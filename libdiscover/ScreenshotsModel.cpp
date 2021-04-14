@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -12,7 +12,8 @@
 ScreenshotsModel::ScreenshotsModel(QObject* parent)
     : QAbstractListModel(parent)
     , m_resource(nullptr)
-{}
+{
+}
 
 QHash< int, QByteArray > ScreenshotsModel::roleNames() const
 {
@@ -24,16 +25,16 @@ QHash< int, QByteArray > ScreenshotsModel::roleNames() const
 
 void ScreenshotsModel::setResource(AbstractResource* res)
 {
-    if(res == m_resource)
+    if (res == m_resource)
         return;
 
-    if(m_resource) {
+    if (m_resource) {
         disconnect(m_resource, &AbstractResource::screenshotsFetched, this, &ScreenshotsModel::screenshotsFetched);
     }
     m_resource = res;
     Q_EMIT resourceChanged(res);
-    
-    if(res) {
+
+    if (res) {
         connect(m_resource, &AbstractResource::screenshotsFetched, this, &ScreenshotsModel::screenshotsFetched);
         res->fetchScreenshots();
     } else
@@ -50,8 +51,9 @@ void ScreenshotsModel::screenshotsFetched(const QList< QUrl >& thumbnails, const
     Q_ASSERT(thumbnails.count()==screenshots.count());
     if (thumbnails.isEmpty())
         return;
-    
     beginInsertRows(QModelIndex(), m_thumbnails.size(), m_thumbnails.size()+thumbnails.size()-1);
+    m_screenshots.clear();
+    m_thumbnails.clear();
     m_thumbnails += thumbnails;
     m_screenshots += screenshots;
     endInsertRows();
@@ -60,14 +62,16 @@ void ScreenshotsModel::screenshotsFetched(const QList< QUrl >& thumbnails, const
 
 QVariant ScreenshotsModel::data(const QModelIndex& index, int role) const
 {
-    if(!index.isValid() || index.parent().isValid())
+    if (!index.isValid() || index.parent().isValid())
         return QVariant();
-    
-    switch(role) {
-        case ThumbnailUrl: return m_thumbnails[index.row()];
-        case ScreenshotUrl: return m_screenshots[index.row()];
+
+    switch (role) {
+    case ThumbnailUrl:
+        return m_thumbnails[index.row()];
+    case ScreenshotUrl:
+        return m_screenshots[index.row()];
     }
-    
+
     return QVariant();
 }
 
@@ -83,7 +87,8 @@ QUrl ScreenshotsModel::screenshotAt(int row) const
 
 int ScreenshotsModel::count() const
 {
-    return m_screenshots.count();
+    auto count = m_screenshots.count();
+    return count;
 }
 
 void ScreenshotsModel::remove(const QUrl& url)

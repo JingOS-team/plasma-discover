@@ -35,19 +35,19 @@ int main(int argc, char** argv)
     KDBusService::StartupOptions startup = {};
     {
         KAboutData about(QStringLiteral("DiscoverNotifier"), i18n("Discover Notifier"), version, i18n("System update status notifier"),
-                     KAboutLicense::GPL, i18n("© 2010-2020 Plasma Development Team"));
+                         KAboutLicense::GPL, i18n("© 2010-2020 Plasma Development Team"));
         about.addAuthor(QStringLiteral("Aleix Pol Gonzalez"), {}, QStringLiteral("aleixpol@kde.org"));
         about.setProductName("discover/discover");
         about.setProgramLogo(app.windowIcon());
         about.setTranslator(
-                i18ndc(nullptr, "NAME OF TRANSLATORS", "Your names"),
-                i18ndc(nullptr, "EMAIL OF TRANSLATORS", "Your emails"));
+            i18ndc(nullptr, "NAME OF TRANSLATORS", "Your names"),
+            i18ndc(nullptr, "EMAIL OF TRANSLATORS", "Your emails"));
 
         KAboutData::setApplicationData(about);
 
         QCommandLineParser parser;
         QCommandLineOption replaceOption({QStringLiteral("replace")},
-                                 i18n("Replace an existing instance"));
+                                         i18n("Replace an existing instance"));
         parser.addOption(replaceOption);
         QCommandLineOption hideOption({QStringLiteral("hide")}, i18n("Do not show the notifier"), i18n("hidden"), QStringLiteral("false"));
         parser.addOption(hideOption);

@@ -83,7 +83,7 @@ void KNSBackendTest::testRetrieval()
     QVERIFY(!m_backend->isFetching() || spy.wait());
 
     const auto resources = getAllResources(m_backend);
-    foreach(AbstractResource* res, resources) {
+    foreach (AbstractResource* res, resources) {
         QVERIFY(!res->name().isEmpty());
         QVERIFY(!res->categories().isEmpty());
         QVERIFY(!res->origin().isEmpty());
@@ -110,7 +110,7 @@ void KNSBackendTest::testReviews()
     const QVector<AbstractResource*> resources = getAllResources(m_backend);
     AbstractReviewsBackend* rev = m_backend->reviewsBackend();
     QVERIFY(!rev->hasCredentials());
-    foreach(AbstractResource* res, resources) {
+    foreach (AbstractResource* res, resources) {
         Rating* r = rev->ratingForApplication(res);
         QVERIFY(r);
         QCOMPARE(r->packageName(), res->packageName());
@@ -134,7 +134,9 @@ void KNSBackendTest::testResourceByUrl()
     AbstractResourcesBackend::Filters f;
     f.resourceUrl = QUrl(QLatin1String("kns://") + m_backend->name() + QLatin1String("/api.kde-look.org/1136471"));
     const QVector<AbstractResource*> resources = getResources(m_backend->search(f));
-    const QVector<QUrl> res = kTransform<QVector<QUrl>>(resources, [](AbstractResource* res){ return res->url(); });
+    const QVector<QUrl> res = kTransform<QVector<QUrl>>(resources, [](AbstractResource* res) {
+        return res->url();
+    });
     QCOMPARE(res.count(), 1);
     QCOMPARE(f.resourceUrl, res.constFirst());
 
@@ -157,6 +159,8 @@ void KNSBackendTest::testResourceByUrlResourcesModel()
     filter.resourceUrl = QUrl(QStringLiteral("kns://plasmoids.knsrc/store.kde.org/1169537")); //Wrong domain
 
     auto resources = getResources(ResourcesModel::global()->search(filter), true);
-    const QVector<QUrl> res = kTransform<QVector<QUrl>>(resources, [](AbstractResource* res){ return res->url(); });
+    const QVector<QUrl> res = kTransform<QVector<QUrl>>(resources, [](AbstractResource* res) {
+        return res->url();
+    });
     QCOMPARE(res.count(), 0);
 }

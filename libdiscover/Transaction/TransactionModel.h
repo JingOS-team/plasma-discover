@@ -44,13 +44,17 @@ public:
     void addTransaction(Transaction *trans);
     void removeTransaction(Transaction *trans);
 
-    bool contains(Transaction* transaction) const { return m_transactions.contains(transaction); }
+    bool contains(Transaction* transaction) const {
+        return m_transactions.contains(transaction);
+    }
     int progress() const;
-    QVector<Transaction *> transactions() const { return m_transactions; }
+    QVector<Transaction *> transactions() const {
+        return m_transactions;
+    }
 
 private:
     QVector<Transaction *> m_transactions;
-    
+
 Q_SIGNALS:
     void startingFirstTransaction();
     void lastTransactionFinished();

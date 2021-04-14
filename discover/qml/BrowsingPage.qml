@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2015 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -11,10 +11,12 @@ import org.kde.discover 2.0
 import org.kde.discover.app 1.0
 import "navigation.js" as Navigation
 import org.kde.kirigami 2.12 as Kirigami
+import "./cus"
 
 DiscoverPage
 {
     id: page
+
     title: i18n("Featured")
     leftPadding: 0
     rightPadding: 0
@@ -62,12 +64,15 @@ DiscoverPage
 
     readonly property bool compact: page.width < 550 || !applicationWindow().wideScreen
 
-    Kirigami.CardsListView {
+    JGridView{
         id: apps
+
         model: FeaturedModel {}
+        maximumColumns:3
+        cellHeight:200
         Component.onCompleted: apps.bottomMargin = Kirigami.Units.largeSpacing * 2
         currentIndex: -1
-        delegate: ApplicationDelegate {
+        component: ApplicationDelegate {
             application: model.application
             compact: page.compact
         }

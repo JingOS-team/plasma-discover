@@ -18,8 +18,8 @@ class DISCOVERCOMMON_EXPORT Review
 {
 public:
     Review(QString  name, QString  pkgName, QString  language, QString  summary,
-               QString  reviewText, QString  userName, const QDateTime& date, bool show, quint64 id,
-               int rating, int usefulTotal, int usefulFavorable, QString  packageVersion);
+           QString  reviewText, QString  userName, const QDateTime& date, bool show, quint64 id,
+           int rating, int usefulTotal, int usefulFavorable, QString  packageVersion);
     ~Review();
 
     // Creation date determines greater than/less than

@@ -19,7 +19,7 @@ void AbstractBackendUpdater::cancel()
 
 void AbstractBackendUpdater::fetchChangelog() const
 {
-    foreach(auto res, toUpdate()) {
+    foreach (auto res, toUpdate()) {
         res->fetchChangelog();
     }
 }

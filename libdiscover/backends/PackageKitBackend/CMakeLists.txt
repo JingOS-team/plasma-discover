@@ -1,3 +1,5 @@
+remove_definitions(-DQT_NO_CAST_FROM_ASCII)
+
 find_package(KF5 REQUIRED Notifications)
 
 add_subdirectory(runservice)

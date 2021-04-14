@@ -40,37 +40,37 @@ class KNSBackendFactory : public AbstractResourcesBackendFactory {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "org.kde.muon.AbstractResourcesBackendFactory")
     Q_INTERFACES(AbstractResourcesBackendFactory)
-    public:
-        KNSBackendFactory() {
-            connect(KNSCore::QuestionManager::instance(), &KNSCore::QuestionManager::askQuestion, this, [](KNSCore::Question* q) {
-                qWarning() << q->question() << q->questionType();
-                q->setResponse(KNSCore::Question::InvalidResponse);
-            });
-        }
+public:
+    KNSBackendFactory() {
+        connect(KNSCore::QuestionManager::instance(), &KNSCore::QuestionManager::askQuestion, this, [](KNSCore::Question* q) {
+            qWarning() << q->question() << q->questionType();
+            q->setResponse(KNSCore::Question::InvalidResponse);
+        });
+    }
 
-        QVector<AbstractResourcesBackend*> newInstance(QObject* parent, const QString &/*name*/) const override
-        {
-            QVector<AbstractResourcesBackend*> ret;
-            const QStringList locations = KNSCore::Engine::configSearchLocations();
-            QSet<QString> files;
-            for (const QString &path: locations) {
-                QDirIterator dirIt(path, {QStringLiteral("*.knsrc")}, QDir::Files);
-                for(; dirIt.hasNext(); ) {
-                    dirIt.next();
+    QVector<AbstractResourcesBackend*> newInstance(QObject* parent, const QString &/*name*/) const override
+    {
+        QVector<AbstractResourcesBackend*> ret;
+        const QStringList locations = KNSCore::Engine::configSearchLocations();
+        QSet<QString> files;
+        for (const QString &path: locations) {
+            QDirIterator dirIt(path, {QStringLiteral("*.knsrc")}, QDir::Files);
+            for (; dirIt.hasNext(); ) {
+                dirIt.next();
 
-                    if (files.contains(dirIt.fileName()))
-                        continue;
-                    files << dirIt.fileName();
+                if (files.contains(dirIt.fileName()))
+                    continue;
+                files << dirIt.fileName();
 
-                    auto bk = new KNSBackend(parent, QStringLiteral("plasma"), dirIt.filePath());
-                    if (bk->isValid())
-                        ret += bk;
-                    else
-                        delete bk;
-                }
+                auto bk = new KNSBackend(parent, QStringLiteral("plasma"), dirIt.filePath());
+                if (bk->isValid())
+                    ret += bk;
+                else
+                    delete bk;
             }
-            return ret;
         }
+        return ret;
+    }
 };
 
 Q_DECLARE_METATYPE(KNSCore::EntryInternal)
@@ -103,10 +103,12 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
     setFetching(true);
 
     // This ensures we have something to track when checking after the initialization timeout
-    connect(this, &KNSBackend::initialized, this, [this](){ m_initialized = true; });
+    connect(this, &KNSBackend::initialized, this, [this]() {
+        m_initialized = true;
+    });
     // If we have not initialized in 60 seconds, consider this KNS backend invalid
-    QTimer::singleShot(60000, this, [this](){
-        if(!m_initialized) {
+    QTimer::singleShot(60000, this, [this]() {
+        if (!m_initialized) {
             markInvalid(i18n("Backend %1 took too long to initialize", m_displayName));
             m_responsePending = false;
             Q_EMIT searchFinished();
@@ -127,7 +129,7 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
     QVector<Category*> categories;
     if (cats.count() > 1) {
         m_categories += cats;
-        for(const auto &cat: cats) {
+        for (const auto &cat: cats) {
             if (m_hasApplications)
                 categories << new Category(cat, QStringLiteral("applications-other"), { {CategoryFilter, cat } }, backendName, {}, {}, true);
             else
@@ -139,7 +141,7 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
     for (const auto &cat: qAsConst(categories)) {
         const QString catName = cat->name().append(QLatin1Char('/'));
         for (const auto& potentialSubCat: qAsConst(categories)) {
-            if(potentialSubCat->name().startsWith(catName)) {
+            if (potentialSubCat->name().startsWith(catName)) {
                 cat->addSubcategory(potentialSubCat);
                 topCategories.removeOne(potentialSubCat);
             }
@@ -156,7 +158,7 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
         m_responsePending = false;
         Q_EMIT availableForQueries();
     });
-    connect(m_engine, &KNSCore::Engine::signalCategoriesMetadataLoded, this, [categories] (const QList<KNSCore::Provider::CategoryMetadata>& categoryMetadatas){
+    connect(m_engine, &KNSCore::Engine::signalCategoriesMetadataLoded, this, [categories] (const QList<KNSCore::Provider::CategoryMetadata>& categoryMetadatas) {
         for (const KNSCore::Provider::CategoryMetadata& category : categoryMetadatas) {
             for (Category* cat : qAsConst(categories)) {
                 if (cat->orFilters().count() > 0 && cat->orFilters().constFirst().second == category.name) {
@@ -169,7 +171,7 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
     m_engine->setPageSize(100);
     m_engine->init(m_name);
 
-    if(m_hasApplications) {
+    if (m_hasApplications) {
         auto actualCategory = new Category(m_displayName, QStringLiteral("applications-other"), filters, backendName, topCategories, QUrl(), false);
         auto applicationCategory = new Category(i18n("Applications"), QStringLiteral("applications-internet"), filters, backendName, { actualCategory }, QUrl(), false);
         applicationCategory->setAndFilter({ {CategoryFilter, QLatin1String("Application")} });
@@ -177,15 +179,15 @@ KNSBackend::KNSBackend(QObject* parent, const QString& iconName, const QString &
         m_rootCategories = { applicationCategory };
         // Make sure we filter out any apps which won't run on the current system architecture
         QStringList tagFilter = m_engine->tagFilter();
-        if(QSysInfo::currentCpuArchitecture() == QLatin1String("arm")) {
+        if (QSysInfo::currentCpuArchitecture() == QLatin1String("arm")) {
             tagFilter << QLatin1String("application##architecture==armhf");
-        } else if(QSysInfo::currentCpuArchitecture() == QLatin1String("arm64")) {
+        } else if (QSysInfo::currentCpuArchitecture() == QLatin1String("arm64")) {
             tagFilter << QLatin1String("application##architecture==arm64");
-        } else if(QSysInfo::currentCpuArchitecture() == QLatin1String("i386")) {
+        } else if (QSysInfo::currentCpuArchitecture() == QLatin1String("i386")) {
             tagFilter << QLatin1String("application##architecture==x86");
-        } else if(QSysInfo::currentCpuArchitecture() == QLatin1String("ia64")) {
+        } else if (QSysInfo::currentCpuArchitecture() == QLatin1String("ia64")) {
             tagFilter << QLatin1String("application##architecture==x86-64");
-        } else if(QSysInfo::currentCpuArchitecture() == QLatin1String("x86_64")) {
+        } else if (QSysInfo::currentCpuArchitecture() == QLatin1String("x86_64")) {
             tagFilter << QLatin1String("application##architecture==x86");
             tagFilter << QLatin1String("application##architecture==x86-64");
         }
@@ -277,7 +279,7 @@ void KNSBackend::checkForUpdates()
 
 void KNSBackend::setFetching(bool f)
 {
-    if(m_fetching!=f) {
+    if (m_fetching!=f) {
         m_fetching = f;
         emit fetchingChanged();
 
@@ -299,11 +301,13 @@ KNSResource* KNSBackend::resourceForEntry(const KNSCore::EntryInternal& entry)
     if (!r) {
         QStringList categories{name(), m_rootCategories.first()->name()};
         const auto cats = m_engine->categoriesMetadata();
-        const int catIndex = kIndexOf(cats, [&entry](const KNSCore::Provider::CategoryMetadata& cat){ return entry.category() == cat.id; });
+        const int catIndex = kIndexOf(cats, [&entry](const KNSCore::Provider::CategoryMetadata& cat) {
+            return entry.category() == cat.id;
+        });
         if (catIndex > -1) {
             categories << cats.at(catIndex).name;
         }
-        if(m_hasApplications) {
+        if (m_hasApplications) {
             categories << QLatin1String("Application");
         }
         r = new KNSResource(entry, categories, this);
@@ -317,8 +321,12 @@ KNSResource* KNSBackend::resourceForEntry(const KNSCore::EntryInternal& entry)
 void KNSBackend::receivedEntries(const KNSCore::EntryInternal::List& entries)
 {
     m_responsePending = false;
-    const auto filtered = kFilter<KNSCore::EntryInternal::List>(entries, [](const KNSCore::EntryInternal& entry){ return entry.isValid(); });
-    const auto resources = kTransform<QVector<AbstractResource*>>(filtered, [this](const KNSCore::EntryInternal& entry){ return resourceForEntry(entry); });
+    const auto filtered = kFilter<KNSCore::EntryInternal::List>(entries, [](const KNSCore::EntryInternal& entry) {
+        return entry.isValid();
+    });
+    const auto resources = kTransform<QVector<AbstractResource*>>(filtered, [this](const KNSCore::EntryInternal& entry) {
+        return resourceForEntry(entry);
+    });
 
     if (!resources.isEmpty()) {
         Q_EMIT receivedResources(resources);
@@ -357,65 +365,65 @@ void KNSBackend::signalErrorCode(const KNSCore::ErrorCode& errorCode, const QStr
     QString error = message;
     qDebug() << "KNS error in" << m_displayName << ":" << errorCode << message << metadata;
     bool invalidFile = false;
-    switch(errorCode) {
-        case KNSCore::ErrorCode::UnknownError:
-            // This is not supposed to be hit, of course, but any error coming to this point should be non-critical and safely ignored.
-            break;
-        case KNSCore::ErrorCode::NetworkError:
-            // If we have a network error, we need to tell the user about it. This is almost always fatal, so mark invalid and tell the user.
-            error = i18n("Network error in backend %1: %2", m_displayName, metadata.toInt());
-            markInvalid(error);
-            invalidFile = true;
-            break;
-        case KNSCore::ErrorCode::OcsError:
-            if(metadata.toInt() == 200) {
-                // Too many requests, try again in a couple of minutes - perhaps we can simply postpone it automatically, and give a message?
-                error = i18n("Too many requests sent to the server for backend %1. Please try again in a few minutes.", m_displayName);
-            } else {
-                // Unknown API error, usually something critical, mark as invalid and cry a lot
-                error = i18n("Invalid %1 backend, contact your distributor.", m_displayName);
-                markInvalid(error);
-                invalidFile = true;
-            }
-            break;
-        case KNSCore::ErrorCode::ConfigFileError:
+    switch (errorCode) {
+    case KNSCore::ErrorCode::UnknownError:
+        // This is not supposed to be hit, of course, but any error coming to this point should be non-critical and safely ignored.
+        break;
+    case KNSCore::ErrorCode::NetworkError:
+        // If we have a network error, we need to tell the user about it. This is almost always fatal, so mark invalid and tell the user.
+        error = i18n("Network error in backend %1: %2", m_displayName, metadata.toInt());
+        markInvalid(error);
+        invalidFile = true;
+        break;
+    case KNSCore::ErrorCode::OcsError:
+        if (metadata.toInt() == 200) {
+            // Too many requests, try again in a couple of minutes - perhaps we can simply postpone it automatically, and give a message?
+            error = i18n("Too many requests sent to the server for backend %1. Please try again in a few minutes.", m_displayName);
+        } else {
+            // Unknown API error, usually something critical, mark as invalid and cry a lot
             error = i18n("Invalid %1 backend, contact your distributor.", m_displayName);
             markInvalid(error);
             invalidFile = true;
-            break;
-        case KNSCore::ErrorCode::ProviderError:
-            error = i18n("Invalid %1 backend, contact your distributor.", m_displayName);
-            markInvalid(error);
-            invalidFile = true;
-            break;
-        case KNSCore::ErrorCode::InstallationError:
-        {
-            KNSResource* r = static_cast<KNSResource*>(m_resourcesByName.value(metadata.toString()));
-            if (r) {
-                // If the following is true, then we can safely assume that the entry was
-                // attempted updated, but the update was aborted.
-                // Specifically, we can also likely expect that the update failed because
-                // KNSCore::Engine was unable to deduce which payload to use (which will
-                // happen when an entry has more than one payload, and none of those match
-                // the name of the originally downloaded file).
-                // We cannot complete this in Discover (as we've no way to forward that
-                // query to the user) but we can give them an idea of how to deal with the
-                // situation some other way.
-                // TODO: Once Discover has a way to forward queries to the user from transactions, this likely will no longer be needed
-                if (r->entry().status() == KNS3::Entry::Updateable) {
-                    error = i18n("Unable to complete the update of %1. You can try and perform this action through the Get Hot New Stuff dialog, which grants tighter control. The reported error was:\n%2", r->name(), message);
-                }
-            }
-            break;
         }
-        case KNSCore::ErrorCode::ImageError:
-            // Image fetching errors are not critical as such, but may lead to weird layout issues, might want handling...
-            error = i18n("Could not fetch screenshot for the entry %1 in backend %2", metadata.toList().at(0).toString(), m_displayName);
-            break;
-        default:
-            // Having handled all current error values, we should by all rights never arrive here, but for good order and future safety...
-            error = i18n("Unhandled error in %1 backend. Contact your distributor.", m_displayName);
-            break;
+        break;
+    case KNSCore::ErrorCode::ConfigFileError:
+        error = i18n("Invalid %1 backend, contact your distributor.", m_displayName);
+        markInvalid(error);
+        invalidFile = true;
+        break;
+    case KNSCore::ErrorCode::ProviderError:
+        error = i18n("Invalid %1 backend, contact your distributor.", m_displayName);
+        markInvalid(error);
+        invalidFile = true;
+        break;
+    case KNSCore::ErrorCode::InstallationError:
+    {
+        KNSResource* r = static_cast<KNSResource*>(m_resourcesByName.value(metadata.toString()));
+        if (r) {
+            // If the following is true, then we can safely assume that the entry was
+            // attempted updated, but the update was aborted.
+            // Specifically, we can also likely expect that the update failed because
+            // KNSCore::Engine was unable to deduce which payload to use (which will
+            // happen when an entry has more than one payload, and none of those match
+            // the name of the originally downloaded file).
+            // We cannot complete this in Discover (as we've no way to forward that
+            // query to the user) but we can give them an idea of how to deal with the
+            // situation some other way.
+            // TODO: Once Discover has a way to forward queries to the user from transactions, this likely will no longer be needed
+            if (r->entry().status() == KNS3::Entry::Updateable) {
+                error = i18n("Unable to complete the update of %1. You can try and perform this action through the Get Hot New Stuff dialog, which grants tighter control. The reported error was:\n%2", r->name(), message);
+            }
+        }
+        break;
+    }
+    case KNSCore::ErrorCode::ImageError:
+        // Image fetching errors are not critical as such, but may lead to weird layout issues, might want handling...
+        error = i18n("Could not fetch screenshot for the entry %1 in backend %2", metadata.toList().at(0).toString(), m_displayName);
+        break;
+    default:
+        // Having handled all current error values, we should by all rights never arrive here, but for good order and future safety...
+        error = i18n("Unhandled error in %1 backend. Contact your distributor.", m_displayName);
+        break;
     }
     m_responsePending = false;
     Q_EMIT searchFinished();
@@ -442,43 +450,43 @@ public:
 
         std::function<void()> actionFunction;
         auto engine = res->knsBackend()->engine();
-        if(role == RemoveRole)
+        if (role == RemoveRole)
             actionFunction = [res, engine]() {
-                engine->uninstall(res->entry());
-            };
+            engine->uninstall(res->entry());
+        };
         else if (res->entry().status() == KNS3::Entry::Updateable)
             actionFunction = [res, engine]() {
-                engine->install(res->entry(), -1);
-            };
+            engine->install(res->entry(), -1);
+        };
         else if (res->linkIds().isEmpty())
             actionFunction = [res]() {
-                qWarning() << "No installable candidates in the KNewStuff entry" << res->entry().name() << "with id" << res->entry().uniqueId() << "on the backend" << res->backend()->name() << "There should always be at least one downloadable item in an OCS entry, and if there isn't, we should consider it broken. OCS can technically show them, but if there is nothing to install, it cannot be installed.";
-            };
+            qWarning() << "No installable candidates in the KNewStuff entry" << res->entry().name() << "with id" << res->entry().uniqueId() << "on the backend" << res->backend()->name() << "There should always be at least one downloadable item in an OCS entry, and if there isn't, we should consider it broken. OCS can technically show them, but if there is nothing to install, it cannot be installed.";
+        };
         else
             actionFunction = [res, engine]() {
-                engine->install(res->entry());
-            };
+            engine->install(res->entry());
+        };
         QTimer::singleShot(0, res, actionFunction);
     }
 
     void anEntryChanged(const KNSCore::EntryInternal& entry) {
         if (entry.uniqueId() == m_id) {
             switch (entry.status()) {
-                case KNS3::Entry::Invalid:
-                    qWarning() << "invalid status for" << entry.uniqueId() << entry.status();
-                    break;
-                case KNS3::Entry::Installing:
-                case KNS3::Entry::Updating:
-                    setStatus(CommittingStatus);
-                    break;
-                case KNS3::Entry::Downloadable:
-                case KNS3::Entry::Installed:
-                case KNS3::Entry::Deleted:
-                case KNS3::Entry::Updateable:
-                    if (status() != DoneStatus) {
-                        setStatus(DoneStatus);
-                    }
-                    break;
+            case KNS3::Entry::Invalid:
+                qWarning() << "invalid status for" << entry.uniqueId() << entry.status();
+                break;
+            case KNS3::Entry::Installing:
+            case KNS3::Entry::Updating:
+                setStatus(CommittingStatus);
+                break;
+            case KNS3::Entry::Downloadable:
+            case KNS3::Entry::Installed:
+            case KNS3::Entry::Deleted:
+            case KNS3::Entry::Updateable:
+                if (status() != DoneStatus) {
+                    setStatus(DoneStatus);
+                }
+                break;
             }
         }
     }
@@ -533,7 +541,9 @@ ResultsStream* KNSBackend::search(const AbstractResourcesBackend::Filters& filte
 
         const auto start = [this, stream, filter]() {
             if (m_isValid) {
-                auto filterFunction = [&filter](AbstractResource* r) { return r->state()>=filter.state && (r->name().contains(filter.search, Qt::CaseInsensitive) || r->comment().contains(filter.search, Qt::CaseInsensitive)); };
+                auto filterFunction = [&filter](AbstractResource* r) {
+                    return r->state()>=filter.state && (r->name().contains(filter.search, Qt::CaseInsensitive) || r->comment().contains(filter.search, Qt::CaseInsensitive));
+                };
                 const auto ret = kFilter<QVector<AbstractResource*>>(m_resourcesByName, filterFunction);
 
                 if (!ret.isEmpty())
@@ -549,8 +559,10 @@ ResultsStream* KNSBackend::search(const AbstractResourcesBackend::Filters& filte
 
         return stream;
     } else if ((!filter.category && !filter.search.isEmpty()) // Accept global searches
-              // If there /is/ a category, make sure we actually are one of those requested before searching
-           || (filter.category && kContains(m_categories, [&filter](const QString& cat) { return filter.category->matchesCategoryName(cat); }))) {
+               // If there /is/ a category, make sure we actually are one of those requested before searching
+    || (filter.category && kContains(m_categories, [&filter](const QString& cat) {
+    return filter.category->matchesCategoryName(cat);
+    }))) {
         auto r = new ResultsStream(QLatin1String("KNS-search-")+name());
         searchStream(r, filter.search);
         return r;

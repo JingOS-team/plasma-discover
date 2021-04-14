@@ -42,13 +42,13 @@ QVector<Category*> CategoriesReader::loadCategoriesPath(const QString& path)
     QString error;
     int line;
     bool correct = menuDocument.setContent(&menuFile, &error, &line);
-    if(!correct)
+    if (!correct)
         qCWarning(LIBDISCOVER_LOG) << "error while parsing the categories file:" << error << " at: " << path << ':' << line;
 
     QDomElement root = menuDocument.documentElement();
 
     QDomNode node = root.firstChild();
-    while(!node.isNull())
+    while (!node.isNull())
     {
         if (node.nodeType() == QDomNode::ElementNode) {
             ret << new Category( {path}, qApp );

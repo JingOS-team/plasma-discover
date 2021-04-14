@@ -43,7 +43,7 @@ void CategoryModel::populateCategories()
 
         const QVector<Category*> cats = cr.loadCategoriesFile(backend);
 
-        if(ret.isEmpty()) {
+        if (ret.isEmpty()) {
             ret = cats;
         } else {
             Q_FOREACH (Category* c, cats)
@@ -58,7 +58,9 @@ void CategoryModel::populateCategories()
 
 QVariantList CategoryModel::rootCategoriesVL() const
 {
-    return kTransform<QVariantList>(m_rootCategories, [](Category* cat) {return QVariant::fromValue<QObject*>(cat); });
+    return kTransform<QVariantList>(m_rootCategories, [](Category* cat) {
+        return QVariant::fromValue<QObject*>(cat);
+    });
 }
 
 void CategoryModel::blacklistPlugin(const QString &name)
@@ -71,13 +73,13 @@ void CategoryModel::blacklistPlugin(const QString &name)
 
 static Category* recFindCategory(Category* root, const QString& name)
 {
-    if(root->name()==name)
+    if (root->name()==name)
         return root;
     else {
         const auto subs = root->subCategories();
         Q_FOREACH (Category* c, subs) {
             Category* ret = recFindCategory(c, name);
-            if(ret)
+            if (ret)
                 return ret;
         }
     }
@@ -88,7 +90,7 @@ Category* CategoryModel::findCategoryByName(const QString& name) const
 {
     for (Category* cat: m_rootCategories) {
         Category* ret = recFindCategory(cat, name);
-        if(ret)
+        if (ret)
             return ret;
     }
     return nullptr;

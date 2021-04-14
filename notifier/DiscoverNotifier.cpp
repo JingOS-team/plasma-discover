@@ -26,7 +26,7 @@ DiscoverNotifier::DiscoverNotifier(QObject * parent)
     : QObject(parent)
 {
     m_backends = BackendNotifierFactory().allBackends();
-    foreach(BackendNotifierModule* module, m_backends) {
+    foreach (BackendNotifierModule* module, m_backends) {
         connect(module, &BackendNotifierModule::foundUpdates, this, &DiscoverNotifier::updateStatusNotifier);
         connect(module, &BackendNotifierModule::needsRebootChanged, this, [this]() {
             if (!m_needsReboot) {
@@ -83,7 +83,9 @@ void DiscoverNotifier::showDiscoverUpdates()
 
 void DiscoverNotifier::showUpdatesNotification()
 {
-    if (m_updatesAvailableNotification) { m_updatesAvailableNotification->close(); }
+    if (m_updatesAvailableNotification) {
+        m_updatesAvailableNotification->close();
+    }
     if (state() != NormalUpdates && state() != SecurityUpdates) {
         //it's not very helpful to notify that everything is in order
         return;
@@ -98,8 +100,12 @@ void DiscoverNotifier::showUpdatesNotification()
 
 void DiscoverNotifier::updateStatusNotifier()
 {
-    const bool hasSecurityUpdates = kContains(m_backends, [](BackendNotifierModule* module) { return module->hasSecurityUpdates(); });
-    const bool hasUpdates = hasSecurityUpdates || kContains(m_backends, [](BackendNotifierModule* module) { return module->hasUpdates(); });
+    const bool hasSecurityUpdates = kContains(m_backends, [](BackendNotifierModule* module) {
+        return module->hasSecurityUpdates();
+    });
+    const bool hasUpdates = hasSecurityUpdates || kContains(m_backends, [](BackendNotifierModule* module) {
+        return module->hasUpdates();
+    });
 
     if (m_hasUpdates == hasUpdates && m_hasSecurityUpdates == hasSecurityUpdates )
         return;
@@ -154,38 +160,38 @@ DiscoverNotifier::State DiscoverNotifier::state() const
 
 QString DiscoverNotifier::iconName() const
 {
-    switch(state()) {
-        case SecurityUpdates:
-            return QStringLiteral("update-high");
-        case NormalUpdates:
-            return QStringLiteral("update-low");
-        case NoUpdates:
-            return QStringLiteral("update-none");
-        case RebootRequired:
-            return QStringLiteral("system-reboot");
-        case Offline:
-            return QStringLiteral("offline");
-        case Busy:
-            return QStringLiteral("state-download");
+    switch (state()) {
+    case SecurityUpdates:
+        return QStringLiteral("update-high");
+    case NormalUpdates:
+        return QStringLiteral("update-low");
+    case NoUpdates:
+        return QStringLiteral("update-none");
+    case RebootRequired:
+        return QStringLiteral("system-reboot");
+    case Offline:
+        return QStringLiteral("offline");
+    case Busy:
+        return QStringLiteral("state-download");
     }
     return QString();
 }
 
 QString DiscoverNotifier::message() const
 {
-    switch(state()) {
-        case SecurityUpdates:
-            return i18n("Security updates available");
-        case NormalUpdates:
-            return i18n("Updates available");
-        case NoUpdates:
-            return i18n("System up to date");
-        case RebootRequired:
-            return i18n("Computer needs to restart");
-        case Offline:
-            return i18n("Offline");
-        case Busy:
-            return i18n("Applying unattended updates...");
+    switch (state()) {
+    case SecurityUpdates:
+        return i18n("Security updates available");
+    case NormalUpdates:
+        return i18n("Updates available");
+    case NoUpdates:
+        return i18n("System up to date");
+    case RebootRequired:
+        return i18n("Computer needs to restart");
+    case Offline:
+        return i18n("Offline");
+    case Busy:
+        return i18n("Applying unattended updates...");
     }
     return QString();
 }
@@ -200,7 +206,7 @@ void DiscoverNotifier::recheckSystemUpdateNeeded()
         }
     }
 
-    foreach(BackendNotifierModule* module, m_backends)
+    foreach (BackendNotifierModule* module, m_backends)
         module->recheckSystemUpdateNeeded();
 
     refreshUnattended();
@@ -209,7 +215,7 @@ void DiscoverNotifier::recheckSystemUpdateNeeded()
 QStringList DiscoverNotifier::loadedModules() const
 {
     QStringList ret;
-    for(BackendNotifierModule* module : m_backends)
+    for (BackendNotifierModule* module : m_backends)
         ret += QString::fromLatin1(module->metaObject()->className());
     return ret;
 }

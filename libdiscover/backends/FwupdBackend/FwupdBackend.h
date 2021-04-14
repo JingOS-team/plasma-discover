@@ -35,8 +35,8 @@ class StandardBackendUpdater;
 class FwupdResource;
 class FwupdBackend : public AbstractResourcesBackend
 {
-Q_OBJECT
-Q_PROPERTY(int startElements MEMBER m_startElements)
+    Q_OBJECT
+    Q_PROPERTY(int startElements MEMBER m_startElements)
 public:
     explicit FwupdBackend(QObject* parent = nullptr);
     ~FwupdBackend();
@@ -46,13 +46,19 @@ public:
     AbstractReviewsBackend* reviewsBackend() const override;
     ResultsStream* search(const AbstractResourcesBackend::Filters & search) override;
     ResultsStream * findResourceByPackageName(const QUrl& search) ;
-    QHash<QString, FwupdResource*> resources() const { return m_resources; }
-    bool isValid() const override { return true; } // No external file dependencies that could cause runtime errors
+    QHash<QString, FwupdResource*> resources() const {
+        return m_resources;
+    }
+    bool isValid() const override {
+        return true;    // No external file dependencies that could cause runtime errors
+    }
 
     Transaction* installApplication(AbstractResource* app) override;
     Transaction* installApplication(AbstractResource* app, const AddonList& addons) override;
     Transaction* removeApplication(AbstractResource* app) override;
-    bool isFetching() const override { return m_fetching; }
+    bool isFetching() const override {
+        return m_fetching;
+    }
     void checkForUpdates() override;
     QString displayName() const override;
     bool hasApplications() const override;

@@ -13,12 +13,26 @@
 #include <QStandardPaths>
 #include "libdiscover_debug.h"
 #include <utils.h>
+#include <QFileInfo>
+
+Category::Category()
+{}
 
 Category::Category(QSet<QString> pluginName, QObject* parent)
-        : QObject(parent)
-        , m_iconString(QStringLiteral("applications-other"))
-        , m_plugins(std::move(pluginName))
+    : QObject(parent)
+    , m_iconString(QStringLiteral("applications-other"))
+    , m_plugins(std::move(pluginName))
 {}
+
+Category::Category(QString name,QString typeName,QString appType)
+    :m_name(name)
+    ,m_typeName(typeName)
+    ,m_appType(appType)
+{
+    m_iconCacheString = "/usr/share/discover/pkcategories/";
+    setIcon(iconCachePath(m_typeName,ICONTYPE::NORMAL));
+    setIconSelect(iconCachePath(m_typeName,ICONTYPE::SELECT));
+}
 
 Category::Category(const QString& name, const QString& iconName, const QVector<QPair<FilterType, QString> >& orFilters, const QSet<QString> &pluginName, const QVector<Category *>& subCategories, const QUrl& decoration, bool isAddons)
     : QObject(nullptr)
@@ -37,10 +51,10 @@ Category::~Category() = default;
 
 void Category::parseData(const QString& path, const QDomNode& data)
 {
-    for(QDomNode node = data.firstChild(); !node.isNull(); node = node.nextSibling())
+    for (QDomNode node = data.firstChild(); !node.isNull(); node = node.nextSibling())
     {
-        if(!node.isElement()) {
-            if(!node.isComment())
+        if (!node.isElement()) {
+            if (!node.isComment())
                 qCWarning(LIBDISCOVER_LOG) << "unknown node found at " << QStringLiteral("%1:%2").arg(path).arg(node.lineNumber());
             continue;
         }
@@ -75,7 +89,7 @@ QVector<QPair<FilterType, QString> > Category::parseIncludes(const QDomNode &dat
 {
     QDomNode node = data.firstChild();
     QVector<QPair<FilterType, QString> > filter;
-    while(!node.isNull())
+    while (!node.isNull())
     {
         QDomElement tempElement = node.toElement();
 
@@ -121,6 +135,88 @@ QString Category::icon() const
     return m_iconString;
 }
 
+void Category::setIcon(const QString& icon)
+{
+    m_iconString = icon;
+    emit iconChanged();
+}
+
+void Category::setIconBaseUrl(const QString& baseUrl)
+{
+    if (m_iconString.isEmpty()) {
+        HttpClient::global() -> get(baseUrl + typeName() + ".png")
+        .onResponse([this](QByteArray result) {
+            if (result.isEmpty()) {
+                return;
+            }
+            QFile iconFile(m_iconCacheString + typeName()+".png");
+            if (iconFile.open(QIODevice::WriteOnly))
+            {
+                iconFile.write(result);
+                iconFile.close();
+            }
+            m_iconString = m_iconCacheString + typeName()+".png";
+            emit iconChanged();
+        })
+        .onError([this](QString errorStr) {
+            return;
+        })
+        .timeout(10 * 1000)
+        .exec();
+    }
+}
+
+QString Category::iconSelect() const
+{
+    return m_iconSelect;
+}
+
+void Category::setIconSelect(const QString& iconSelect)
+{
+    m_iconSelect = iconSelect;
+    emit iconSelectChanged();
+}
+
+QString Category::typeName() const
+{
+    return m_typeName;
+}
+
+void Category::setTypeName(QString typeName) {
+    m_typeName = typeName;
+    setIcon(iconCachePath(m_typeName,ICONTYPE::NORMAL));
+    setIconSelect(iconCachePath(m_typeName,ICONTYPE::SELECT));
+}
+
+QString Category::appType() const
+{
+    return m_appType;
+}
+
+void Category::setApptype(QString apptype)
+{
+    m_appType = apptype;
+}
+
+QString Category::iconCachePath(QString typeName,ICONTYPE iconType)
+{
+    QString iconTypeString = QString::fromUtf8("normal");
+    if (iconType == ICONTYPE::SELECT) {
+        iconTypeString = QString::fromUtf8("select");
+    }
+    if (typeName.contains(QString::fromUtf8(" "))) {
+        typeName.replace(QString::fromUtf8(" "),QString::fromUtf8("_"));
+    }
+    typeName = typeName.toLower();
+    QString suffix = typeName+QLatin1String("_")+iconTypeString+QLatin1String(".png");
+    QString path = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QLatin1String("discover/pkcategories/")+suffix);
+    if (path.isEmpty()) {
+        return QLatin1String("");
+    }
+    QString iconPath = QStringLiteral("file://%1").arg(path);
+    return iconPath;
+}
+
 QVector<QPair<FilterType, QString> > Category::andFilters() const
 {
     return m_andFilters;
@@ -154,7 +250,7 @@ bool Category::categoryLessThan(Category *c1, const Category *c2)
 static bool isSorted(const QVector<Category*>& vector)
 {
     Category *last = nullptr;
-    for(auto a: vector) {
+    for (auto a: vector) {
         if (last && !Category::categoryLessThan(last, a))
             return false;
         last = a;
@@ -165,7 +261,7 @@ static bool isSorted(const QVector<Category*>& vector)
 void Category::sortCategories(QVector<Category *>& cats)
 {
     std::sort(cats.begin(), cats.end(), &categoryLessThan);
-    for(auto cat: cats) {
+    for (auto cat: cats) {
         sortCategories(cat->m_subCategories);
     }
     Q_ASSERT(isSorted(cats));
@@ -182,17 +278,17 @@ void Category::addSubcategory(QVector< Category* >& list, Category* newcat)
     }
 
     auto c = *it;
-    if(c->name() == newcat->name()) {
-        if(c->icon() != newcat->icon()
-            || c->m_andFilters != newcat->m_andFilters
-            || c->m_isAddons != newcat->m_isAddons
-        )
+    if (c->name() == newcat->name()) {
+        if (c->icon() != newcat->icon()
+                || c->m_andFilters != newcat->m_andFilters
+                || c->m_isAddons != newcat->m_isAddons
+           )
         {
             qCWarning(LIBDISCOVER_LOG) << "the following categories seem to be the same but they're not entirely"
-                << c->icon() << newcat->icon() << "--"
-                << c->name() << newcat->name() << "--"
-                << c->andFilters() << newcat->andFilters() << "--"
-                << c->isAddons() << newcat->isAddons();
+                                       << c->icon() << newcat->icon() << "--"
+                                       << c->name() << newcat->name() << "--"
+                                       << c->andFilters() << newcat->andFilters() << "--"
+                                       << c->isAddons() << newcat->isAddons();
         } else {
             c->m_orFilters += newcat->orFilters();
             c->m_notFilters += newcat->notFilters();
@@ -211,8 +307,8 @@ void Category::addSubcategory(QVector< Category* >& list, Category* newcat)
 void Category::addSubcategory(Category* cat)
 {
     int i = 0;
-    for(Category* subCat : qAsConst(m_subCategories)) {
-        if(!categoryLessThan(subCat, cat)) {
+    for (Category* subCat : qAsConst(m_subCategories)) {
+        if (!categoryLessThan(subCat, cat)) {
             break;
         }
         ++i;
@@ -224,7 +320,7 @@ void Category::addSubcategory(Category* cat)
 bool Category::blacklistPluginsInVector(const QSet<QString>& pluginNames, QVector<Category *>& subCategories)
 {
     bool ret = false;
-    for(QVector<Category*>::iterator it = subCategories.begin(); it!=subCategories.end(); ) {
+    for (QVector<Category*>::iterator it = subCategories.begin(); it!=subCategories.end(); ) {
         if ((*it)->blacklistPlugins(pluginNames)) {
             delete *it;
             it = subCategories.erase(it);
@@ -259,12 +355,14 @@ QUrl Category::decoration() const
 
 QVariantList Category::subCategoriesVariant() const
 {
-    return kTransform<QVariantList>(m_subCategories, [](Category* cat){ return QVariant::fromValue<QObject*>(cat); });
+    return kTransform<QVariantList>(m_subCategories, [](Category* cat) {
+        return QVariant::fromValue<QObject*>(cat);
+    });
 }
 
 bool Category::matchesCategoryName(const QString& name) const
 {
-    for(const auto &filter: m_orFilters) {
+    for (const auto &filter: m_orFilters) {
         if (filter.first == CategoryFilter && filter.second == name)
             return true;
     }
@@ -280,7 +378,7 @@ bool Category::contains(Category* cat) const
 bool Category::contains(const QVariantList& cats) const
 {
     bool ret = false;
-    for(const auto &itCat : cats) {
+    for (const auto &itCat : cats) {
         if (contains(qobject_cast<Category*>(itCat.value<QObject*>()))) {
             ret = true;
             break;

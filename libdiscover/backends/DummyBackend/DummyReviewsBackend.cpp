@@ -28,9 +28,9 @@ void DummyReviewsBackend::fetchReviews(AbstractResource* app, int page)
         return;
 
     QVector<ReviewPtr> review;
-    for(int i=0; i<33; i++) {
+    for (int i=0; i<33; i++) {
         review += ReviewPtr(new Review(app->name(), app->packageName(), QStringLiteral("en_US"), QStringLiteral("good morning"), QStringLiteral("the morning is very good"), QStringLiteral("dummy"),
-                             QDateTime(), true, page+i, i%5, 1, 1, app->packageName()));
+                                       QDateTime(), true, page+i, i%5, 1, 1, app->packageName()));
     }
     emit reviewsReady(app, review, false);
 }
@@ -44,7 +44,7 @@ void DummyReviewsBackend::initialize()
 {
     int i = 11;
     DummyBackend* b = qobject_cast<DummyBackend*>(parent());
-    foreach(DummyResource* app, b->resources()) {
+    foreach (DummyResource* app, b->resources()) {
         if (m_ratings.contains(app))
             continue;
         auto randomRating = qrand()%10;

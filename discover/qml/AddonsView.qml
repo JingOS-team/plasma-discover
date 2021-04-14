@@ -3,7 +3,7 @@ import QtQuick.Controls 2.14
 import QtQuick.Layouts 1.1
 import org.kde.discover 2.0
 import "navigation.js" as Navigation
-import org.kde.kirigami 2.14 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 
 Kirigami.OverlaySheet
 {
@@ -28,7 +28,7 @@ Kirigami.OverlaySheet
 
         model: ApplicationAddonsModel { id: addonsModel }
 
-        delegate: Kirigami.CheckableListItem {
+        delegate: Kirigami.BasicListItem {
             id: listItem
 
             enabled: !addonsView.isInstalling

@@ -19,6 +19,9 @@ Kirigami.GlobalDrawer {
     rightPadding: 0
     topPadding: 0
     bottomPadding: 0
+    background: Rectangle{
+    color: "transparent"
+    }
 
     // FIXME: Dirty workaround for 385992
     width: Kirigami.Units.gridUnit * 14
@@ -166,8 +169,9 @@ Kirigami.GlobalDrawer {
                    || (category && category.contains(window.leftPage.subcategories))
                      )
             onTriggered: {
-                if (!window.leftPage.canNavigate)
+                if (!window.leftPage.canNavigate){
                     Navigation.openCategory(category, currentSearchText)
+                }
                 else {
                     if (pageStack.depth>1)
                         pageStack.pop()

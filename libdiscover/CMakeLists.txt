@@ -10,6 +10,10 @@ set(discovercommon_SRCS
     Category/Category.cpp
     Category/CategoryModel.cpp
     Category/CategoriesReader.cpp
+    network/HttpClient.cpp
+    network/HttpRequest.cpp
+    network/HttpResponse.cpp
+    network/networkutils.cpp
     ReviewsBackend/AbstractReviewsBackend.cpp
     ReviewsBackend/Rating.cpp
     ReviewsBackend/Review.cpp
@@ -31,6 +35,9 @@ set(discovercommon_SRCS
     resources/AbstractBackendUpdater.cpp
     resources/AbstractSourcesBackend.cpp
     resources/StoredResultsStream.cpp
+    resources/bannerresourcemodel.cpp
+    resources/bannerappresource.cpp
+    resources/AppResItem.cpp
     ActionsModel.cpp
     DiscoverBackendsFactory.cpp
     ScreenshotsModel.cpp
@@ -69,6 +76,7 @@ PUBLIC
     Qt5::Widgets
     KF5::I18n
     KF5::ItemModels
+    Qt5::Concurrent
 PRIVATE
     Qt5::Xml
     KF5::CoreAddons
@@ -80,5 +88,6 @@ generate_export_header(DiscoverCommon)
 
 target_include_directories(DiscoverCommon PRIVATE ${PHONON_INCLUDES} PUBLIC ${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR})
 
+remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 install(TARGETS DiscoverCommon DESTINATION ${CMAKE_INSTALL_LIBDIR}/plasma-discover)
 install(FILES resources/discoverabstractnotifier.notifyrc DESTINATION ${KNOTIFYRC_INSTALL_DIR})

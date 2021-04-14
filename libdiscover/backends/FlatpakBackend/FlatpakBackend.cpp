@@ -94,7 +94,9 @@ FlatpakBackend::FlatpakBackend(QObject* parent)
     }
 
     connect(m_reviews.data(), &OdrsReviewsBackend::ratingsReady, this, [this] {
-        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_resources.values(), [] (AbstractResource* r) { return r; }));
+        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_resources.values(), [] (AbstractResource* r) {
+            return r;
+        }));
     });
 
     /* Override the umask to 022 to make it possible to share files between
@@ -108,7 +110,7 @@ FlatpakBackend::FlatpakBackend(QObject* parent)
 FlatpakBackend::~FlatpakBackend()
 {
     g_cancellable_cancel(m_cancellable);
-    for(auto inst : qAsConst(m_installations))
+    for (auto inst : qAsConst(m_installations))
         g_object_unref(inst);
     if (!m_threadPool.waitForDone(200)) {
         qDebug() << "could not kill them all" << m_threadPool.activeThreadCount();
@@ -125,7 +127,7 @@ bool FlatpakBackend::isValid() const
 
 class FlatpakFetchRemoteResourceJob : public QNetworkAccessManager
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     FlatpakFetchRemoteResourceJob(const QUrl &url, FlatpakBackend *backend)
         : QNetworkAccessManager(backend)
@@ -179,7 +181,7 @@ public:
                     Q_EMIT jobFinished(false, nullptr);
                 }
             }
-            );
+                   );
         });
     }
 
@@ -216,11 +218,11 @@ FlatpakInstalledRef * FlatpakBackend::getInstalledRefForApp(FlatpakResource *res
     const auto type = resource->resourceType() == FlatpakResource::DesktopApp ? FLATPAK_REF_KIND_APP : FLATPAK_REF_KIND_RUNTIME;
 
     FlatpakInstalledRef *ref = flatpak_installation_get_installed_ref(resource->installation(),
-                                                 type,
-                                                 resource->flatpakName().toUtf8().constData(),
-                                                 resource->arch().toUtf8().constData(),
-                                                 resource->branch().toUtf8().constData(),
-                                                 m_cancellable, &localError);
+                               type,
+                               resource->flatpakName().toUtf8().constData(),
+                               resource->arch().toUtf8().constData(),
+                               resource->branch().toUtf8().constData(),
+                               m_cancellable, &localError);
     return ref;
 }
 
@@ -246,7 +248,7 @@ FlatpakResource * FlatpakBackend::getRuntimeForApp(FlatpakResource *resource) co
         return runtime;
     }
 
-    for(auto it = m_resources.constBegin(), itEnd = m_resources.constEnd(); it!=itEnd; ++it) {
+    for (auto it = m_resources.constBegin(), itEnd = m_resources.constEnd(); it!=itEnd; ++it) {
         const auto& id = it.key();
         if (id.type == FlatpakResource::Runtime && id.id == runtimeInfo.at(0) && id.branch == runtimeInfo.at(2)) {
             runtime = *it;
@@ -790,7 +792,7 @@ void FlatpakBackend::loadLocalUpdates(FlatpakInstallation *flatpakInstallation)
 void FlatpakBackend::loadRemoteUpdates(FlatpakInstallation* installation)
 {
     auto fw = new QFutureWatcher<GPtrArray *>(this);
-    connect(fw, &QFutureWatcher<GPtrArray *>::finished, this, [this, installation, fw](){
+    connect(fw, &QFutureWatcher<GPtrArray *>::finished, this, [this, installation, fw]() {
         g_autoptr(GPtrArray) refs = fw->result();
         onFetchUpdatesFinished(installation, refs);
         fw->deleteLater();
@@ -907,7 +909,9 @@ void FlatpakBackend::refreshAppstreamMetadata(FlatpakInstallation *installation,
 {
     FlatpakRefreshAppstreamMetadataJob *job = new FlatpakRefreshAppstreamMetadataJob(installation, remote);
     connect(job, &FlatpakRefreshAppstreamMetadataJob::jobRefreshAppstreamMetadataFailed, this, &FlatpakBackend::metadataRefreshed);
-    connect(job, &FlatpakRefreshAppstreamMetadataJob::jobRefreshAppstreamMetadataFailed, this, [this] (const QString &errorMessage) { Q_EMIT passiveMessage(errorMessage); });
+    connect(job, &FlatpakRefreshAppstreamMetadataJob::jobRefreshAppstreamMetadataFailed, this, [this] (const QString &errorMessage) {
+        Q_EMIT passiveMessage(errorMessage);
+    });
     connect(job, &FlatpakRefreshAppstreamMetadataJob::jobRefreshAppstreamMetadataFinished, this, &FlatpakBackend::integrateRemote);
     connect(job, &FlatpakRefreshAppstreamMetadataJob::finished, this, [this] { acquireFetching(false); });
 
@@ -1148,8 +1152,8 @@ int FlatpakBackend::updatesCount() const
 bool FlatpakBackend::flatpakResourceLessThan(AbstractResource* l, AbstractResource* r) const
 {
     return (l->isInstalled() != r->isInstalled()) ? l->isInstalled()
-         : (l->origin() != r->origin()) ? m_sources->originIndex(l->origin()) < m_sources->originIndex(r->origin())
-         : l < r;
+           : (l->origin() != r->origin()) ? m_sources->originIndex(l->origin()) < m_sources->originIndex(r->origin())
+           : l < r;
 }
 
 ResultsStream * FlatpakBackend::search(const AbstractResourcesBackend::Filters &filter)
@@ -1168,7 +1172,7 @@ ResultsStream * FlatpakBackend::search(const AbstractResourcesBackend::Filters &
         fetchResourceJob->start();
 
         return stream;
-    } else if(filter.resourceUrl.scheme() == QLatin1String("appstream")) {
+    } else if (filter.resourceUrl.scheme() == QLatin1String("appstream")) {
         return findResourceByPackageName(filter.resourceUrl);
     } else if (!filter.resourceUrl.isEmpty() || (!filter.extends.isEmpty() && !m_extends.contains(filter.extends)))
         return new ResultsStream(QStringLiteral("FlatpakStream-void"), {});
@@ -1192,7 +1196,9 @@ ResultsStream * FlatpakBackend::search(const AbstractResourcesBackend::Filters &
                 ret += r;
             }
         }
-        auto f = [this](AbstractResource* l, AbstractResource* r) { return flatpakResourceLessThan(l,r); };
+        auto f = [this](AbstractResource* l, AbstractResource* r) {
+            return flatpakResourceLessThan(l,r);
+        };
         std::sort(ret.begin(), ret.end(), f);
         if (!ret.isEmpty())
             Q_EMIT stream->resourcesFound(ret);
@@ -1223,7 +1229,9 @@ QVector<AbstractResource *> FlatpakBackend::resourcesByAppstreamName(const QStri
             }
         }
     }
-    auto f = [this](AbstractResource* l, AbstractResource* r) { return flatpakResourceLessThan(l, r); };
+    auto f = [this](AbstractResource* l, AbstractResource* r) {
+        return flatpakResourceLessThan(l, r);
+    };
     std::sort(resources.begin(), resources.end(), f);
     return resources;
 }
@@ -1237,7 +1245,9 @@ ResultsStream * FlatpakBackend::findResourceByPackageName(const QUrl &url)
         else {
             auto stream = new ResultsStream(QStringLiteral("FlatpakStream"));
             auto f = [this, stream, appstreamIds] () {
-                const auto resources = kAppend<QVector<AbstractResource*>>(appstreamIds, [this] (const QString &appstreamId) { return resourcesByAppstreamName(appstreamId); });
+                const auto resources = kAppend<QVector<AbstractResource*>>(appstreamIds, [this] (const QString &appstreamId) {
+                    return resourcesByAppstreamName(appstreamId);
+                });
                 if (!resources.isEmpty())
                     Q_EMIT stream->resourcesFound(resources);
                 stream->finish();

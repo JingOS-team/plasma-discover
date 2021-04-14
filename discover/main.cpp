@@ -52,24 +52,24 @@ QCommandLineParser* createParser()
 
 void processArgs(QCommandLineParser* parser, DiscoverObject* mainWindow)
 {
-    if(parser->isSet(QStringLiteral("application")))
+    if (parser->isSet(QStringLiteral("application")))
         mainWindow->openApplication(QUrl(parser->value(QStringLiteral("application"))));
-    else if(parser->isSet(QStringLiteral("mime")))
+    else if (parser->isSet(QStringLiteral("mime")))
         mainWindow->openMimeType(parser->value(QStringLiteral("mime")));
-    else if(parser->isSet(QStringLiteral("category")))
+    else if (parser->isSet(QStringLiteral("category")))
         mainWindow->openCategory(parser->value(QStringLiteral("category")));
-    else if(parser->isSet(QStringLiteral("mode")))
+    else if (parser->isSet(QStringLiteral("mode")))
         mainWindow->openMode(parser->value(QStringLiteral("mode")));
     else
         mainWindow->openMode(QStringLiteral("Browsing"));
 
-    if(parser->isSet(QStringLiteral("search")))
+    if (parser->isSet(QStringLiteral("search")))
         Q_EMIT mainWindow->openSearch(parser->value(QStringLiteral("search")));
 
-    if(parser->isSet(QStringLiteral("local-filename")))
+    if (parser->isSet(QStringLiteral("local-filename")))
         mainWindow->openLocalPackage(QUrl::fromUserInput(parser->value(QStringLiteral("local-filename")), {}, QUrl::AssumeLocalFile));
 
-    foreach(const QString &arg, parser->positionalArguments()) {
+    foreach (const QString &arg, parser->positionalArguments()) {
         const QUrl url = QUrl::fromUserInput(arg, {}, QUrl::AssumeLocalFile);
         if (url.isLocalFile())
             mainWindow->openLocalPackage(url);
@@ -101,8 +101,8 @@ int main(int argc, char** argv)
     about.setProgramLogo(app.windowIcon());
 
     about.setTranslator(
-            i18ndc(nullptr, "NAME OF TRANSLATORS", "Your names"),
-            i18ndc(nullptr, "EMAIL OF TRANSLATORS", "Your emails"));
+        i18ndc(nullptr, "NAME OF TRANSLATORS", "Your names"),
+        i18ndc(nullptr, "EMAIL OF TRANSLATORS", "Your emails"));
 
     KAboutData::setApplicationData(about);
 
@@ -113,10 +113,10 @@ int main(int argc, char** argv)
         about.processCommandLine(parser.data());
         DiscoverBackendsFactory::processCommandLine(parser.data(), parser->isSet(QStringLiteral("test")));
 
-        if(parser->isSet(QStringLiteral("listbackends"))) {
+        if (parser->isSet(QStringLiteral("listbackends"))) {
             QTextStream(stdout) << i18n("Available backends:\n");
             DiscoverBackendsFactory f;
-            foreach(const QString& name, f.allBackendNames(false, true))
+            foreach (const QString& name, f.allBackendNames(false, true))
                 QTextStream(stdout) << " * " << name << '\n';
             return 0;
         }
@@ -137,7 +137,7 @@ int main(int argc, char** argv)
             mainWindow = new DiscoverObject(s_decodeCompactMode->value(parser->value(QStringLiteral("compact")), DiscoverObject::Full), initialProperties);
         }
         QObject::connect(&app, &QCoreApplication::aboutToQuit, mainWindow, &DiscoverObject::deleteLater);
-        QObject::connect(service, &KDBusService::activateRequested, mainWindow, [mainWindow](const QStringList &arguments, const QString &/*workingDirectory*/){
+        QObject::connect(service, &KDBusService::activateRequested, mainWindow, [mainWindow](const QStringList &arguments, const QString &/*workingDirectory*/) {
 
 
             if (!mainWindow->rootObject())
@@ -159,15 +159,15 @@ int main(int argc, char** argv)
 
         processArgs(parser.data(), mainWindow);
 
-        if(parser->isSet(QStringLiteral("listmodes"))) {
+        if (parser->isSet(QStringLiteral("listmodes"))) {
             QTextStream(stdout) << i18n("Available modes:\n");
-            foreach(const QString& mode, mainWindow->modes())
+            foreach (const QString& mode, mainWindow->modes())
                 QTextStream(stdout) << " * " << mode << '\n';
             delete mainWindow;
             return 0;
         }
 
-        if(parser->isSet(QStringLiteral("feedback"))) {
+        if (parser->isSet(QStringLiteral("feedback"))) {
             QTextStream(stdout) << mainWindow->describeSources() << '\n';
             delete mainWindow;
             return 0;

@@ -43,14 +43,28 @@ public:
         m_model->appendRow(it);
     }
 
-    QAbstractItemModel* sources() override { return m_model; }
-    bool addSource(const QString& /*id*/) override { return false; }
-    bool removeSource(const QString& /*id*/) override { return false;}
-    QString idDescription() override { return QStringLiteral("Snap"); }
-    QVariantList actions() const override { return {}; }
+    QAbstractItemModel* sources() override {
+        return m_model;
+    }
+    bool addSource(const QString& /*id*/) override {
+        return false;
+    }
+    bool removeSource(const QString& /*id*/) override {
+        return false;
+    }
+    QString idDescription() override {
+        return QStringLiteral("Snap");
+    }
+    QVariantList actions() const override {
+        return {};
+    }
 
-    bool supportsAdding() const override { return false; }
-    bool canMoveSources() const override { return false; }
+    bool supportsAdding() const override {
+        return false;
+    }
+    bool canMoveSources() const override {
+        return false;
+    }
 
 private:
     QStandardItemModel* const m_model;
@@ -62,7 +76,9 @@ SnapBackend::SnapBackend(QObject* parent)
     , m_reviews(AppStreamIntegration::global()->reviews())
 {
     connect(m_reviews.data(), &OdrsReviewsBackend::ratingsReady, this, [this] {
-        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_resources.values(), [] (AbstractResource* r) { return r; }));
+        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_resources.values(), [] (AbstractResource* r) {
+            return r;
+        }));
     });
 
     //make sure we populate the installed resources first
@@ -85,7 +101,9 @@ int SnapBackend::updatesCount() const
     return m_updater->updatesCount();
 }
 
-static ResultsStream* voidStream() { return new ResultsStream(QStringLiteral("Snap-void"), {}); }
+static ResultsStream* voidStream() {
+    return new ResultsStream(QStringLiteral("Snap-void"), {});
+}
 
 ResultsStream * SnapBackend::search(const AbstractResourcesBackend::Filters& filters)
 {
@@ -96,7 +114,9 @@ ResultsStream * SnapBackend::search(const AbstractResourcesBackend::Filters& fil
     } else if (filters.category && filters.category->isAddons()) {
         return voidStream();
     } else if (filters.state >= AbstractResource::Installed || filters.origin == QLatin1String("Snap")) {
-        std::function<bool(const QSharedPointer<QSnapdSnap>&)> f = [filters](const QSharedPointer<QSnapdSnap>& s) { return filters.search.isEmpty() || s->name().contains(filters.search, Qt::CaseInsensitive) || s->description().contains(filters.search, Qt::CaseInsensitive); };
+        std::function<bool(const QSharedPointer<QSnapdSnap>&)> f = [filters](const QSharedPointer<QSnapdSnap>& s) {
+            return filters.search.isEmpty() || s->name().contains(filters.search, Qt::CaseInsensitive) || s->description().contains(filters.search, Qt::CaseInsensitive);
+        };
         return populateWithFilter(m_client.getSnaps(), f);
     } else if (!filters.search.isEmpty()) {
         return populate(m_client.find(QSnapdClient::FindFlag::None, filters.search));
@@ -110,21 +130,25 @@ ResultsStream * SnapBackend::findResourceByPackageName(const QUrl& search)
     return search.scheme() == QLatin1String("snap")      ? populate(m_client.find(QSnapdClient::MatchName, search.host())) :
 #ifdef SNAP_FIND_COMMON_ID
            search.scheme() == QLatin1String("appstream") ? populate(kTransform<QVector<QSnapdFindRequest*>>(AppStreamUtils::appstreamIds(search),
-                                                                                [this] (const QString &id) {return m_client.find(QSnapdClient::MatchCommonId, id); })) :
+    [this] (const QString &id) {
+        return m_client.find(QSnapdClient::MatchCommonId, id);
+    })) :
 #endif
-                voidStream();
+        voidStream();
 }
 
 template <class T>
 ResultsStream* SnapBackend::populate(T* job)
 {
-    return populate<T>(QVector<T*>{job});
+    return populate<T>(QVector<T*> {job});
 }
 
 template <class T>
 ResultsStream* SnapBackend::populate(const QVector<T*>& jobs)
 {
-    std::function<bool(const QSharedPointer<QSnapdSnap>&)> acceptAll = [](const QSharedPointer<QSnapdSnap>&){ return true; };
+    std::function<bool(const QSharedPointer<QSnapdSnap>&)> acceptAll = [](const QSharedPointer<QSnapdSnap>&) {
+        return true;
+    };
     return populateJobsWithFilter(jobs, acceptAll);
 }
 
@@ -211,13 +235,13 @@ Transaction* SnapBackend::installApplication(AbstractResource* app, const AddonL
 Transaction* SnapBackend::installApplication(AbstractResource* _app)
 {
     auto app = qobject_cast<SnapResource*>(_app);
-	return new SnapTransaction(&m_client, app, Transaction::InstallRole, AbstractResource::Installed);
+    return new SnapTransaction(&m_client, app, Transaction::InstallRole, AbstractResource::Installed);
 }
 
 Transaction* SnapBackend::removeApplication(AbstractResource* _app)
 {
     auto app = qobject_cast<SnapResource*>(_app);
-	return new SnapTransaction(&m_client, app, Transaction::RemoveRole, AbstractResource::None);
+    return new SnapTransaction(&m_client, app, Transaction::RemoveRole, AbstractResource::None);
 }
 
 QString SnapBackend::displayName() const
@@ -228,7 +252,7 @@ QString SnapBackend::displayName() const
 void SnapBackend::refreshStates()
 {
     auto ret = new StoredResultsStream({populate(m_client.getSnaps())});
-    connect(ret, &StoredResultsStream::finishedResources, this, [this] (const QVector<AbstractResource*>& resources){
+    connect(ret, &StoredResultsStream::finishedResources, this, [this] (const QVector<AbstractResource*>& resources) {
         for (auto res: qAsConst(m_resources)) {
             if (resources.contains(res))
                 res->setState(AbstractResource::Installed);

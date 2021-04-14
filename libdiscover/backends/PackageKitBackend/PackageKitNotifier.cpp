@@ -34,7 +34,7 @@ PackageKitNotifier::PackageKitNotifier(QObject* parent)
     connect(PackageKit::Daemon::global(), &PackageKit::Daemon::updatesChanged, this, &PackageKitNotifier::recheckSystemUpdateNeeded);
     connect(PackageKit::Daemon::global(), &PackageKit::Daemon::transactionListChanged, this, &PackageKitNotifier::transactionListChanged);
     connect(PackageKit::Daemon::global(), &PackageKit::Daemon::restartScheduled, this, &PackageKitNotifier::nowNeedsReboot);
-    connect(PackageKit::Daemon::global()->offline(), &PackageKit::Offline::changed, this, [this]{
+    connect(PackageKit::Daemon::global()->offline(), &PackageKit::Offline::changed, this, [this] {
         if (PackageKit::Daemon::global()->offline()->updateTriggered())
             nowNeedsReboot();
     });
@@ -76,9 +76,9 @@ PackageKitNotifier::PackageKitNotifier(QObject* parent)
     watcher->addPath(QStringLiteral(PK_OFFLINE_ACTION_FILENAME));
     connect(watcher, &QFileSystemWatcher::fileChanged, this, &PackageKitNotifier::nowNeedsReboot);
 
-    QTimer::singleShot(100, this, [this](){
-    if (QFile::exists(QStringLiteral(PK_OFFLINE_ACTION_FILENAME)))
-        nowNeedsReboot();
+    QTimer::singleShot(100, this, [this]() {
+        if (QFile::exists(QStringLiteral(PK_OFFLINE_ACTION_FILENAME)))
+            nowNeedsReboot();
     });
 }
 
@@ -114,7 +114,7 @@ void PackageKitNotifier::checkOfflineUpdates()
         });
         connect(notification, &KNotification::action2Activated, this, [this] () {
             auto trans = PackageKit::Daemon::global()->repairSystem();
-            connect(trans, &PackageKit::Transaction::errorCode, this, [](PackageKit::Transaction::Error /*error*/, const QString &details){
+            connect(trans, &PackageKit::Transaction::errorCode, this, [](PackageKit::Transaction::Error /*error*/, const QString &details) {
                 KNotification::event(QStringLiteral("offlineupdate-repair-failed"), i18n("Repair Failed"), i18n("Please report to your distribution: %1", details), {}, KNotification::Persistent, QStringLiteral("org.kde.discovernotifier"));
             });
         });
@@ -173,14 +173,14 @@ void PackageKitNotifier::package(PackageKit::Transaction::Info info, const QStri
     PackageKit::Transaction * trans = qobject_cast<PackageKit::Transaction *>(sender());
 
     switch (info) {
-        case PackageKit::Transaction::InfoBlocked:
-            break; //skip, we ignore blocked updates
-        case PackageKit::Transaction::InfoSecurity:
-            trans->setProperty("securityUpdates", trans->property("securityUpdates").toInt()+1);
-            break;
-        default:
-            trans->setProperty("normalUpdates", trans->property("normalUpdates").toInt()+1);
-            break;
+    case PackageKit::Transaction::InfoBlocked:
+        break; //skip, we ignore blocked updates
+    case PackageKit::Transaction::InfoSecurity:
+        trans->setProperty("securityUpdates", trans->property("securityUpdates").toInt()+1);
+        break;
+    default:
+        trans->setProperty("normalUpdates", trans->property("normalUpdates").toInt()+1);
+        break;
     }
 }
 
@@ -274,7 +274,7 @@ void PackageKitNotifier::transactionListChanged(const QStringList& tids)
             }
         });
         connect(t, &PackageKit::Transaction::requireRestart, this, &PackageKitNotifier::onRequireRestart);
-        connect(t, &PackageKit::Transaction::finished, this, [this, t](){
+        connect(t, &PackageKit::Transaction::finished, this, [this, t]() {
             auto restart = t->property("requireRestart");
             if (!restart.isNull()) {
                 auto restartEvent = PackageKit::Transaction::Restart(restart.toInt());

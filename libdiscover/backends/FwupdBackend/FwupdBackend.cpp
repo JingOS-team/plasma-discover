@@ -97,7 +97,7 @@ void FwupdBackend::addUpdates()
         return;
     }
 
-    for(uint i = 0; i < devices->len && !g_cancellable_is_cancelled(m_cancellable); i++)
+    for (uint i = 0; i < devices->len && !g_cancellable_is_cancelled(m_cancellable); i++)
     {
         FwupdDevice *device = (FwupdDevice *)g_ptr_array_index(devices, i);
 
@@ -122,7 +122,7 @@ void FwupdBackend::addUpdates()
             else
             {
                 QString longdescription;
-                for(uint j = 0; j < rels->len; j++)
+                for (uint j = 0; j < rels->len; j++)
                 {
                     FwupdRelease *release = (FwupdRelease *)g_ptr_array_index(rels, j);
                     if (!fwupd_release_get_description(release))
@@ -212,7 +212,7 @@ void FwupdBackend::handleError(GError *perror)
     //TODO: localise the error message
     if (perror && !g_error_matches(perror, FWUPD_ERROR, FWUPD_ERROR_INVALID_FILE) && !g_error_matches(perror, FWUPD_ERROR, FWUPD_ERROR_NOTHING_TO_DO)) {
         const QString msg = QString::fromUtf8(perror->message);
-        QTimer::singleShot(0, this, [this, msg](){
+        QTimer::singleShot(0, this, [this, msg]() {
             Q_EMIT passiveMessage(msg);
         });
         qWarning() << "Fwupd Error" << perror->code << perror->message;
@@ -248,7 +248,7 @@ static void fwupd_client_get_devices_cb (GObject */*source*/, GAsyncResult *res,
 
 void FwupdBackend::setDevices(GPtrArray *devices)
 {
-    for(uint i = 0; devices && i < devices->len; i++) {
+    for (uint i = 0; devices && i < devices->len; i++) {
         FwupdDevice *device = (FwupdDevice *) g_ptr_array_index(devices, i);
 
         if (!fwupd_device_has_flag (device, FWUPD_DEVICE_FLAG_SUPPORTED))
@@ -310,7 +310,7 @@ static void fwupd_client_refresh_remote_cb (GObject */*source*/, GAsyncResult *r
 
 void FwupdBackend::setRemotes(GPtrArray *remotes)
 {
-    for(uint i = 0; remotes && i < remotes->len; i++)
+    for (uint i = 0; remotes && i < remotes->len; i++)
     {
         FwupdRemote *remote = (FwupdRemote *)g_ptr_array_index(remotes, i);
         if (!fwupd_remote_get_enabled(remote))
@@ -361,7 +361,7 @@ ResultsStream* FwupdBackend::search(const AbstractResourcesBackend::Filters& fil
     auto stream = new ResultsStream(QStringLiteral("FwupdStream"));
     auto f = [this, stream, filter] () {
         QVector<AbstractResource*> ret;
-        foreach(AbstractResource* r, m_resources) {
+        foreach (AbstractResource* r, m_resources) {
             if (r->state() < filter.state)
                 continue;
 
@@ -410,7 +410,7 @@ Transaction* FwupdBackend::installApplication(AbstractResource* app, const Addon
 
 Transaction* FwupdBackend::installApplication(AbstractResource* app)
 {
-	return new FwupdTransaction(qobject_cast<FwupdResource*>(app), this);
+    return new FwupdTransaction(qobject_cast<FwupdResource*>(app), this);
 }
 
 Transaction* FwupdBackend::removeApplication(AbstractResource* /*app*/)
@@ -441,7 +441,7 @@ ResultsStream* FwupdBackend::resourceForFile(const QUrl& path)
             FwupdDevice *device = (FwupdDevice *)g_ptr_array_index(devices, 0);
             app = createRelease(device);
             app->setState(AbstractResource::None);
-            for(uint i = 1; i < devices->len; i++)
+            for (uint i = 1; i < devices->len; i++)
             {
                 FwupdDevice *device = (FwupdDevice *)g_ptr_array_index(devices, i);
                 FwupdResource* app_ = createRelease(device);

@@ -43,10 +43,10 @@ FlatpakResource::FlatpakResource(const AppStream::Component &component, FlatpakI
     : AbstractResource(parent)
     , m_appdata(component)
     , m_id({installation, QString(), FlatpakResource::DesktopApp, component.id(), QString(), QString() })
-    , m_downloadSize(0)
-    , m_installedSize(0)
-    , m_propertyStates({{DownloadSize, NotKnownYet}, {InstalledSize, NotKnownYet},{RequiredRuntime, NotKnownYet}})
-    , m_state(AbstractResource::None)
+, m_downloadSize(0)
+, m_installedSize(0)
+, m_propertyStates({{DownloadSize, NotKnownYet}, {InstalledSize, NotKnownYet},{RequiredRuntime, NotKnownYet}})
+, m_state(AbstractResource::None)
 {
     setObjectName(packageName());
 
@@ -132,8 +132,8 @@ void FlatpakResource::updateFromRef(FlatpakRef* ref)
     setCommit(QString::fromUtf8(flatpak_ref_get_commit(ref)));
     setFlatpakName(QString::fromUtf8(flatpak_ref_get_name(ref)));
     setType(flatpak_ref_get_kind(ref) == FLATPAK_REF_KIND_APP ? DesktopApp :
-                                          extends().isEmpty() ? Runtime
-                                                              : Extension);
+            extends().isEmpty() ? Runtime
+            : Extension);
     setObjectName(packageName());
 }
 
@@ -179,8 +179,8 @@ QVariant FlatpakResource::icon() const
         ret = QIcon(m_bundledIcon);
     } else if (icons.isEmpty()) {
         ret = QIcon::fromTheme(QStringLiteral("package-x-generic"));
-    } else foreach(const AppStream::Icon &icon, icons) {
-        switch (icon.kind()) {
+    } else foreach (const AppStream::Icon &icon, icons) {
+            switch (icon.kind()) {
             case AppStream::Icon::KindLocal:
             case AppStream::Icon::KindCached: {
                 const QString path = m_iconPath + icon.url().path();
@@ -192,7 +192,8 @@ QVariant FlatpakResource::icon() const
                         ret.addFile(altPath, icon.size());
                     }
                 }
-            }   break;
+            }
+            break;
             case AppStream::Icon::KindStock: {
                 const auto ret = QIcon::fromTheme(icon.name());
                 if (!ret.isNull())
@@ -208,8 +209,8 @@ QVariant FlatpakResource::icon() const
             }
             case AppStream::Icon::KindUnknown:
                 break;
+            }
         }
-    }
 
     if (ret.isNull()) {
         ret = QIcon::fromTheme(QStringLiteral("package-x-generic"));
@@ -237,12 +238,12 @@ int FlatpakResource::installedSize() const
 AbstractResource::Type FlatpakResource::type() const
 {
     switch (m_id.type) {
-        case FlatpakResource::Runtime:
-            return Technical;
-        case FlatpakResource::Extension:
-            return Addon;
-        default:
-            return Application;
+    case FlatpakResource::Runtime:
+        return Technical;
+    case FlatpakResource::Extension:
+        return Addon;
+    default:
+        return Application;
     }
 }
 
@@ -381,13 +382,13 @@ FlatpakResource::ResourceType FlatpakResource::resourceType() const
 QString FlatpakResource::typeAsString() const
 {
     switch (m_id.type) {
-        case FlatpakResource::Runtime:
-        case FlatpakResource::Extension:
-            return QLatin1String("runtime");
-        case FlatpakResource::DesktopApp:
-        case FlatpakResource::Source:
-        default:
-            return QLatin1String("app");
+    case FlatpakResource::Runtime:
+    case FlatpakResource::Extension:
+        return QLatin1String("runtime");
+    case FlatpakResource::DesktopApp:
+    case FlatpakResource::Source:
+    default:
+        return QLatin1String("app");
     }
 }
 
@@ -571,7 +572,7 @@ QString FlatpakResource::sourceIcon() const
     return iconUrl;
 }
 
-    QString FlatpakResource::author() const
+QString FlatpakResource::author() const
 {
     return m_appdata.developerName();
 }

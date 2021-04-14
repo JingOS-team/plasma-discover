@@ -20,7 +20,7 @@ class StandardBackendUpdater;
 class SnapResource;
 class SnapBackend : public AbstractResourcesBackend
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit SnapBackend(QObject* parent = nullptr);
     ~SnapBackend() override;
@@ -32,15 +32,23 @@ public:
     int updatesCount() const override;
     AbstractBackendUpdater* backendUpdater() const override;
     AbstractReviewsBackend* reviewsBackend() const override;
-    bool isValid() const override { return m_valid; }
+    bool isValid() const override {
+        return m_valid;
+    }
 
     Transaction* installApplication(AbstractResource* app) override;
     Transaction* installApplication(AbstractResource* app, const AddonList& addons) override;
     Transaction* removeApplication(AbstractResource* app) override;
-    bool isFetching() const override { return m_fetching; }
+    bool isFetching() const override {
+        return m_fetching;
+    }
     void checkForUpdates() override {}
-    bool hasApplications() const override { return true; }
-    QSnapdClient* client() { return &m_client; }
+    bool hasApplications() const override {
+        return true;
+    }
+    QSnapdClient* client() {
+        return &m_client;
+    }
     void refreshStates();
 
 Q_SIGNALS:

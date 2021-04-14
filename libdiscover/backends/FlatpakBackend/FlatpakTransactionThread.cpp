@@ -14,11 +14,11 @@ static int FLATPAK_CLI_UPDATE_FREQUENCY = 150;
 
 gboolean
 add_new_remote_cb(FlatpakTransaction */*object*/,
-               gint                /*reason*/,
-               gchar              *from_id,
-               gchar              *suggested_remote_name,
-               gchar              *url,
-               gpointer            user_data)
+                  gint                /*reason*/,
+                  gchar              *from_id,
+                  gchar              *suggested_remote_name,
+                  gchar              *url,
+                  gpointer            user_data)
 {
     FlatpakTransactionThread *obj = (FlatpakTransactionThread*) user_data;
 
@@ -47,9 +47,9 @@ progress_changed_cb (FlatpakTransactionProgress *progress,
 
 void
 new_operation_cb(FlatpakTransaction          */*object*/,
-               FlatpakTransactionOperation */*operation*/,
-               FlatpakTransactionProgress  *progress,
-               gpointer                     user_data)
+                 FlatpakTransactionOperation */*operation*/,
+                 FlatpakTransactionProgress  *progress,
+                 gpointer                     user_data)
 {
     FlatpakTransactionThread *obj = (FlatpakTransactionThread*) user_data;
 
@@ -60,10 +60,10 @@ new_operation_cb(FlatpakTransaction          */*object*/,
 
 void
 operation_error_cb(FlatpakTransaction          */*object*/,
-                    FlatpakTransactionOperation */*operation*/,
-                    GError                      *error,
-                    gint                         /*details*/,
-                    gpointer                     user_data)
+                   FlatpakTransactionOperation */*operation*/,
+                   GError                      *error,
+                   gint                         /*details*/,
+                   gpointer                     user_data)
 {
     FlatpakTransactionThread *obj = (FlatpakTransactionThread*) user_data;
     obj->addErrorMessage(QString::fromUtf8(error->message));
@@ -112,8 +112,8 @@ void FlatpakTransactionThread::run()
         bool correct = false;
         if (m_app->state() == AbstractResource::Upgradeable && m_app->isInstalled()) {
             correct = flatpak_transaction_add_update(m_transaction,
-                                              refName.toUtf8().constData(),
-                                              nullptr, nullptr, &localError);
+                      refName.toUtf8().constData(),
+                      nullptr, nullptr, &localError);
         } else {
             if (m_app->flatpakFileType() == QLatin1String("flatpak")) {
                 g_autoptr(GFile) file = g_file_new_for_path(m_app->resourceFile().toLocalFile().toUtf8().constData());
@@ -125,10 +125,10 @@ void FlatpakTransactionThread::run()
                 correct = flatpak_transaction_add_install_bundle(m_transaction, file, nullptr, &localError);
             } else {
                 correct = flatpak_transaction_add_install(m_transaction,
-                                                   m_app->origin().toUtf8().constData(),
-                                                   refName.toUtf8().constData(),
-                                                   nullptr,
-                                                   &localError);
+                          m_app->origin().toUtf8().constData(),
+                          refName.toUtf8().constData(),
+                          nullptr,
+                          &localError);
             }
         }
 
@@ -142,8 +142,8 @@ void FlatpakTransactionThread::run()
         }
     } else if (m_role == Transaction::Role::RemoveRole) {
         if (!flatpak_transaction_add_uninstall(m_transaction,
-                                            refName.toUtf8().constData(),
-                                            &localError)) {
+                                               refName.toUtf8().constData(),
+                                               &localError)) {
             m_result = false;
             m_errorMessage = QString::fromUtf8(localError->message);
             // We are done so we can set the progress to 100
@@ -169,8 +169,8 @@ void FlatpakTransactionThread::run()
                 g_autofree gchar *strRef = flatpak_ref_format_ref(ref);
                 qDebug() << "unused ref:" << strRef;
                 if (!flatpak_transaction_add_uninstall(transaction,
-                                            strRef,
-                                            &localError))
+                                                       strRef,
+                                                       &localError))
                 {
                     qDebug() << "failed to uninstall unused ref" << refName << localError->message;
                     break;

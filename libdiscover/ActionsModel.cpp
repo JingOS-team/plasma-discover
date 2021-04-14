@@ -24,7 +24,7 @@ QHash< int, QByteArray > ActionsModel::roleNames() const
 
 QVariant ActionsModel::data(const QModelIndex& index, int role) const
 {
-    if(!index.isValid() || role!=Qt::UserRole)
+    if (!index.isValid() || role!=Qt::UserRole)
         return QVariant();
     return QVariant::fromValue<QObject*>(m_filteredActions[index.row()]);
 }
@@ -49,9 +49,13 @@ void ActionsModel::reload()
 {
     QList<QAction*> actions = m_actions.value<QList<QAction*>>();
     if (m_priority>=0) {
-        actions = kFilter<QList<QAction*>>(actions, [this](QAction* action){ return action->priority() == m_priority; });
+        actions = kFilter<QList<QAction*>>(actions, [this](QAction* action) {
+            return action->priority() == m_priority;
+        });
     }
-    actions = kFilter<QList<QAction*>>(actions, [](QAction* action){ return action->isVisible(); });
+    actions = kFilter<QList<QAction*>>(actions, [](QAction* action) {
+        return action->isVisible();
+    });
     if (actions == m_filteredActions)
         return;
 
@@ -60,7 +64,7 @@ void ActionsModel::reload()
     m_filteredActions = actions;
     endResetModel();
 
-    for(auto a : qAsConst(m_filteredActions)) {
+    for (auto a : qAsConst(m_filteredActions)) {
         connect(a, &QAction::changed, this, &ActionsModel::reload, Qt::UniqueConnection);
     }
 }

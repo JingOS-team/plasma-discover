@@ -21,7 +21,7 @@ TransactionListener::TransactionListener(QObject *parent)
 
 void TransactionListener::cancel()
 {
-    if(!isCancellable()) {
+    if (!isCancellable()) {
         return;
     }
     m_transaction->cancel();
@@ -99,7 +99,7 @@ void TransactionListener::setTransaction(Transaction* trans)
         return;
     }
 
-    if(m_transaction) {
+    if (m_transaction) {
         disconnect(m_transaction, nullptr, this, nullptr);
     }
 
@@ -109,7 +109,7 @@ void TransactionListener::setTransaction(Transaction* trans)
     CheckChange change4(this, "progress");
 
     m_transaction = trans;
-    if(m_transaction) {
+    if (m_transaction) {
         connect(m_transaction, &Transaction::cancellableChanged, this, &TransactionListener::cancellableChanged);
         connect(m_transaction, &Transaction::statusChanged, this, &TransactionListener::transactionStatusChanged);
         connect(m_transaction, &Transaction::progressChanged, this, &TransactionListener::progressChanged);

@@ -14,9 +14,9 @@ class Category;
 class AbstractResourcesBackend;
 class DISCOVERCOMMON_EXPORT CategoriesReader
 {
-    public:
-        QVector<Category*> loadCategoriesPath(const QString& path);
-        QVector<Category*> loadCategoriesFile(AbstractResourcesBackend* backend);
+public:
+    QVector<Category*> loadCategoriesPath(const QString& path);
+    QVector<Category*> loadCategoriesFile(AbstractResourcesBackend* backend);
 };
 
 #endif // CATEGORIESREADER_H

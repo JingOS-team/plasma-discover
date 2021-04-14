@@ -61,7 +61,9 @@ void LocalFilePKResource::fetchDetails()
     PackageKit::Transaction* transaction2 = PackageKit::Daemon::getFilesLocal(m_path.toLocalFile());
     connect(transaction2, &PackageKit::Transaction::errorCode, this, &PackageKitResource::failedFetchingDetails);
     connect(transaction2, &PackageKit::Transaction::files, this, [this] (const QString &/*pkgid*/, const QStringList & files) {
-        const auto execIdx = kIndexOf(files, [](const QString& file) { return file.endsWith(QLatin1String(".desktop")) && file.contains(QLatin1String("usr/share/applications")); });
+        const auto execIdx = kIndexOf(files, [](const QString& file) {
+            return file.endsWith(QLatin1String(".desktop")) && file.contains(QLatin1String("usr/share/applications"));
+        });
         if (execIdx >= 0)
             m_exec = files[execIdx];
         else

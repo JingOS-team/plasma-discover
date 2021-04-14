@@ -28,8 +28,8 @@ public:
     AbstractResourcesBackend* backendByName(ResourcesModel* m, const QString& name)
     {
         QVector<AbstractResourcesBackend*> backends = m->backends();
-        foreach(AbstractResourcesBackend* backend, backends) {
-            if(QLatin1String(backend->metaObject()->className()) == name) {
+        foreach (AbstractResourcesBackend* backend, backends) {
+            if (QLatin1String(backend->metaObject()->className()) == name) {
                 return backend;
             }
         }
@@ -46,7 +46,7 @@ private Q_SLOTS:
     void init()
     {
         QVERIFY(m_appBackend);
-        while(m_appBackend->isFetching()) {
+        while (m_appBackend->isFetching()) {
             QSignalSpy spy(m_appBackend, &AbstractResourcesBackend::fetchingChanged);
             QVERIFY(spy.wait());
         }
@@ -91,7 +91,7 @@ private Q_SLOTS:
         QCOMPARE(m_appBackend->updatesCount(), m_appBackend->property("startElements").toInt());
         QCOMPARE(m->hasUpdates(), true);
 
-        for(int i=0, c=m->rowCount(); i<c; ++i) {
+        for (int i=0, c=m->rowCount(); i<c; ++i) {
             const QModelIndex resourceIdx = m->index(i,0);
             QVERIFY(resourceIdx.isValid());
 

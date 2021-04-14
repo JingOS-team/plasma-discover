@@ -17,9 +17,9 @@ class QProcess;
 
 class PackageKitNotifier : public BackendNotifierModule
 {
-Q_OBJECT
-Q_PLUGIN_METADATA(IID "org.kde.discover.BackendNotifierModule")
-Q_INTERFACES(BackendNotifierModule)
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.kde.discover.BackendNotifierModule")
+    Q_INTERFACES(BackendNotifierModule)
 public:
     explicit PackageKitNotifier(QObject* parent = nullptr);
     ~PackageKitNotifier() override;
@@ -28,7 +28,9 @@ public:
     bool hasSecurityUpdates() override;
     void recheckSystemUpdateNeeded() override;
     void refreshDatabase();
-    bool needsReboot() const override { return m_needsReboot; }
+    bool needsReboot() const override {
+        return m_needsReboot;
+    }
 
 private Q_SLOTS:
     void package(PackageKit::Transaction::Info info, const QString &packageID, const QString &summary);

@@ -37,24 +37,34 @@ public:
     AbstractReviewsBackend * reviewsBackend() const override;
     ResultsStream * search(const AbstractResourcesBackend::Filters & search) override;
     ResultsStream * findResourceByPackageName(const QUrl &search);
-    QList<FlatpakResource*> resources() const { return m_resources.values(); }
+    QList<FlatpakResource*> resources() const {
+        return m_resources.values();
+    }
     bool isValid() const override;
 
     Transaction* installApplication(AbstractResource* app) override;
     Transaction* installApplication(AbstractResource* app, const AddonList& addons) override;
     Transaction* removeApplication(AbstractResource* app) override;
-    bool isFetching() const override { return m_isFetching>0; }
+    bool isFetching() const override {
+        return m_isFetching>0;
+    }
     void checkForUpdates() override;
     QString displayName() const override;
-    bool hasApplications() const override { return true; }
+    bool hasApplications() const override {
+        return true;
+    }
     FlatpakResource * addSourceFromFlatpakRepo(const QUrl &url);
-    QStringList extends() const override { return m_extends; }
+    QStringList extends() const override {
+        return m_extends;
+    }
 
     FlatpakResource * addAppFromFlatpakBundle(const QUrl &url);
     FlatpakResource * addAppFromFlatpakRef(const QUrl &url);
     FlatpakResource * getAppForInstalledRef(FlatpakInstallation *flatpakInstallation, FlatpakInstalledRef *ref) const;
 
-    FlatpakSourcesBackend *sources() const { return m_sources; }
+    FlatpakSourcesBackend *sources() const {
+        return m_sources;
+    }
 
     bool updateAppSize(FlatpakResource *resource);
 
@@ -70,7 +80,9 @@ private:
     void metadataRefreshed();
     bool flatpakResourceLessThan(AbstractResource* l, AbstractResource* r) const;
     void announceRatingsReady();
-    FlatpakInstallation * preferredInstallation() const { return m_installations.constFirst(); }
+    FlatpakInstallation * preferredInstallation() const {
+        return m_installations.constFirst();
+    }
     void integrateRemote(FlatpakInstallation *flatpakInstallation, FlatpakRemote *remote);
     FlatpakRemote * getFlatpakRemoteByUrl(const QString &url, FlatpakInstallation *installation) const;
     FlatpakInstalledRef * getInstalledRefForApp(FlatpakResource *resource) const;

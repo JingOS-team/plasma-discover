@@ -119,8 +119,8 @@ QHash< int, QByteArray > PaginateModel::roleNames() const
 int PaginateModel::rowsByPageSize(int size) const
 {
     return d->m_hasStaticRowCount ? size
-        : !d->m_sourceModel ? 0
-        : qMin(d->m_sourceModel->rowCount() - d->m_firstItem, size);
+           : !d->m_sourceModel ? 0
+           : qMin(d->m_sourceModel->rowCount() - d->m_firstItem, size);
 }
 
 int PaginateModel::rowCount(const QModelIndex& parent) const

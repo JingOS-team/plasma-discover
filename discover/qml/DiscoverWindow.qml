@@ -4,12 +4,13 @@ import QtQuick.Controls 2.14
 import org.kde.discover 2.0
 import org.kde.discover.app 1.0
 import org.kde.kquickcontrolsaddons 2.0
-import org.kde.kirigami 2.5 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import "navigation.js" as Navigation
 
-Kirigami.ApplicationWindow
-{
+import "cus/"
+Kirigami.ApplicationWindow {
     id: window
+
     readonly property string topBrowsingComp: ("qrc:/qml/BrowsingPage.qml")
     readonly property string topInstalledComp: ("qrc:/qml/InstalledPage.qml")
     readonly property string topSearchComp: ("qrc:/qml/SearchPage.qml")
@@ -21,17 +22,15 @@ Kirigami.ApplicationWindow
 
     objectName: "DiscoverMainWindow"
     title: leftPage ? leftPage.title : ""
-
-    width: app.initialGeometry.width>=10 ? app.initialGeometry.width : Kirigami.Units.gridUnit * 45
-    height: app.initialGeometry.height>=10 ? app.initialGeometry.height : Kirigami.Units.gridUnit * 30
-
     visible: true
 
-    minimumWidth: 300
-    minimumHeight: 300
-
     pageStack.defaultColumnWidth: Kirigami.Units.gridUnit * 25
-    pageStack.globalToolBar.style: window.wideScreen ? Kirigami.ApplicationHeaderStyle.ToolBar : Kirigami.ApplicationHeaderStyle.Breadcrumb
+    pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
+    fastBlurMode:true
+    fastBlurOpacity:0.8
+    fastBlurColor:"#CCF7F7F7"
+    width: screen.width
+    height: screen.height
 
     readonly property var leftPage: window.stack.depth>0 ? window.stack.get(0) : null
 
@@ -77,6 +76,7 @@ Kirigami.ApplicationWindow
         text: ResourcesModel.updatesCount<=0 ? (ResourcesModel.isFetching ? i18n("Fetching updates...") : i18n("Up to date") ) : i18nc("Update section name", "Update (%1)", ResourcesModel.updatesCount)
         component: topUpdateComp
         objectName: "update"
+        visible: false
     }
     TopLevelPageData {
         id: aboutAction
@@ -103,7 +103,7 @@ Kirigami.ApplicationWindow
         // Don't need to show this action in mobile view since you can pull down
         // on the view to refresh, and this is the common and expected behavior
         //on that platform
-        visible: window.wideScreen
+        visible: false//window.wideScreen
         tooltip: shortcut
 
         shortcut: "Ctrl+R"
@@ -130,9 +130,9 @@ Kirigami.ApplicationWindow
         }
 
         function onOpenErrorPage(errorMessage) {
-            Navigation.clearStack()
+//            Navigation.clearStack()
             console.warn("error", errorMessage)
-            window.stack.push(errorPageComponent, { error: errorMessage, title: i18n("Sorry...") })
+//            window.stack.push(errorPageComponent, { error: errorMessage, title: i18n("Sorry...") })
         }
 
         function onPreventedClose() {
@@ -281,19 +281,24 @@ Kirigami.ApplicationWindow
     }
     contextDrawer: drawerObject.object
 
-    globalDrawer: DiscoverDrawer {
-        wideScreen: window.wideScreen
-    }
+//    globalDrawer: DiscoverDrawer {
+////        wideScreen: window.wideScreen
+//    }
 
-    onCurrentTopLevelChanged: {
-        window.pageStack.clear()
-        if (currentTopLevel)
-            window.pageStack.push(currentTopLevel, {}, window.status!==Component.Ready)
-    }
+//    onCurrentTopLevelChanged: {
+//        window.pageStack.clear()
+//        if (currentTopLevel){
+//            window.pageStack.push(currentTopLevel, {}, window.status!==Component.Ready)
+//        }
+//    }
 
     UnityLauncher {
         launcherId: "org.kde.discover.desktop"
         progressVisible: TransactionModel.count > 0
         progress: TransactionModel.progress
+    }
+
+    pageStack.initialPage: DiscoverMainPage {
+        id:mainPage
     }
 }

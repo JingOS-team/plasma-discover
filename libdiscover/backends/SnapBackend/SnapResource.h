@@ -18,9 +18,9 @@ class QSnapdClient;
 
 class SnapResource : public AbstractResource
 {
-Q_OBJECT
-Q_PROPERTY(QStringList objects MEMBER m_objects CONSTANT)
-Q_PROPERTY(QString channel READ channel WRITE setChannel NOTIFY channelChanged)
+    Q_OBJECT
+    Q_PROPERTY(QStringList objects MEMBER m_objects CONSTANT)
+    Q_PROPERTY(QString channel READ channel WRITE setChannel NOTIFY channelChanged)
 public:
     explicit SnapResource(QSharedPointer<QSnapdSnap> snap, AbstractResource::State state, SnapBackend* parent);
     ~SnapResource() override = default;
@@ -39,16 +39,22 @@ public:
     QString name() const override;
     QString packageName() const override;
     AbstractResource::Type type() const override;
-    bool canExecute() const override { return true; }
+    bool canExecute() const override {
+        return true;
+    }
     void invokeApplication() const override;
     void fetchChangelog() override;
     void fetchScreenshots() override;
     QString author() const override;
-    QList<PackageState> addonsInformation() override { return {}; }
+    QList<PackageState> addonsInformation() override {
+        return {};
+    }
     void setSnap(const QSharedPointer<QSnapdSnap> &snap);
 
     void setState(AbstractResource::State state);
-    QString sourceIcon() const override { return QStringLiteral("snap"); }
+    QString sourceIcon() const override {
+        return QStringLiteral("snap");
+    }
 
     QDate releaseDate() const override;
 
@@ -59,7 +65,9 @@ public:
     QString channel() const;
     void setChannel(const QString &channel);
 
-    QSharedPointer<QSnapdSnap> snap() const { return m_snap; }
+    QSharedPointer<QSnapdSnap> snap() const {
+        return m_snap;
+    }
 
 Q_SIGNALS:
     void channelChanged(const QString &channel);

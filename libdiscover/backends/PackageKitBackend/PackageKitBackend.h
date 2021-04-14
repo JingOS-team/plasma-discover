@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -18,6 +18,8 @@
 #include <QThreadPool>
 #include <PackageKit/Transaction>
 #include <AppStreamQt/pool.h>
+#include <QString>
+#include <Category/Category.h>
 
 class AppPackageKitResource;
 class PackageKitUpdater;
@@ -28,98 +30,120 @@ class PKResolveTransaction;
 class DISCOVERCOMMON_EXPORT PackageKitBackend : public AbstractResourcesBackend
 {
     Q_OBJECT
-    public:
-        explicit PackageKitBackend(QObject* parent = nullptr);
-        ~PackageKitBackend() override;
+    
+public:
+    explicit PackageKitBackend(QObject* parent = nullptr);
+    ~PackageKitBackend() override;
 
-        AbstractBackendUpdater* backendUpdater() const override;
-        AbstractReviewsBackend* reviewsBackend() const override;
-        QSet<AbstractResource*> resourcesByPackageName(const QString& name) const;
+    AbstractBackendUpdater* backendUpdater() const override;
+    AbstractReviewsBackend* reviewsBackend() const override;
+    QSet<AbstractResource*> resourcesByPackageName(const QString& name) const;
 
-        ResultsStream* search(const AbstractResourcesBackend::Filters & search) override;
-        PKResultsStream* findResourceByPackageName(const QUrl& search);
-        int updatesCount() const override;
-        bool hasSecurityUpdates() const override;
+    ResultsStream* search(const AbstractResourcesBackend::Filters & search) override;
+    PKResultsStream* findResourceByPackageName(const QUrl& search);
+    int updatesCount() const override;
+    bool hasSecurityUpdates() const override;
 
-        Transaction* installApplication(AbstractResource* app) override;
-        Transaction* installApplication(AbstractResource* app, const AddonList& addons) override;
-        Transaction* removeApplication(AbstractResource* app) override;
-        bool isValid() const override { return true; }
-        QSet<AbstractResource*> upgradeablePackages() const;
-        bool isFetching() const override;
+    Transaction* installApplication(AbstractResource* app) override;
+    Transaction* installApplication(AbstractResource* app, const AddonList& addons) override;
+    Transaction* removeApplication(AbstractResource* app) override;
+    bool isValid() const override {
+        return true;
+    }
+    QSet<AbstractResource*> upgradeablePackages() const;
+    bool isFetching() const override;
 
-        bool isPackageNameUpgradeable(const PackageKitResource* res) const;
-        QString upgradeablePackageId(const PackageKitResource* res) const;
-        QVector<AppPackageKitResource*> extendedBy(const QString& id) const;
+    bool isPackageNameUpgradeable(const PackageKitResource* res) const;
+    QString upgradeablePackageId(const PackageKitResource* res) const;
+    QVector<AppPackageKitResource*> extendedBy(const QString& id) const;
 
-        void resolvePackages(const QStringList &packageNames);
-        void fetchDetails(const QString& pkgid) { fetchDetails(QSet<QString>{pkgid}); }
-        void fetchDetails(const QSet<QString>& pkgid);
+    void resolvePackages(const QStringList &packageNames);
+    void fetchDetails(const QString& pkgid) {
+        fetchDetails(QSet<QString> {pkgid});
+    }
+    void fetchDetails(const QSet<QString>& pkgid);
 
-        void checkForUpdates() override;
-        QString displayName() const override;
+    void checkForUpdates() override;
+    QString displayName() const override;
 
-        bool hasApplications() const override { return true; }
-        static QString locateService(const QString &filename);
+    bool hasApplications() const override {
+        return true;
+    }
+    static QString locateService(const QString &filename);
 
-        QList<AppStream::Component> componentsById(const QString &id) const;
-        void fetchUpdates();
-        int fetchingUpdatesProgress() const override;
+    QList<AppStream::Component> componentsById(const QString &id) const;
+    void fetchUpdates();
+    int fetchingUpdatesProgress() const override;
 
-        void addPackageArch(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary);
-        void addPackageNotArch(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary);
+    void addPackageArch(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary);
+    void addPackageNotArch(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary);
+    void addPackageForPackageKit(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary);
 
-    public Q_SLOTS:
-        void reloadPackageList();
-        void transactionError(PackageKit::Transaction::Error, const QString& message);
 
-    private Q_SLOTS:
-        void getPackagesFinished();
-        void addPackage(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary, bool arch);
-        void packageDetails(const PackageKit::Details& details);
-        void addPackageToUpdate(PackageKit::Transaction::Info, const QString& pkgid, const QString& summary);
-        void getUpdatesFinished(PackageKit::Transaction::Exit,uint);
+public Q_SLOTS:
+    void reloadPackageList();
+    void transactionError(PackageKit::Transaction::Error, const QString& message);
 
-    Q_SIGNALS:
-        void loadedAppStream();
-        void available();
+private Q_SLOTS:
+    void getPackagesFinished();
+    void addPackage(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary, bool arch);
+    void packageDetails(const PackageKit::Details& details);
+    void addPackageToUpdate(PackageKit::Transaction::Info, const QString& pkgid, const QString& summary);
+    void getUpdatesFinished(PackageKit::Transaction::Exit,uint);
 
-    private:
-        friend class PackageKitResource;
-        template <typename T>
-        T resourcesByPackageNames(const QStringList& names) const;
+Q_SIGNALS:
+    void loadedAppStream();
+    void available();
 
-        void runWhenInitialized(const std::function<void()> &f, QObject* stream);
+private:
+    friend class PackageKitResource;
+    template <typename T>
+    T resourcesByPackageNames(const QStringList& names) const;
 
-        void checkDaemonRunning();
-        void acquireFetching(bool f);
-        void includePackagesToAdd();
-        void performDetailsFetch();
-        AppPackageKitResource* addComponent(const AppStream::Component& component, const QStringList& pkgNames);
-        void updateProxy();
+    void runWhenInitialized(const std::function<void()> &f, QObject* stream);
 
-        QScopedPointer<AppStream::Pool> m_appdata;
-        PackageKitUpdater* m_updater;
-        QPointer<PackageKit::Transaction> m_refresher;
-        int m_isFetching;
-        QSet<QString> m_updatesPackageId;
-        bool m_hasSecurityUpdates = false;
-        QSet<PackageKitResource*> m_packagesToAdd;
-        QSet<PackageKitResource*> m_packagesToDelete;
-        bool m_appstreamInitialized = false;
+    void checkDaemonRunning();
+    void acquireFetching(bool f);
+    void includePackagesToAdd();
+    void performDetailsFetch();
+    ResultsStream *getAppList(QString category,QString keyword,PKResultsStream * stream);
+    void showResource();
+    AppPackageKitResource* addComponent(const AppStream::Component& component, const QStringList& pkgNames);
+    void updateProxy();
 
-        struct {
-            QHash<QString, AbstractResource*> packages;
-            QHash<QString, QStringList> packageToApp;
-            QHash<QString, QVector<AppPackageKitResource*>> extendedBy;
-        } m_packages;
+    QScopedPointer<AppStream::Pool> m_appdata;
+    PackageKitUpdater* m_updater;
+    QPointer<PackageKit::Transaction> m_refresher;
+    int m_isFetching;
+    QSet<QString> m_updatesPackageId;
+    QSet<QString> m_packageKitId;
+    bool m_hasSecurityUpdates = false;
+    QSet<PackageKitResource*> m_packagesToAdd;
+    QSet<PackageKitResource*> m_packagesToDelete;
+    bool m_appstreamInitialized = false;
 
-        QTimer m_delayedDetailsFetch;
-        QSet<QString> m_packageNamesToFetchDetails;
-        QSharedPointer<OdrsReviewsBackend> m_reviews;
-        QPointer<PackageKit::Transaction> m_getUpdatesTransaction;
-        QThreadPool m_threadPool;
-        QPointer<PKResolveTransaction> m_resolveTransaction;
+    struct {
+        QHash<QString, AbstractResource*> packages;
+        QHash<QString, QStringList> packageToApp;
+        QHash<QString, QVector<AppPackageKitResource*>> extendedBy;
+    } m_packages;
+
+    struct ServerData {
+        QString appId;
+        QString appName;
+        QString banner;
+        QString icon;
+        QString name;
+        QString categoryDisplay;
+        QString comment;
+    };
+
+    QTimer m_delayedDetailsFetch;
+    QSet<QString> m_packageNamesToFetchDetails;
+    QSharedPointer<OdrsReviewsBackend> m_reviews;
+    QPointer<PackageKit::Transaction> m_getUpdatesTransaction;
+    QThreadPool m_threadPool;
+    QPointer<PKResolveTransaction> m_resolveTransaction;
 };
 
 #endif // PACKAGEKITBACKEND_H

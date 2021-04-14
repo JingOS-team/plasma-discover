@@ -12,9 +12,9 @@
 
 class DISCOVERNOTIFIERS_EXPORT UpgradeAction : public QObject
 {
-Q_OBJECT
-Q_PROPERTY(QString name READ name CONSTANT)
-Q_PROPERTY(QString description READ description CONSTANT)
+    Q_OBJECT
+    Q_PROPERTY(QString name READ name CONSTANT)
+    Q_PROPERTY(QString description READ description CONSTANT)
 public:
     UpgradeAction(const QString& name, const QString& description, QObject* parent)
         : QObject(parent)
@@ -22,10 +22,16 @@ public:
         , m_description(description)
     {}
 
-    QString name() const { return m_name; }
-    QString description() const { return m_description; }
+    QString name() const {
+        return m_name;
+    }
+    QString description() const {
+        return m_description;
+    }
 
-    void trigger() { Q_EMIT triggered(m_name); }
+    void trigger() {
+        Q_EMIT triggered(m_name);
+    }
 
 Q_SIGNALS:
     void triggered(const QString & name);
@@ -37,7 +43,7 @@ private:
 
 class DISCOVERNOTIFIERS_EXPORT BackendNotifierModule : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit BackendNotifierModule(QObject* parent = nullptr);
     ~BackendNotifierModule() override;

@@ -1,9 +1,10 @@
+
+
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                          2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
-
 import QtQuick 2.5
 import QtQuick.Controls 2.3
 import QtQuick.Window 2.1
@@ -12,393 +13,362 @@ import org.kde.discover 2.0
 import org.kde.discover.app 1.0
 import org.kde.kirigami 2.6 as Kirigami
 import "navigation.js" as Navigation
+import "cus/"
 
-DiscoverPage {
-    id: appInfo
-    property QtObject application: null
-    readonly property int visibleReviews: 3
-    title: appInfo.application.name
-    clip: true
+Column {
+    id: appDetailsRoot
 
-    // Usually this page is not the top level page, but when we are, isHome being
-    // true will ensure that the search field suggests we are searching in the list
-    // of available apps, not inside the app page itself. This will happen when
-    // Discover is launched e.g. from krunner or otherwise requested to show a
-    // specific application on launch.
-    readonly property bool isHome: true
-    function searchFor(text) {
-        if (text.length === 0)
-            return;
-        Navigation.openCategory(null, "")
-    }
+    property alias application: appInfo.application
+    readonly property alias visibleReviews: appInfo.visibleReviews
+    property var vLeftMargin: screen.width * 0.02
+    property var icon: ""
+    property var name: ""
+    property var categoryDisplay: ""
+    property var appSummary: ""
+    property var appScreenShots: []
+    property var description: ""
+    property var versionName: ""
+    property var pkgSize: ""
+    property var updateDate: ""
+    property var author: ""
+    property var homePage: ""
+    property var buttonTextType
+    property var currentUpdateModel
 
-    background: Rectangle {
-        color: Kirigami.Theme.backgroundColor
-        Kirigami.Theme.colorSet: Kirigami.Theme.View
-        Kirigami.Theme.inherit: false
-    }
+    TopBar {
+        id: topBar
 
-    ReviewsPage {
-        id: reviewsSheet
-        model: ReviewsModel {
-            id: reviewsModel
-            resource: appInfo.application
+        Layout.preferredWidth: 50
+        textCont: getLeftMenuName()
+        onBackClicked: {
+            exitDetailsActions()
         }
     }
 
-    contextualActions: [originsMenuAction]
+    DiscoverPage {
+        id: appInfo
 
-    ActionGroup {
-        id: sourcesGroup
-        exclusive: true
-    }
+        property QtObject application: null
+        readonly property int visibleReviews: 3
+        title: appInfo.application.name
+        clip: true
+        anchors {
+            left: parent.left
+            leftMargin: screen.width * 0.01
+            right: parent.right
+            rightMargin: screen.width * 0.02
+            top: topBar.bottom
+            topMargin: topBar.height + 40 + parent.height * 0.03 //parent.height * 0.08
+            bottom: appDetailsRoot.bottom
+            bottomMargin: parent.height * 0.03
+        }
 
-    Kirigami.Action {
-        id: originsMenuAction
+        // Usually this page is not the top level page, but when we are, isHome being
+        // true will ensure that the search field suggests we are searching in the list
+        // of available apps, not inside the app page itself. This will happen when
+        // Discover is launched e.g. from krunner or otherwise requested to show a
+        // specific application on launch.
+        readonly property bool isHome: true
+        function searchFor(text) {
+            if (text.length === 0)
+                return
+            Navigation.openCategory(null, "")
+        }
 
-        text: i18n("Sources")
-        visible: children.length>1
-        children: sourcesGroup.actions
-        readonly property var r0: Instantiator {
-            model: ResourcesProxyModel {
-                id: alternativeResourcesModel
-                allBackends: true
-                resourcesUrl: appInfo.application.url
-            }
-            delegate: Action {
-                ActionGroup.group: sourcesGroup
-                text: model.application.availableVersion ? i18n("%1 - %2", displayOrigin, model.application.availableVersion) : displayOrigin
-                icon.name: sourceIcon
-                checkable: true
-                checked: appInfo.application === model.application
-                onTriggered: if(index>=0) {
-                    var res = model.application
-                    console.assert(res)
-                    window.stack.pop()
-                    Navigation.openApplication(res)
+        background: RectDropshadow {
+            anchors.fill: parent
+            color: "#CCFFFFFF" //Kirigami.Theme.backgroundColor
+            Kirigami.Theme.colorSet: Kirigami.Theme.View
+            Kirigami.Theme.inherit: false
+            radius: 20
+        }
+
+        contextualActions: [originsMenuAction]
+
+        ActionGroup {
+            id: sourcesGroup
+
+            exclusive: true
+        }
+
+        Kirigami.Action {
+            id: originsMenuAction
+
+            text: i18n("Sources")
+            visible: false //children.length>1
+            children: sourcesGroup.actions
+            readonly property var r0: Instantiator {
+                model: ResourcesProxyModel {
+                    id: alternativeResourcesModel
+                    allBackends: true
+                    resourcesUrl: appInfo.application.url
+                }
+                delegate: Action {
+                    ActionGroup.group: sourcesGroup
+                    text: model.application.availableVersion ? i18n(
+                                                                   "%1 - %2",
+                                                                   displayOrigin,
+                                                                   model.application.availableVersion) : displayOrigin
+                    icon.name: sourceIcon
+                    checkable: true
+                    checked: appInfo.application === model.application
+                    onTriggered: if (index >= 0) {
+                                     var res = model.application
+                                     console.assert(res)
+                                     window.stack.pop()
+                                     Navigation.openApplication(res)
+                                 }
                 }
             }
         }
-    }
 
-    Kirigami.Action {
-        id: invokeAction
-        visible: application.isInstalled && application.canExecute && !appbutton.isActive
-        text: application.executeLabel
-        icon.name: "media-playback-start"
-        onTriggered: application.invokeApplication()
-    }
+        Kirigami.Action {
+            id: invokeAction
 
-    actions {
-        main: appbutton.action
-        right: appbutton.isActive ? appbutton.cancelAction : invokeAction
-    }
+            visible: false //application.isInstalled && application.canExecute && !appbutton.isActive
+            text: application.executeLabel
+            icon.name: "media-playback-start"
+            onTriggered: application.invokeApplication()
+        }
 
-    InstallApplicationButton {
-        id: appbutton
-        Layout.rightMargin: Kirigami.Units.smallSpacing
-        application: appInfo.application
-        visible: false
-    }
-
-    leftPadding: Kirigami.Units.largeSpacing * (applicationWindow().wideScreen ? 2 : 1)
-    rightPadding: Kirigami.Units.largeSpacing * (applicationWindow().wideScreen ? 2 : 1)
-    // Icon, name, caption, screenshots, description and reviews
-    ColumnLayout {
-        spacing: 0
-        RowLayout {
-            Kirigami.Icon {
-                Layout.preferredHeight: 80
-                Layout.preferredWidth: 80
-                source: appInfo.application.icon
-                Layout.rightMargin: Kirigami.Units.smallSpacing * 2
-            }
-            ColumnLayout {
-                spacing: 0
-                Kirigami.Heading {
-                    level: 1
-                    text: appInfo.application.name
-                    lineHeight: 1.0
-                    maximumLineCount: 1
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    Layout.alignment: Text.AlignBottom
+        InstallApplicationButton {
+            id: appbutton
+            
+            Layout.rightMargin: Kirigami.Units.smallSpacing
+            application: appInfo.application
+            width: parent.width / 10
+            height: width * 56 / 179
+            visible: true
+            text: {
+                if (buttonTextType === 1) {
+                    return installTextString
+                } else if (buttonTextType === 2) {
+                    return updateTextString
+                } else {
+                    return categoryTextString
                 }
-                RowLayout {
-                    spacing: Kirigami.Units.largeSpacing
-                    Rating {
-                        rating: appInfo.application.rating ? appInfo.application.rating.sortableRating : 0
-                        starSize: summary.font.pointSize
+            }
+            anchors {
+                right: parent.right
+                rightMargin: parent.width * 0.03
+                top: parent.top
+                topMargin: screen.height * 0.04
+            }
+            onUpdateButtonClicked: {
+                currentUpdateModel.updateResource(application)
+            }
+        }
+
+        leftPadding: vLeftMargin //Kirigami.Units.largeSpacing * (applicationWindow().wideScreen ? 2 : 1)
+        rightPadding: vLeftMargin //Kirigami.Units.largeSpacing * (applicationWindow().wideScreen ? 2 : 1)
+
+        Column {
+            spacing: 0
+            height: count > 0 ? appInfo.height + screen.height * 0.15 : appInfo.height
+            anchors {
+                bottom: appDetailsRoot.bottom
+            }
+            Row {
+                id: topRow
+                width: parent.width
+                height: 180
+                anchors {
+                    top: parent.top
+                    topMargin: screen.height * 0.03
+                }
+                Kirigami.Icon {
+                    id: appIcon
+                    width: 180
+                    height: 180
+                    source: icon //appInfo.application.icon
+                }
+                Column {
+                    id: clayout
+                    spacing: 11
+                    anchors {
+                        left: appIcon.right
+                        leftMargin: parent.width * 0.03
+                        right: parent.right
+                        verticalCenter: appIcon.verticalCenter
                     }
+                    Kirigami.Heading {
+                        id: namee
+                        level: 1
+                        text: name
+                        maximumLineCount: 1
+                        elide: Text.ElideRight
+                        font.pointSize: discoverMain.defaultFontSize + 21
+                        font.bold: true
+                        color: "black"
+                    }
+
                     Label {
-                        text: appInfo.application.rating ? i18np("%1 rating", "%1 ratings", appInfo.application.rating.ratingCount) : i18n("No ratings yet")
-                        opacity: 0.5
+                        text: categoryDisplay //appInfo.application.categoryDisplay
+                        font.pointSize: discoverMain.defaultFontSize + 4
+                        width: 100
+                        color: "black"
                     }
-                }
-                Kirigami.Heading {
-                    id: summary
-                    level: 4
-                    text: appInfo.application.comment
-                    maximumLineCount: 2
-                    lineHeight: lineCount > 1 ? 0.75 : 1.2
-                    elide: Text.ElideRight
-                    Layout.fillWidth: true
-                    Layout.alignment: Qt.AlignTop
-                }
-            }
-            Layout.bottomMargin: Kirigami.Units.largeSpacing
-        }
 
-        ApplicationScreenshots {
-            id: applicationScreenshots
-            Layout.fillWidth: true
-            visible: count > 0
-            resource: appInfo.application
-            ScrollBar.horizontal: screenshotsScrollbar
-        }
-        ScrollBar {
-            id: screenshotsScrollbar
-            Layout.fillWidth: true
-            visible: applicationScreenshots.count > 0
-        }
-
-        Label {
-            Layout.topMargin: Kirigami.Units.largeSpacing
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-            text: appInfo.application.longDescription
-            onLinkActivated: Qt.openUrlExternally(link);
-        }
-
-        Kirigami.Heading {
-            Layout.topMargin: Kirigami.Units.largeSpacing
-            text: i18n("What's New")
-            level: 2
-            visible: changelogLabel.text.length > 0
-        }
-
-        Kirigami.Separator {
-            Layout.fillWidth: true
-            height: 1
-            visible: changelogLabel.text.length > 0
-        }
-
-        Label {
-            id: changelogLabel
-            Layout.topMargin: Kirigami.Units.largeSpacing
-            Layout.fillWidth: true
-            wrapMode: Text.WordWrap
-
-            Component.onCompleted: appInfo.application.fetchChangelog()
-            Connections {
-                target: appInfo.application
-                function onChangelogFetched(changelog) {
-                    changelogLabel.text = changelog
-                }
-            }
-        }
-
-        Kirigami.LinkButton {
-            id: addonsButton
-            text: i18n("Addons")
-            visible: addonsView.containsAddons
-            onClicked: addonsView.sheetOpen = true
-        }
-
-
-        Kirigami.Heading {
-            Layout.fillWidth: true
-            Layout.topMargin: Kirigami.Units.largeSpacing
-            text: i18n("Reviews")
-            Layout.alignment: Qt.AlignLeft | Qt.AlignBottom
-            level: 2
-            visible: rep.count > 0
-        }
-
-        Kirigami.Separator {
-            Layout.fillWidth: true
-            height: 1
-            visible: rep.count > 0
-        }
-
-        Repeater {
-            id: rep
-            model: PaginateModel {
-                sourceModel: reviewsSheet.model
-                pageSize: visibleReviews
-            }
-            delegate: ReviewDelegate {
-                Layout.topMargin: Kirigami.Units.largeSpacing
-                Layout.fillWidth: true
-                separator: false
-                compact: true
-            }
-        }
-
-        RowLayout {
-            Layout.topMargin: Kirigami.Units.largeSpacing
-            Layout.bottomMargin: Kirigami.Units.largeSpacing
-            spacing: Kirigami.Units.largeSpacing
-
-            Button {
-                visible: reviewsModel.count > visibleReviews
-
-                text: i18np("Show %1 Review...", "Show All %1 Reviews...", reviewsModel.count)
-                icon.name: "view-visible"
-
-                onClicked: {
-                    reviewsSheet.open()
-                }
-            }
-
-            Button {
-                visible: reviewsModel.backend && reviewsModel.backend.isResourceSupported(appInfo.application)
-                enabled: appInfo.application.isInstalled
-
-                text: appInfo.application.isInstalled ? i18n("Write a Review") : i18n("Install to Write a Review")
-                icon.name: "document-edit"
-
-                onClicked: {
-                    reviewsSheet.openReviewDialog()
-                }
-            }
-        }
-
-        Repeater {
-            model: application.objects
-            delegate: Loader {
-                property QtObject resource: appInfo.application
-                source: modelData
-            }
-        }
-
-
-        // Details/metadata
-        Kirigami.Separator {
-            Layout.fillWidth: true
-            height: 1
-            Layout.bottomMargin: Kirigami.Units.largeSpacing
-        }
-        Kirigami.FormLayout {
-            Layout.fillWidth: true
-
-            // Category row
-            Label {
-                Kirigami.FormData.label: i18n("Category:")
-                visible: text.length > 0
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: appInfo.application.categoryDisplay
-            }
-
-            // Version row
-            Label {
-                readonly property string version: appInfo.application.isInstalled ? appInfo.application.installedVersion : appInfo.application.availableVersion
-                readonly property string releaseDate: appInfo.application.releaseDate.toLocaleDateString(Locale.ShortFormat)
-
-                function versionString() {
-                    if (version.length == 0) {
-                        return ""
-                    } else {
-                        if (releaseDate.length > 0) {
-                            return i18n("%1, released on %2", version, releaseDate)
-                        } else {
-                            return version
+                    Kirigami.Heading {
+                        id: summary
+                        level: 4
+                        text: appSummary //appInfo.application.comment
+                        maximumLineCount: 2
+                        // lineHeight: lineCount > 1 ? 0.75 : 1.2
+                        elide: Text.ElideRight
+                        Layout.fillWidth: true
+                        // Layout.alignment: Qt.AlignTop
+                        font.pointSize: discoverMain.defaultFontSize - 2
+                        color: "black"
+                        anchors {
+                            left: parent.left
+                            right: parent.right
+                            rightMargin: appbutton.rightMargin
                         }
                     }
                 }
-
-                Kirigami.FormData.label: i18n("Version:")
-                visible: text.length > 0
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                text: versionString()
             }
 
-            // Author row
-            Label {
-                Kirigami.FormData.label: i18n("Author:")
-                Layout.fillWidth: true
-                elide: Text.ElideRight
-                visible: text.length>0
-                text: appInfo.application.author
-            }
+            ApplicationScreenshots {
+                id: applicationScreenshots
 
-            // Size row
-            Label {
-                Kirigami.FormData.label: i18n("Size:")
                 Layout.fillWidth: true
-                Layout.alignment: Text.AlignTop
-                elide: Text.ElideRight
-                text: appInfo.application.sizeDescription
-            }
-
-            // Source row
-            Label {
-                Kirigami.FormData.label: i18n("Source:")
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
-                text: appInfo.application.displayOrigin
-                elide: Text.ElideRight
-            }
-
-            // License row
-            RowLayout {
-                Kirigami.FormData.label: i18n("License:")
-                visible: appInfo.application.licenses.length>0
-                Layout.fillWidth: true
-                Repeater {
-                    model: appInfo.application.licenses
-                    delegate: Kirigami.UrlButton {
-                        id: licenseButton
-                        horizontalAlignment: Text.AlignLeft
-                        ToolTip.text: i18n("See full license terms")
-                        ToolTip.visible: licenseButton.hovered
-                        text: modelData.name
-                        url: modelData.url
-                        enabled: url !== ""
-                    }
+                width: parent.width
+                height: count > 0 ? screen.height * 0.18 : 0
+                visible: count > 0
+                resource: appInfo.application
+                anchors {
+                    top: topRow.bottom
+                    topMargin: count > 0 ? screen.height * 0.04 : 0
                 }
             }
 
-            // "User Guide" row
-            Kirigami.UrlButton {
-                Kirigami.FormData.label: i18n ("Documentation:")
-                text: i18n("Read the user guide")
-                url: application.helpURL
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
+            Label {
+                id: appIntro
+
+                text: "Application Introduction"
+                color: '#FF000000'
+                font {
+                    pointSize: discoverMain.defaultFontSize + 9
+                    bold: true
+                }
+                width: parent.width
+                anchors {
+                    top: applicationScreenshots.bottom
+                    topMargin: screen.height * 0.04
+                }
             }
 
-            // Homepage row
-            Kirigami.UrlButton {
-                Kirigami.FormData.label: i18n("Get involved:")
-                text: i18n("Visit the app's website")
-                url: application.homepage
+            Label {
+                id: appIntroCont
+
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
+                width: parent.width
+                wrapMode: Text.WordWrap
+                text: description //appInfo.application.longDescription
+                onLinkActivated: Qt.openUrlExternally(link)
+                font.pointSize: discoverMain.defaultFontSize
+                Layout.rightMargin: appbutton.rightMargin
+                anchors {
+                    top: appIntro.bottom
+                    topMargin: screen.height * 0.02
+                    right: appbutton.right
+                    rightMargin: appbutton.rightMargin
+                }
             }
 
-            // Donate row
-            Kirigami.UrlButton {
-                text: i18n("Make a donation")
-                url: application.donationURL
-                Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
+            Label {
+                id: appDetails
+                
+                text: "Detailed information"
+                color: '#FF000000'
+                font {
+                    pointSize: discoverMain.defaultFontSize + 9
+                    bold: true
+                }
+                anchors {
+                    top: appIntroCont.bottom
+                    topMargin: screen.height * 0.04
+                }
             }
 
-            // "Report a Problem" row
-            Kirigami.UrlButton {
-                text: i18n("Report a problem")
-                url: application.bugURL
+            JFormLayout {
+                anchors {
+                    top: appDetails.bottom
+                }
                 Layout.fillWidth: true
-                horizontalAlignment: Text.AlignLeft
+
+                // Version row
+                Label {
+                    readonly property string version: appInfo.application.isInstalled ? appInfo.application.installedVersion : appInfo.application.availableVersion
+                    readonly property string releaseDate: appInfo.application.releaseDate.toLocaleDateString(
+                                                              Locale.ShortFormat)
+
+                    function versionString() {
+                        if (version.length == 0) {
+                            return ""
+                        } else {
+                            if (releaseDate.length > 0) {
+                                return i18n("%1, released on %2", version,
+                                            releaseDate)
+                            } else {
+                                return version
+                            }
+                        }
+                    }
+
+                    Kirigami.FormData.label: i18n("Edition")
+                    visible: text.length > 0
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    text: versionName //versionString()
+                    font.pointSize: discoverMain.defaultFontSize
+                }
+
+                // Size row
+                Label {
+                    Kirigami.FormData.label: i18n("Download size")
+                    Layout.fillWidth: true
+                    Layout.alignment: Text.AlignTop
+                    elide: Text.ElideRight
+                    text: pkgSize
+                    font.pointSize: discoverMain.defaultFontSize
+                }
+
+                // Update date
+                Label {
+                    Kirigami.FormData.label: i18n("Update date")
+                    Layout.fillWidth: true
+                    Layout.alignment: Text.AlignTop
+                    elide: Text.ElideRight
+                    text: updateDate
+                    font.pointSize: discoverMain.defaultFontSize
+                }
+
+                // Author row
+                Label {
+                    Kirigami.FormData.label: i18n("Developer")
+                    Layout.fillWidth: true
+                    elide: Text.ElideRight
+                    visible: text.length > 0
+                    text: author //appInfo.application.author
+                    font.pointSize: discoverMain.defaultFontSize
+                }
+
+                Label {
+                    Kirigami.FormData.label: i18n("Website")
+                    Layout.fillWidth: true
+                    // elide: Text.ElideRight
+                    visible: text.length > 0
+                    text: homePage //appInfo.application.author
+                    font.pointSize: discoverMain.defaultFontSize
+                }
             }
         }
-    }
 
-    readonly property var addons: AddonsView {
-        id: addonsView
-        application: appInfo.application
+        readonly property var addons: AddonsView {
+            id: addonsView
+            application: appInfo.application
+        }
     }
 }

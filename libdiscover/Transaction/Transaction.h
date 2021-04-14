@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Jonathan Thomas <echidnaman@kubuntu.org>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -21,7 +21,7 @@ class AbstractResource;
  * \class Transaction  Transaction.h "Transaction.h"
  *
  * \brief This is the base class of all transactions.
- * 
+ *
  * When there are transactions running inside Muon, the backends should
  * provide the corresponding Transaction objects with proper information.
  */
@@ -67,12 +67,13 @@ public:
         ///The transaction is going to remove a resource
         RemoveRole,
         ///The transaction is going to change the addons of a resource
-        ChangeAddonsRole
+        ChangeAddonsRole,
+        UpdateRole
     };
     Q_ENUM(Role)
 
     Transaction(QObject *parent, AbstractResource *resource,
-                 Transaction::Role role, const AddonList &addons = {});
+                Transaction::Role role, const AddonList &addons = {});
 
     ~Transaction() override;
 
@@ -138,10 +139,14 @@ public:
     bool isVisible() const;
     void setVisible(bool v);
 
-    quint64 downloadSpeed() const { return m_downloadSpeed; }
+    quint64 downloadSpeed() const {
+        return m_downloadSpeed;
+    }
     void setDownloadSpeed(quint64 downloadSpeed);
 
-    uint remainingTime() const { return m_remainingTime; }
+    uint remainingTime() const {
+        return m_remainingTime;
+    }
     void setRemainingTime(uint seconds);
 
     QString downloadSpeedString() const;
@@ -188,6 +193,8 @@ Q_SIGNALS:
     void downloadSpeedChanged(quint64 downloadSpeed);
 
     void remainingTimeChanged(uint remainingTime);
+    void transactionResult(AbstractResource *resource);
+
 };
 
 #endif // TRANSACTION_H

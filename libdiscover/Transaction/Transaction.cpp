@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Jonathan Thomas <echidnaman@kubuntu.org
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -26,7 +26,7 @@ Transaction::Transaction(QObject *parent, AbstractResource *resource,
 
 Transaction::~Transaction()
 {
-    if(status()<DoneStatus || TransactionModel::global()->contains(this)) {
+    if (status()<DoneStatus || TransactionModel::global()->contains(this)) {
         qCWarning(LIBDISCOVER_LOG) << "destroying Transaction before it's over" << this;
         TransactionModel::global()->removeTransaction(this);
     }
@@ -64,9 +64,13 @@ int Transaction::progress() const
 
 void Transaction::setStatus(Status status)
 {
-    if(m_status != status) {
+    if (m_status != status) {
         m_status = status;
         emit statusChanged(m_status);
+
+        if (m_status == DoneStatus) {
+            emit transactionResult(m_resource);
+        }
 
         if (m_status == DoneStatus || m_status == CancelledStatus || m_status == DoneWithErrorStatus) {
             setCancellable(false);
@@ -78,7 +82,7 @@ void Transaction::setStatus(Status status)
 
 void Transaction::setCancellable(bool isCancellable)
 {
-    if(m_isCancellable != isCancellable) {
+    if (m_isCancellable != isCancellable) {
         m_isCancellable = isCancellable;
         emit cancellableChanged(m_isCancellable);
     }
@@ -86,7 +90,7 @@ void Transaction::setCancellable(bool isCancellable)
 
 void Transaction::setProgress(int progress)
 {
-    if(m_progress != progress) {
+    if (m_progress != progress) {
         Q_ASSERT(qBound(0, progress, 100) == progress);
         m_progress = qBound(0, progress, 100);
         emit progressChanged(m_progress);

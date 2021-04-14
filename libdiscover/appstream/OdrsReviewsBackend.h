@@ -21,7 +21,7 @@ class CachedNetworkAccessManager;
 
 class DISCOVERCOMMON_EXPORT OdrsReviewsBackend : public AbstractReviewsBackend
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit OdrsReviewsBackend();
     ~OdrsReviewsBackend() override;
@@ -32,10 +32,14 @@ public:
     void registerAndLogin() override {}
 
     Rating * ratingForApplication(AbstractResource *app) const override;
-    bool hasCredentials() const override { return false; }
+    bool hasCredentials() const override {
+        return false;
+    }
     void deleteReview(Review *) override {}
     void fetchReviews(AbstractResource *app, int page = 1) override;
-    bool isFetching() const override { return m_isFetching; }
+    bool isFetching() const override {
+        return m_isFetching;
+    }
     void submitReview(AbstractResource *, const QString &summary, const QString &description, const QString &rating) override;
     void flagReview(Review *, const QString &, const QString &) override {}
     void submitUsefulness(Review *review, bool useful) override;

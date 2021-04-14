@@ -26,8 +26,12 @@ class FlatpakSourceItem : public QStandardItem
 {
 public:
     FlatpakSourceItem(const QString &text) : QStandardItem(text) { }
-    void setFlatpakInstallation(FlatpakInstallation *installation) { m_installation = installation; }
-    FlatpakInstallation *flatpakInstallation() const { return m_installation; }
+    void setFlatpakInstallation(FlatpakInstallation *installation) {
+        m_installation = installation;
+    }
+    FlatpakInstallation *flatpakInstallation() const {
+        return m_installation;
+    }
 
 private:
     FlatpakInstallation *m_installation;
@@ -42,7 +46,7 @@ FlatpakSourcesBackend::FlatpakSourcesBackend(const QVector<FlatpakInstallation *
 {
     m_flathubAction->setObjectName(QStringLiteral("flathub"));
     m_flathubAction->setToolTip(i18n("Makes it possible to easily install the applications listed in https://flathub.org"));
-    connect(m_flathubAction, &QAction::triggered, this, [this](){
+    connect(m_flathubAction, &QAction::triggered, this, [this]() {
         addSource(QStringLiteral("https://flathub.org/repo/flathub.flatpakrepo"));
     });
     for (auto installation : installations) {
@@ -301,7 +305,7 @@ void FlatpakSourcesBackend::addRemote(FlatpakRemote *remote, FlatpakInstallation
     const QUrl remoteUrl(QString::fromUtf8(flatpak_remote_get_url(remote)));
 
     const auto theActions = actions();
-    for(const QVariant& act: theActions) {
+    for (const QVariant& act: theActions) {
         QAction* action = qobject_cast<QAction*>(act.value<QObject*>());
         if (action->objectName() == id) {
             action->setEnabled(false);
@@ -329,7 +333,7 @@ void FlatpakSourcesBackend::addRemote(FlatpakRemote *remote, FlatpakInstallation
             idx = 0;
         } else {
             idx=0;
-            for(int c=m_sources->rowCount(); idx<c; ++idx) {
+            for (int c=m_sources->rowCount(); idx<c; ++idx) {
                 const auto compIt = m_sources->item(idx);
                 const int compIdx = ids.indexOf(compIt->data(IdRole).toString());
                 if (compIdx >= ourIdx) {

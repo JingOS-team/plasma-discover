@@ -34,7 +34,7 @@ QString FwupdResource::availableVersion() const
 
 QStringList FwupdResource::categories()
 {
-   return m_categories;
+    return m_categories;
 }
 
 QString FwupdResource::comment()
@@ -127,7 +127,7 @@ void FwupdResource::fetchChangelog()
 
 void FwupdResource::setState(AbstractResource::State state)
 {
-    if(m_state != state) {
+    if (m_state != state) {
         m_state = state;
         emit stateChanged();
     }
@@ -177,7 +177,7 @@ void FwupdResource::setDeviceDetails(FwupdDevice* dev)
         if (!vendorDesc.startsWith(vendorName))
             vendorDesc = vendorName + QLatin1Char(' ') + vendorDesc;
         m_displayName = vendorDesc;
-     }
+    }
     m_summary = QString::fromUtf8(fwupd_device_get_summary(dev));
     m_vendor = QString::fromUtf8(fwupd_device_get_vendor(dev));
     m_releaseDate = QDateTime::fromSecsSinceEpoch(fwupd_device_get_created(dev)).date();

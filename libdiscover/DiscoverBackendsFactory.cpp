@@ -47,14 +47,14 @@ QVector<AbstractResourcesBackend*> DiscoverBackendsFactory::backendForFile(const
 {
     QPluginLoader* loader = new QPluginLoader(QLatin1String("discover/") + libname, ResourcesModel::global());
 
-    //     qCDebug(LIBDISCOVER_LOG) << "trying to load plugin:" << loader->fileName();
+    qCDebug(LIBDISCOVER_LOG) << "qt---trying to load plugin:" << loader->fileName();
     AbstractResourcesBackendFactory* f = qobject_cast<AbstractResourcesBackendFactory*>(loader->instance());
-    if(!f) {
+    if (!f) {
         qCWarning(LIBDISCOVER_LOG) << "error loading" << libname << loader->errorString() << loader->metaData();
         return {};
     }
     auto instances = f->newInstance(ResourcesModel::global(), name);
-    if(instances.isEmpty()) {
+    if (instances.isEmpty()) {
         qCWarning(LIBDISCOVER_LOG) << "Couldn't find the backend: " << libname << "among" << allBackendNames(false, true);
         return instances;
     }
@@ -88,10 +88,12 @@ QStringList DiscoverBackendsFactory::allBackendNames(bool whitelist, bool allowD
 QVector<AbstractResourcesBackend*> DiscoverBackendsFactory::allBackends() const
 {
     QStringList names = allBackendNames();
-    auto ret = kTransform<QVector<AbstractResourcesBackend*>>(names, [this](const QString& name) { return backend(name); });
+    auto ret = kTransform<QVector<AbstractResourcesBackend*>>(names, [this](const QString& name) {
+        return backend(name);
+    });
     ret.removeAll(nullptr);
 
-    if(ret.isEmpty())
+    if (ret.isEmpty())
         qCWarning(LIBDISCOVER_LOG) << "Didn't find any Discover backend!";
     return ret;
 }
@@ -108,8 +110,9 @@ void DiscoverBackendsFactory::setupCommandLine(QCommandLineParser* parser)
 
 void DiscoverBackendsFactory::processCommandLine(QCommandLineParser* parser, bool test)
 {
-    QStringList backends = test ? QStringList{ QStringLiteral("dummy-backend") } : parser->value(QStringLiteral("backends")).split(QLatin1Char(','), Qt::SkipEmptyParts);
-    for(auto &backend: backends) {
+    QStringList backends = test ? QStringList{ QStringLiteral("dummy-backend") } :
+                           parser->value(QStringLiteral("backends")).split(QLatin1Char(','), Qt::SkipEmptyParts);
+    for (auto &backend: backends) {
         if (!backend.endsWith(QLatin1String("-backend")))
             backend.append(QLatin1String("-backend"));
     }

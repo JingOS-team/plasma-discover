@@ -30,12 +30,12 @@ public:
         if (!item)
             return false;
 
-        switch(role) {
-            case Qt::CheckStateRole: {
-                auto transaction = PackageKit::Daemon::global()->repoEnable(item->data(AbstractSourcesBackend::IdRole).toString(), value.toInt() == Qt::Checked);
-                connect(transaction, &PackageKit::Transaction::errorCode, m_backend, &PackageKitSourcesBackend::transactionError);
-                return true;
-            }
+        switch (role) {
+        case Qt::CheckStateRole: {
+            auto transaction = PackageKit::Daemon::global()->repoEnable(item->data(AbstractSourcesBackend::IdRole).toString(), value.toInt() == Qt::Checked);
+            connect(transaction, &PackageKit::Transaction::errorCode, m_backend, &PackageKitSourcesBackend::transactionError);
+            return true;
+        }
         }
         item->setData(value, role);
         return true;
@@ -52,7 +52,7 @@ static QAction* createActionForService(const QString &servicePath, QObject* pare
     action->setIcon(QIcon::fromTheme(parser.readIcon()));
     action->setText(parser.readName());
     action->setToolTip(parser.readComment());
-    QObject::connect(action, &QAction::triggered, action, [servicePath](){
+    QObject::connect(action, &QAction::triggered, action, [servicePath]() {
         bool b = QProcess::startDetached(QStringLiteral(CMAKE_INSTALL_FULL_LIBEXECDIR_KF5 "/discover/runservice"), {servicePath});
         if (!b)
             qWarning() << "Could not start" << servicePath;
@@ -68,11 +68,11 @@ PackageKitSourcesBackend::PackageKitSourcesBackend(AbstractResourcesBackend* par
     connect(SourcesModel::global(), &SourcesModel::showingNow, this, &PackageKitSourcesBackend::resetSources);
 
     // Kubuntu-based
-    auto addNativeSourcesManager = [this](const QString &file){
+    auto addNativeSourcesManager = [this](const QString &file) {
         auto service = PackageKitBackend::locateService(file);
         if (!service.isEmpty())
             m_actions += QVariant::fromValue<QObject*>(createActionForService(service, this));
-        };
+    };
 
     //New Ubuntu
     addNativeSourcesManager(QStringLiteral("software-properties-qt.desktop"));
@@ -91,7 +91,7 @@ QString PackageKitSourcesBackend::idDescription()
 
 QStandardItem* PackageKitSourcesBackend::findItemForId(const QString &id) const
 {
-    for(int i=0, c=m_sources->rowCount(); i<c; ++i) {
+    for (int i=0, c=m_sources->rowCount(); i<c; ++i) {
         auto it = m_sources->item(i);
         if (it->data(AbstractSourcesBackend::IdRole).toString() == id)
             return it;

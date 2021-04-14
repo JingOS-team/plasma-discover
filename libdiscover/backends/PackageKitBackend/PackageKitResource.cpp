@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -10,9 +10,14 @@
 #include "PackageKitMessages.h"
 #include <KLocalizedString>
 #include <PackageKit/Daemon>
+#include <PackageKit/Transaction>
 #include <QJsonArray>
 #include <QDebug>
+#include <QFile>
+#include <QProcess>
+#include <QStandardPaths>
 #include <utils.h>
+#include "config-paths.h"
 
 #if defined(WITH_MARKDOWN)
 extern "C" {
@@ -25,26 +30,31 @@ const QStringList PackageKitResource::m_objects({ QStringLiteral("qrc:/qml/Depen
 PackageKitResource::PackageKitResource(QString packageName, QString summary, PackageKitBackend* parent)
     : AbstractResource(parent)
     , m_summary(std::move(summary))
-    , m_name(std::move(packageName))
+    , m_packageName(std::move(packageName))
 {
-    setObjectName(m_name);
+    setObjectName(m_packageName);
 
-    connect(this, &PackageKitResource::dependenciesFound, this, [this](const QJsonObject& obj) { setDependenciesCount(obj.size()); });
+    connect(this, &PackageKitResource::dependenciesFound, this, [this](const QJsonObject& obj) {
+        setDependenciesCount(obj.size());
+    });
 }
 
 QString PackageKitResource::name() const
 {
+    if (m_name == "") {
+        return m_packageName;
+    }
     return m_name;
 }
 
 QString PackageKitResource::packageName() const
 {
-    return m_name;
+    return m_packageName;
 }
 
 QStringList PackageKitResource::allPackageNames() const
 {
-    return { m_name };
+    return { m_packageName };
 }
 
 QString PackageKitResource::availablePackageId() const
@@ -66,9 +76,41 @@ QString PackageKitResource::installedPackageId() const
     return installed.isEmpty() ? QString() : installed.last();
 }
 
+void PackageKitResource::invokeApplication() const
+{
+    auto trans = PackageKit::Daemon::getFiles({installedPackageId()});
+    qDebug()<<Q_FUNC_INFO<< " installedPackageId():"<<installedPackageId();
+    connect(trans, &PackageKit::Transaction::errorCode, backend(), &PackageKitBackend::transactionError);
+    connect(trans, &PackageKit::Transaction::files, this, [this](const QString &/*packageID*/, const QStringList &_filenames) {
+        //This workarounds bug in zypper's backend (suse) https://github.com/hughsie/PackageKit/issues/351
+        QStringList filenames = _filenames;
+        if (filenames.count() == 1 && !QFile::exists(filenames.constFirst())) {
+            filenames = filenames.constFirst().split(QLatin1Char(';'));
+        }
+        qDebug()<<Q_FUNC_INFO<<" invokeapplicaiton filenames:"<< filenames;
+        const auto locations = QStandardPaths::standardLocations(QStandardPaths::ApplicationsLocation);
+        const auto desktopFiles = kFilter<QStringList>(filenames, [locations](const QString &exe) {
+            for (const auto &location: locations) {
+                if (exe.startsWith(location))
+                    return exe.contains(QLatin1String(".desktop"));
+            }
+            return false;
+        });
+        if (!desktopFiles.isEmpty()) {
+            QProcess::startDetached(QStringLiteral(CMAKE_INSTALL_FULL_LIBEXECDIR_KF5 "/discover/runservice"), { desktopFiles });
+            return;
+        }
+
+        Q_EMIT backend()->passiveMessage(i18n("Cannot launch %1", name()));
+    });
+}
+
 QString PackageKitResource::comment()
 {
-    return m_summary;
+    if (m_comment == "") {
+        return m_summary;
+    }
+    return m_comment;
 }
 
 QString PackageKitResource::longDescription()
@@ -85,7 +127,11 @@ QUrl PackageKitResource::homepage()
 
 QVariant PackageKitResource::icon() const
 {
-    return QStringLiteral("applications-other");
+    qDebug()<<Q_FUNC_INFO<<" currentIcon::"<< m_icon << " name:"<< name();
+    if (!m_icon.isValid() || m_icon == "") {
+        return "qrc:/img/ic_app_list_empty.png";
+    }
+    return m_icon;
 }
 
 QJsonArray PackageKitResource::licenses()
@@ -135,9 +181,9 @@ AbstractResource::State PackageKitResource::state()
 {
     if (backend()->isPackageNameUpgradeable(this))
         return Upgradeable;
-    else if(m_packages.contains(PackageKit::Transaction::InfoInstalled))
+    else if (m_packages.contains(PackageKit::Transaction::InfoInstalled))
         return Installed;
-    else if(m_packages.contains(PackageKit::Transaction::InfoAvailable))
+    else if (m_packages.contains(PackageKit::Transaction::InfoAvailable))
         return None;
     else
         return Broken;
@@ -164,7 +210,7 @@ QStringList PackageKitResource::categories()
 
 AbstractResource::Type PackageKitResource::type() const
 {
-    return Technical;
+    return m_type;
 }
 
 void PackageKitResource::fetchDetails()
@@ -200,7 +246,6 @@ void PackageKitResource::setDetails(const PackageKit::Details & details)
         const auto oldState = state();
         const auto oldSize= size();
         m_details = details;
-
         if (oldState != state())
             emit stateChanged();
 
@@ -227,7 +272,10 @@ void PackageKitResource::fetchUpdateDetails()
     }
     PackageKit::Transaction* t = PackageKit::Daemon::getUpdateDetail(availablePackageId());
     connect(t, &PackageKit::Transaction::updateDetail, this, &PackageKitResource::updateDetail);
-    connect(t, &PackageKit::Transaction::errorCode, this, [this](PackageKit::Transaction::Error err, const QString & error) { qWarning() << "error fetching updates:" << err << error; emit changelogFetched(QString()); });
+    connect(t, &PackageKit::Transaction::errorCode, this, [this](PackageKit::Transaction::Error err, const QString & error) {
+        qWarning() << "error fetching updates:" << err << error;
+        emit changelogFetched(QString());
+    });
 }
 
 static void addIfNotEmpty(const QString& title, const QString& content, QString& where)
@@ -239,7 +287,7 @@ static void addIfNotEmpty(const QString& title, const QString& content, QString&
 QString PackageKitResource::joinPackages(const QStringList& pkgids, const QString &_sep, const QString &shadowPackage)
 {
     QStringList ret;
-    foreach(const QString& pkgid, pkgids) {
+    foreach (const QString& pkgid, pkgids) {
         const auto pkgname = PackageKit::Daemon::packageName(pkgid);
         if (pkgname == shadowPackage)
             ret += PackageKit::Daemon::packageVersion(pkgid);
@@ -253,7 +301,7 @@ QString PackageKitResource::joinPackages(const QStringList& pkgids, const QStrin
 static QStringList urlToLinks(const QStringList& urls)
 {
     QStringList ret;
-    foreach(const QString& in, urls)
+    foreach (const QString& in, urls)
         ret += QStringLiteral("<a href='%1'>%1</a>").arg(in);
     return ret;
 }
@@ -328,7 +376,9 @@ void PackageKitResource::fetchDependencies()
     QSharedPointer<QJsonObject> packageDependencies(new QJsonObject);
 
     auto trans = PackageKit::Daemon::dependsOn(id);
-    connect(trans, &PackageKit::Transaction::errorCode, this, [this](PackageKit::Transaction::Error, const QString& message) { qWarning() << "Transaction error: " << message << sender(); });
+    connect(trans, &PackageKit::Transaction::errorCode, this, [this](PackageKit::Transaction::Error, const QString& message) {
+        qWarning() << "Transaction error: " << message << sender();
+    });
     connect(trans, &PackageKit::Transaction::package, this, [packageDependencies](PackageKit::Transaction::Info /*info*/, const QString &packageID, const QString &summary) {
         (*packageDependencies)[PackageKit::Daemon::packageName(packageID)] = summary ;
     });

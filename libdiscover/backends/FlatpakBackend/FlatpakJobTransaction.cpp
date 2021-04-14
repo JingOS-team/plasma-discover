@@ -18,7 +18,7 @@ extern "C" {
 
 FlatpakJobTransaction::FlatpakJobTransaction(FlatpakResource *app, Role role, bool delayStart)
     : Transaction(app->backend(), app, role, {})
-    , m_app(app)
+, m_app(app)
 {
     setCancellable(true);
     setStatus(QueuedStatus);
@@ -54,7 +54,7 @@ void FlatpakJobTransaction::finishTransaction()
 {
     if (m_appJob->result()) {
         AbstractResource::State newState = AbstractResource::None;
-        switch(role()) {
+        switch (role()) {
         case InstallRole:
         case ChangeAddonsRole:
             newState = AbstractResource::Installed;

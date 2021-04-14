@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -18,7 +18,6 @@
 #include <appstream/OdrsReviewsBackend.h>
 #include <appstream/AppStreamIntegration.h>
 #include <appstream/AppStreamUtils.h>
-
 #include <QProcess>
 #include <QStringList>
 #include <QDebug>
@@ -29,17 +28,21 @@
 #include <QFileSystemWatcher>
 #include <QFutureWatcher>
 #include <QtConcurrentRun>
-
 #include <PackageKit/Daemon>
 #include <PackageKit/Offline>
 #include <PackageKit/Details>
-
 #include <KLocalizedString>
 #include <KProtocolManager>
-
 #include "utils.h"
 #include "config-paths.h"
 #include "libdiscover_backend_debug.h"
+#include <network/HttpClient.h>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
+#define APPLIST_URL "applist"
+
 
 DISCOVER_BACKEND_PLUGIN(PackageKitBackend)
 
@@ -48,11 +51,11 @@ static void setWhenAvailable(const QDBusPendingReply<T>& pending, W func, QObjec
 {
     QDBusPendingCallWatcher* watcher = new QDBusPendingCallWatcher(pending, parent);
     QObject::connect(watcher, &QDBusPendingCallWatcher::finished,
-                    parent, [func](QDBusPendingCallWatcher* watcher) {
-                        watcher->deleteLater();
-                        QDBusPendingReply<T> reply = *watcher;
-                        func(reply.value());
-                    });
+    parent, [func](QDBusPendingCallWatcher* watcher) {
+        watcher->deleteLater();
+        QDBusPendingReply<T> reply = *watcher;
+        func(reply.value());
+    });
 }
 
 QString PackageKitBackend::locateService(const QString &filename)
@@ -81,12 +84,14 @@ PackageKitBackend::PackageKitBackend(QObject* parent)
     connect(PackageKit::Daemon::global(), &PackageKit::Daemon::restartScheduled, m_updater, &PackageKitUpdater::enableNeedsReboot);
     connect(PackageKit::Daemon::global(), &PackageKit::Daemon::isRunningChanged, this, &PackageKitBackend::checkDaemonRunning);
     connect(m_reviews.data(), &OdrsReviewsBackend::ratingsReady, this, [this] {
-        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_packages.packages.values(), [] (AbstractResource* r) { return r; }));
+        m_reviews->emitRatingFetched(this, kTransform<QList<AbstractResource*>>(m_packages.packages.values(), [] (AbstractResource* r) {
+            return r;
+        }));
     });
 
     auto proxyWatch = new QFileSystemWatcher(this);
     proxyWatch->addPath(QStandardPaths::writableLocation(QStandardPaths::ConfigLocation) + QLatin1String("/kioslaverc"));
-    connect(proxyWatch, &QFileSystemWatcher::fileChanged, this, [this](){
+    connect(proxyWatch, &QFileSystemWatcher::fileChanged, this, [this]() {
         KProtocolManager::reparseConfiguration();
         updateProxy();
     });
@@ -105,6 +110,10 @@ PackageKitBackend::PackageKitBackend(QObject* parent)
     }, this);
 
     PackageKit::Daemon::global()->setHints(QStringLiteral("locale=%1").arg(qEnvironmentVariable("LANG")));
+    connect(PackageKit::Daemon::global(), &PackageKit::Daemon::networkStateChanged, this, [=]() {
+        auto networkState = PackageKit::Daemon::networkState();
+        emit networkStateChanged(networkState);
+    });
 }
 
 PackageKitBackend::~PackageKitBackend()
@@ -115,7 +124,6 @@ PackageKitBackend::~PackageKitBackend()
 
 void PackageKitBackend::updateProxy()
 {
-
     if (PackageKit::Daemon::isRunning()) {
         static bool everHad = KProtocolManager::useProxy();
         if (!everHad && !KProtocolManager::useProxy())
@@ -168,7 +176,9 @@ static DelayedAppStreamLoad loadAppStream(AppStream::Pool* appdata)
 
     const auto components = appdata->components();
     ret.components.reserve(components.size());
-    foreach(const AppStream::Component& component, components) {
+    QSet<QStringList> componentList;
+    foreach (const AppStream::Component& component, components) {
+        componentList.insert(component.packageNames());
         if (component.kind() == AppStream::Component::KindFirmware)
             continue;
 
@@ -231,7 +241,6 @@ AppPackageKitResource* PackageKitBackend::addComponent(const AppStream::Componen
 {
     Q_ASSERT(isFetching());
     Q_ASSERT(!pkgNames.isEmpty());
-
     auto& resPos = m_packages.packages[component.id()];
     AppPackageKitResource* res = qobject_cast<AppPackageKitResource*>(resPos);
     if (!res) {
@@ -281,6 +290,12 @@ void PackageKitBackend::fetchUpdates()
     Q_EMIT fetchingUpdatesProgressChanged();
 }
 
+void PackageKitBackend::addPackageForPackageKit(PackageKit::Transaction::Info info, const QString& packageId, const QString& summary)
+{
+    m_packageKitId += packageId;
+    addPackage(info, packageId, summary, true);
+}
+
 void PackageKitBackend::addPackageArch(PackageKit::Transaction::Info info, const QString& packageId, const QString& summary)
 {
     addPackage(info, packageId, summary, true);
@@ -293,26 +308,31 @@ void PackageKitBackend::addPackageNotArch(PackageKit::Transaction::Info info, co
 
 void PackageKitBackend::addPackage(PackageKit::Transaction::Info info, const QString &packageId, const QString &summary, bool arch)
 {
-    if(PackageKit::Daemon::packageArch(packageId) == QLatin1String("source")) {
+    if (PackageKit::Daemon::packageArch(packageId) == QLatin1String("source")) {
         // We do not add source packages, they make little sense here. If source is needed,
         // we are going to have to consider that in some other way, some other time
         // If we do not ignore them here, e.g. openSuse entirely fails at installing applications
         return;
     }
+
     const QString packageName = PackageKit::Daemon::packageName(packageId);
     QSet<AbstractResource*> r = resourcesByPackageName(packageName);
+
     if (r.isEmpty()) {
         auto pk = new PackageKitResource(packageName, summary, this);
         r = { pk };
         m_packagesToAdd.insert(pk);
     }
-    foreach(auto res, r)
+    foreach (auto res, r)
         static_cast<PackageKitResource*>(res)->addPackageId(info, packageId, arch);
 }
 
 void PackageKitBackend::getPackagesFinished()
 {
     includePackagesToAdd();
+    if (m_packageKitId.size() > 0) {
+        fetchDetails(m_packageKitId);
+    }
 }
 
 void PackageKitBackend::includePackagesToAdd()
@@ -321,17 +341,17 @@ void PackageKitBackend::includePackagesToAdd()
         return;
 
     acquireFetching(true);
-    foreach(PackageKitResource* res, m_packagesToAdd) {
+    foreach (PackageKitResource* res, m_packagesToAdd) {
         m_packages.packages[res->packageName()] = res;
     }
-    foreach(PackageKitResource* res, m_packagesToDelete) {
+    foreach (PackageKitResource* res, m_packagesToDelete) {
         const auto pkgs = m_packages.packageToApp.value(res->packageName(), {res->packageName()});
-        foreach(const auto &pkg, pkgs) {
+        foreach (const auto &pkg, pkgs) {
             auto res = m_packages.packages.take(pkg);
             if (res) {
                 if (AppPackageKitResource* ares = qobject_cast<AppPackageKitResource*>(res)) {
                     const auto extends = res->extends();
-                    for(const auto &ext: extends)
+                    for (const auto &ext: extends)
                         m_packages.extendedBy[ext].removeAll(ares);
                 }
 
@@ -357,9 +377,10 @@ void PackageKitBackend::packageDetails(const PackageKit::Details& details)
     if (resources.isEmpty())
         qWarning() << "couldn't find package for" << details.packageId();
 
-    foreach(AbstractResource* res, resources) {
+    foreach (AbstractResource* res, resources) {
         qobject_cast<PackageKitResource*>(res)->setDetails(details);
     }
+    emit updatesCountChanged();
 }
 
 QSet<AbstractResource*> PackageKitBackend::resourcesByPackageName(const QString& name) const
@@ -372,9 +393,9 @@ T PackageKitBackend::resourcesByPackageNames(const QStringList &pkgnames) const
 {
     T ret;
     ret.reserve(pkgnames.size());
-    for(const QString &name : pkgnames) {
+    for (const QString &name : pkgnames) {
         const QStringList names = m_packages.packageToApp.value(name, QStringList(name));
-        foreach(const QString& name, names) {
+        foreach (const QString& name, names) {
             AbstractResource* res = m_packages.packages.value(name);
             if (res)
                 ret += res;
@@ -411,8 +432,12 @@ QList<AppStream::Component> PackageKitBackend::componentsById(const QString& id)
     return m_appdata->componentsById(id);
 }
 
-static const auto needsResolveFilter = [] (AbstractResource* res) { return res->state() == AbstractResource::Broken; };
-static const auto installedFilter = [] (AbstractResource* res) { return res->state() >= AbstractResource::Installed; };
+static const auto needsResolveFilter = [] (AbstractResource* res) {
+    return res->state() == AbstractResource::Broken;
+};
+static const auto installedFilter = [] (AbstractResource* res) {
+    return res->state() >= AbstractResource::Installed && res->type() == AbstractResource::Application;
+};
 
 class PKResultsStream : public ResultsStream
 {
@@ -437,7 +462,9 @@ public:
     {
         const auto toResolve = kFilter<QVector<AbstractResource*>>(res, needsResolveFilter);
         if (!toResolve.isEmpty())
-            backend->resolvePackages(kTransform<QStringList>(toResolve, [] (AbstractResource* res) { return res->packageName(); }));
+            backend->resolvePackages(kTransform<QStringList>(toResolve, [] (AbstractResource* res) {
+            return res->packageName();
+        }));
         Q_EMIT resourcesFound(res);
     }
 private:
@@ -451,7 +478,9 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
     } else if (!filter.extends.isEmpty()) {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-extends"));
         auto f = [this, filter, stream] {
-            const auto resources = kTransform<QVector<AbstractResource*>>(m_packages.extendedBy.value(filter.extends), [](AppPackageKitResource* a){ return a; });
+            const auto resources = kTransform<QVector<AbstractResource*>>(m_packages.extendedBy.value(filter.extends), [](AppPackageKitResource* a) {
+                return a;
+            });
             if (!resources.isEmpty()) {
                 stream->setResources(resources);
             }
@@ -464,9 +493,10 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-installed"));
         auto f = [this, stream] {
             const auto toResolve = kFilter<QVector<AbstractResource*>>(m_packages.packages, needsResolveFilter);
-
             if (!toResolve.isEmpty()) {
-                resolvePackages(kTransform<QStringList>(toResolve, [] (AbstractResource* res) { return res->packageName(); }));
+                resolvePackages(kTransform<QStringList>(toResolve, [] (AbstractResource* res) {
+                    return res->packageName();
+                }));
                 connect(m_resolveTransaction, &PKResolveTransaction::allFinished, this, [stream, toResolve] {
                     const auto resolved = kFilter<QVector<AbstractResource*>>(toResolve, installedFilter);
                     if (!resolved.isEmpty())
@@ -483,7 +513,7 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
 
                     if (toResolve.isEmpty())
                         stream->finish();
-            });
+                });
             }
         };
         runWhenInitialized(f, stream);
@@ -491,26 +521,28 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
     } else if (filter.search.isEmpty()) {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-all"));
         auto f = [this, filter, stream] {
-            auto resources = kFilter<QVector<AbstractResource*>>(m_packages.packages, [](AbstractResource* res) { return res->type() != AbstractResource::Technical && !qobject_cast<PackageKitResource*>(res)->extendsItself(); });
-            if (!resources.isEmpty()) {
-                stream->setResources(resources);
-            }
+            getAppList(filter.category->typeName(),filter.search,stream);
         };
         runWhenInitialized(f, stream);
         return stream;
     } else {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-search"));
         const auto f = [this, stream, filter] () {
+            getAppList("",filter.search,stream);
+
             const QList<AppStream::Component> components = m_appdata->search(filter.search);
-            const QStringList ids = kTransform<QStringList>(components, [](const AppStream::Component& comp) { return comp.id(); });
+            const QStringList ids = kTransform<QStringList>(components, [](const AppStream::Component& comp) {
+                return comp.id();
+            });
             if (!ids.isEmpty()) {
-                const auto resources = kFilter<QVector<AbstractResource*>>(resourcesByPackageNames<QVector<AbstractResource*>>(ids), [](AbstractResource* res){ return !qobject_cast<PackageKitResource*>(res)->extendsItself(); });
-                stream->setResources(resources);
+                const auto resources = kFilter<QVector<AbstractResource*>>(resourcesByPackageNames<QVector<AbstractResource*>>(ids), [](AbstractResource* res) {
+                    return !qobject_cast<PackageKitResource*>(res)->extendsItself();
+                });
             }
 
             PackageKit::Transaction * tArch = PackageKit::Daemon::resolve(filter.search, PackageKit::Transaction::FilterArch);
             connect(tArch, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageArch);
-            connect(tArch, &PackageKit::Transaction::package, stream, [stream](PackageKit::Transaction::Info /*info*/, const QString &packageId){
+            connect(tArch, &PackageKit::Transaction::package, stream, [stream](PackageKit::Transaction::Info /*info*/, const QString &packageId) {
                 stream->setProperty("packageId", packageId);
             });
             connect(tArch, &PackageKit::Transaction::finished, stream, [stream, ids, this](PackageKit::Transaction::Exit status) {
@@ -519,10 +551,8 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
                     const auto packageId = stream->property("packageId");
                     if (!packageId.isNull()) {
                         const auto res = resourcesByPackageNames<QVector<AbstractResource*>>({PackageKit::Daemon::packageName(packageId.toString())});
-                        stream->setResources(kFilter<QVector<AbstractResource*>>(res, [ids](AbstractResource* res){ return !ids.contains(res->appstreamId()); }));
                     }
                 }
-                stream->finish();
             }, Qt::QueuedConnection);
         };
         runWhenInitialized(f, stream);
@@ -545,11 +575,11 @@ PKResultsStream * PackageKitBackend::findResourceByPackageName(const QUrl& url)
         QMimeDatabase db;
         const auto mime = db.mimeTypeForUrl(url);
         if (    mime.inherits(QStringLiteral("application/vnd.debian.binary-package"))
-            || mime.inherits(QStringLiteral("application/x-rpm"))
-            || mime.inherits(QStringLiteral("application/x-tar"))
-            || mime.inherits(QStringLiteral("application/x-zstd-compressed-tar"))
-            || mime.inherits(QStringLiteral("application/x-xz-compressed-tar"))
-        ) {
+                || mime.inherits(QStringLiteral("application/x-rpm"))
+                || mime.inherits(QStringLiteral("application/x-tar"))
+                || mime.inherits(QStringLiteral("application/x-zstd-compressed-tar"))
+                || mime.inherits(QStringLiteral("application/x-xz-compressed-tar"))
+           ) {
             return new PKResultsStream(this, QStringLiteral("PackageKitStream-localpkg"), { new LocalFilePKResource(url, this)});
         }
     } else if (url.scheme() == QLatin1String("appstream")) {
@@ -562,7 +592,7 @@ PKResultsStream * PackageKitBackend::findResourceByPackageName(const QUrl& url)
             { QStringLiteral("org.kde.kolourpaint.desktop"), QStringLiteral("kolourpaint.desktop") },
             { QStringLiteral("org.blender.blender.desktop"), QStringLiteral("blender.desktop") },
         };
-        
+
         const auto appstreamIds = AppStreamUtils::appstreamIds(url);
         if (appstreamIds.isEmpty())
             Q_EMIT passiveMessage(i18n("Malformed appstream url '%1'", url.toDisplayString()));
@@ -583,8 +613,8 @@ PKResultsStream * PackageKitBackend::findResourceByPackageName(const QUrl& url)
                     const bool matches = kContains(allAppStreamIds, [&it] (const QString& id) {
                         static const QLatin1String desktopPostfix(".desktop");
                         return it.key().compare(id, Qt::CaseInsensitive) == 0 ||
-                              //doing (id == id.key()+".desktop") without allocating
-                              (id.size() == (desktopPostfix.size() + it.key().size()) && id.endsWith(desktopPostfix) && id.startsWith(it.key(), Qt::CaseInsensitive));
+                               //doing (id == id.key()+".desktop") without allocating
+                               (id.size() == (desktopPostfix.size() + it.key().size()) && id.endsWith(desktopPostfix) && id.startsWith(it.key(), Qt::CaseInsensitive));
                     });
                     if (matches) {
                         pkg = it.value();
@@ -594,8 +624,8 @@ PKResultsStream * PackageKitBackend::findResourceByPackageName(const QUrl& url)
                 if (pkg)
                     stream->setResources({pkg});
                 stream->finish();
-    //             if (!pkg)
-    //                 qCDebug(LIBDISCOVER_BACKEND_LOG) << "could not find" << host << deprecatedHost;
+                //             if (!pkg)
+                //                 qCDebug(LIBDISCOVER_BACKEND_LOG) << "could not find" << host << deprecatedHost;
             };
             runWhenInitialized(f, stream);
             return stream;
@@ -617,7 +647,7 @@ int PackageKitBackend::updatesCount() const
     int ret = 0;
     QSet<QString> packages;
     const auto toUpgrade = upgradeablePackages();
-    for(auto res: toUpgrade) {
+    for (auto res: toUpgrade) {
         const auto packageName = res->packageName();
         if (packages.contains(packageName)) {
             continue;
@@ -631,9 +661,9 @@ int PackageKitBackend::updatesCount() const
 Transaction* PackageKitBackend::installApplication(AbstractResource* app, const AddonList& addons)
 {
     Transaction* t = nullptr;
-    if(!addons.addonsToInstall().isEmpty()) {
+    if (!addons.addonsToInstall().isEmpty()) {
         QVector<AbstractResource*> appsToInstall = resourcesByPackageNames<QVector<AbstractResource*>>(addons.addonsToInstall());
-        if(!app->isInstalled())
+        if (!app->isInstalled())
             appsToInstall << app;
         t = new PKTransaction(appsToInstall, Transaction::ChangeAddonsRole);
     } else if (!app->isInstalled())
@@ -678,7 +708,11 @@ QSet<AbstractResource*> PackageKitBackend::upgradeablePackages() const
         }
         ret.unite(pkgs);
     }
-    return kFilter<QSet<AbstractResource*>>(ret, [] (AbstractResource* res) { return !static_cast<PackageKitResource*>(res)->extendsItself(); });
+    QList<AbstractResource*> listRet =  ret.values();
+
+    return kFilter<QSet<AbstractResource*>>(ret, [] (AbstractResource* res) {
+        return !static_cast<PackageKitResource*>(res)->extendsItself() && res->type() == AbstractResource::Application;
+    });
 }
 
 void PackageKitBackend::addPackageToUpdate(PackageKit::Transaction::Info info, const QString& packageId, const QString& summary)
@@ -702,7 +736,9 @@ void PackageKitBackend::addPackageToUpdate(PackageKit::Transaction::Info info, c
 void PackageKitBackend::getUpdatesFinished(PackageKit::Transaction::Exit, uint)
 {
     if (!m_updatesPackageId.isEmpty()) {
-        resolvePackages(kTransform<QStringList>(m_updatesPackageId, [](const QString &pkgid) { return PackageKit::Daemon::packageName(pkgid); }));
+        resolvePackages(kTransform<QStringList>(m_updatesPackageId, [](const QString &pkgid) {
+            return PackageKit::Daemon::packageName(pkgid);
+        }));
         fetchDetails(m_updatesPackageId);
     }
 
@@ -785,13 +821,154 @@ int PackageKitBackend::fetchingUpdatesProgress() const
 {
     if (!m_getUpdatesTransaction)
         return 0;
-    
+
     if (m_getUpdatesTransaction->status() == PackageKit::Transaction::StatusWait || m_getUpdatesTransaction->status() == PackageKit::Transaction::StatusUnknown) {
         return m_getUpdatesTransaction->property("lastPercentage").toInt();
     }
     int percentage = percentageWithStatus(m_getUpdatesTransaction->status(), m_getUpdatesTransaction->percentage());
     m_getUpdatesTransaction->setProperty("lastPercentage", percentage);
     return percentage;
+}
+
+void PackageKitBackend::showResource()
+{
+}
+
+ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PKResultsStream *stream)
+{
+    QString url;
+    url = QLatin1String(BASE_URL) + QLatin1String(APPLIST_URL);
+    QString requestParam = QLatin1String("category");
+    if (category == QLatin1String("feature_applications")) {
+        requestParam = "label";
+        category = "recommend";
+    }
+    if (keyword != "") {
+        requestParam = "keyword";
+        category = keyword;
+    }
+    HttpClient::global() -> get(url)
+    .header(QString::fromUtf8("content-type"), QString::fromUtf8("application/json"))
+    .queryParam(requestParam, category)
+    .onResponse([this,stream](QByteArray result) {
+        auto json = QJsonDocument::fromJson(result).object();
+        if (json.empty()) {
+            stream->finish();
+            return;
+        }
+        auto httpCode = json.value(QString::fromUtf8("code")).toInt();
+        if (httpCode != 200) {
+            stream->finish();
+            return;
+        }
+        auto appList = json.value(QString::fromUtf8("apps")).toArray();
+        if (appList.size() < 1) {
+            stream->finish();
+            return;
+        }
+        QStringList notResources;
+        QHash<QString,ServerData> cacheRequest;
+        QVector<AbstractResource*> displayRes;
+        for (int i = 0; i < appList.size(); i++) {
+            auto appObj = appList.at(i).toObject();
+            auto appId = appObj.value(QString::fromUtf8("appId")).toString();
+            auto appName = appObj.value(QString::fromUtf8("appName")).toString();
+            auto icon = appObj.value(QString::fromUtf8("icon")).toString();
+            auto banner = appObj.value(QString::fromUtf8("banner")).toString();
+            auto categories = appObj.value(QString::fromUtf8("categories")).toArray();
+            auto display = appObj.value(QString::fromUtf8("display")).toArray();
+            auto resource = m_packages.packages.value(appName);
+            QString name = "";
+            QString comment = "";
+            for (int j = 0; j < display.size(); j++) {
+                auto displayObj = display.at(j).toObject();
+                QString lang = "";
+                if (QLocale::system().nativeLanguageName().contains("china")) {
+                    lang = "cn";
+                } else {
+                    lang = "en";
+                }
+                if (lang == displayObj.value(QString::fromUtf8("lang")).toString()) {
+                    name = displayObj.value(QString::fromUtf8("name")).toString();
+                    comment = displayObj.value(QString::fromUtf8("summary")).toString();
+                }
+            }
+            QString categoryDisplay = "";
+            for (int j = 0; j < categories.size(); j++) {
+                categoryDisplay += categories.at(j).toString();
+                if (j != categories.size() - 1) {
+                    categoryDisplay += ",";
+                }
+            }
+            if (resource) {
+                resource->setAppId(appId);
+                resource->setBanner(banner);
+                resource->setIcon(icon);
+                resource->setName(name);
+                resource->setAppName(appName);
+                resource->setCategoryDisplay(categoryDisplay);
+                resource->setComment(comment);
+                displayRes.append(resource);
+            } else {
+                ServerData currentData;
+                currentData.appId = appId;
+                currentData.banner = banner;
+                currentData.categoryDisplay = categoryDisplay;
+                currentData.comment = comment;
+                currentData.icon = icon;
+                currentData.name = name;
+                currentData.appName = appName;
+                notResources.append(appName);
+                cacheRequest.insert(appName,currentData);
+            }
+        }
+        if (notResources.size() <= 0) {
+            stream->setResources(displayRes);
+            stream->finish();
+            return;
+        }
+        stream->setResources(displayRes);
+        m_packageKitId.clear();
+        PackageKit::Transaction * searchT = PackageKit::Daemon::searchNames(notResources);
+        connect(searchT, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageForPackageKit);
+
+        connect(searchT,&PackageKit::Transaction::errorCode,this,[this,stream] {
+            stream->finish();
+        });
+        connect(searchT, &PackageKit::Transaction::finished, this, [this,stream,cacheRequest,notResources](PackageKit::Transaction::Exit status) {
+            if (status == PackageKit::Transaction::Exit::ExitSuccess) {
+                QVector<AbstractResource*> displayRes;
+
+                for (auto it = cacheRequest.constBegin(), itEnd = cacheRequest.constEnd(); it != itEnd; ++it) {
+                    QString pkgKey = it.key();
+                    ServerData pkgVaule = it.value();
+                    QSet<AbstractResource*> res = resourcesByPackageName(pkgKey);
+                    if (res.count() > 0) {
+                        AbstractResource* getResource = res.values().first();
+                        getResource->setAppId(pkgVaule.appId);
+                        getResource->setBanner(pkgVaule.banner);
+                        getResource->setIcon(pkgVaule.icon);
+                        getResource->setName(pkgVaule.name);
+                        getResource->setAppName(pkgVaule.appName);
+                        getResource->setCategoryDisplay(pkgVaule.categoryDisplay);
+                        getResource->setComment(pkgVaule.comment);
+                        displayRes.append(getResource);
+                    }
+                }
+                stream->setResources(displayRes);
+                stream->finish();
+            }
+            getPackagesFinished();
+        }, Qt::QueuedConnection);
+
+    })
+    .onError([this,stream](QString errorStr) {
+        stream->finish();
+        return;
+    })
+    .timeout(10 * 1000)
+    .exec();
+    return stream;
 }
 
 #include "PackageKitBackend.moc"

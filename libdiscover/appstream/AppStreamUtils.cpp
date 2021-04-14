@@ -34,7 +34,7 @@ QUrl AppStreamUtils::imageOfKind(const QList<AppStream::Image>& images, AppStrea
 
 QString AppStreamUtils::changelogToHtml(const AppStream::Component& appdata)
 {
-    if(appdata.releases().isEmpty())
+    if (appdata.releases().isEmpty())
         return {};
 
     const auto release = appdata.releases().constFirst();
@@ -42,7 +42,7 @@ QString AppStreamUtils::changelogToHtml(const AppStream::Component& appdata)
         return {};
 
     QString changelog = QLatin1String("<h3>") + release.version() + QLatin1String("</h3>")
-                      + QStringLiteral("<p>") + release.description() + QStringLiteral("</p>");
+                        + QStringLiteral("<p>") + release.description() + QStringLiteral("</p>");
     return changelog;
 }
 
@@ -76,7 +76,7 @@ QJsonArray AppStreamUtils::licenses(const AppStream::Component& appdata)
         if (!AppStream::SPDX::isLicenseId(license))
             continue;
 #if APPSTREAM_HAS_SPDX_LICENSEURL
-        ret.append(QJsonObject{ {QStringLiteral("name"), license}, {QStringLiteral("url"), { AppStream::SPDX::licenseUrl(license) } }});
+        ret.append(QJsonObject { {QStringLiteral("name"), license}, {QStringLiteral("url"), { AppStream::SPDX::licenseUrl(license) } }});
 #else
         if (license.startsWith(prop))
             ret.append(QJsonObject{ {QStringLiteral("name"), i18n("Proprietary")}, {QStringLiteral("url"), license.mid(prop.size())} });

@@ -28,11 +28,11 @@ public Q_SLOTS:
     KAuth::ActionReply login(const QVariantMap &args)
     {
         const QString user = args[QStringLiteral("user")].toString()
-                    , pass = args[QStringLiteral("password")].toString()
-                    , otp  = args[QStringLiteral("otp")].toString();
+                             , pass = args[QStringLiteral("password")].toString()
+                             , otp  = args[QStringLiteral("otp")].toString();
 
         QScopedPointer<QSnapdLoginRequest> req(otp.isEmpty() ? m_client.login(user, pass)
-                                                             : m_client.login(user, pass, otp));
+                                               : m_client.login(user, pass, otp));
 
         req->runSync();
 
@@ -43,9 +43,9 @@ public Q_SLOTS:
         if (req->error() == QSnapdRequest::NoError) {
             const auto auth = req->authData();
             replyData = QJsonDocument(QJsonObject{
-                    {QStringLiteral("macaroon"), auth->macaroon()},
-                    {QStringLiteral("discharges"), QJsonArray::fromStringList(auth->discharges())}
-                }).toJson();
+                {QStringLiteral("macaroon"), auth->macaroon()},
+                {QStringLiteral("discharges"), QJsonArray::fromStringList(auth->discharges())}
+            }).toJson();
 
             reply = ActionReply::SuccessReply();
         } else {

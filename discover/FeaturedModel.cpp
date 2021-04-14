@@ -94,7 +94,9 @@ void FeaturedModel::refresh()
         return;
     }
 
-    const auto uris = kTransform<QVector<QUrl>>(array, [](const QJsonValue& uri) { return QUrl(uri.toString()); });
+    const auto uris = kTransform<QVector<QUrl>>(array, [](const QJsonValue& uri) {
+        return QUrl(uri.toString());
+    });
     setUris(uris);
 }
 
@@ -104,7 +106,7 @@ void FeaturedModel::setUris(const QVector<QUrl>& uris)
         return;
 
     QSet<ResultsStream*> streams;
-    foreach(const auto &uri, uris) {
+    foreach (const auto &uri, uris) {
         AbstractResourcesBackend::Filters filter;
         filter.resourceUrl = uri;
         streams << m_backend->search(filter);
@@ -119,7 +121,7 @@ void FeaturedModel::setUris(const QVector<QUrl>& uris)
 static void filterDupes(QVector<AbstractResource *> &resources)
 {
     QSet<QString> found;
-    for(auto it = resources.begin(); it!=resources.end(); ) {
+    for (auto it = resources.begin(); it!=resources.end(); ) {
         auto id = (*it)->appstreamId();
         if (found.contains(id)) {
             it = resources.erase(it);

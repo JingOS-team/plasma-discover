@@ -61,9 +61,9 @@ QDebug operator<<(QDebug debug, const QSnapdSlot* slot)
 
 const QStringList SnapResource::m_objects({ QStringLiteral("qrc:/qml/PermissionsButton.qml")
 #ifdef SNAP_CHANNELS
-	, QStringLiteral("qrc:/qml/ChannelsButton.qml")
+        , QStringLiteral("qrc:/qml/ChannelsButton.qml")
 #endif
-	});
+                                          });
 
 SnapResource::SnapResource(QSharedPointer<QSnapdSnap> snap, AbstractResource::State state, SnapBackend* backend)
     : AbstractResource(backend)
@@ -168,44 +168,44 @@ serialize_children (QSnapdMarkdownNode &node)
 static QString
 serialize_node (QSnapdMarkdownNode &node)
 {
-   switch (node.type ()) {
-   case QSnapdMarkdownNode::NodeTypeText:
-       return node.text().toHtmlEscaped();
+    switch (node.type ()) {
+    case QSnapdMarkdownNode::NodeTypeText:
+        return node.text().toHtmlEscaped();
 
-   case QSnapdMarkdownNode::NodeTypeParagraph:
-       return QLatin1String("<p>") + serialize_children (node) + QLatin1String("</p>\n");
+    case QSnapdMarkdownNode::NodeTypeParagraph:
+        return QLatin1String("<p>") + serialize_children (node) + QLatin1String("</p>\n");
 
-   case QSnapdMarkdownNode::NodeTypeUnorderedList:
-       return QLatin1String("<ul>\n") + serialize_children (node) + QLatin1String("</ul>\n");
+    case QSnapdMarkdownNode::NodeTypeUnorderedList:
+        return QLatin1String("<ul>\n") + serialize_children (node) + QLatin1String("</ul>\n");
 
-   case QSnapdMarkdownNode::NodeTypeListItem:
-       if (node.childCount () == 0)
-           return QLatin1String("<li></li>\n");
-       if (node.childCount () == 1) {
-           QScopedPointer<QSnapdMarkdownNode> child (node.child (0));
-           if (child->type () == QSnapdMarkdownNode::NodeTypeParagraph)
-               return QLatin1String("<li>") + serialize_children (*child) + QLatin1String("</li>\n");
-       }
-       return QLatin1String("<li>\n") + serialize_children (node) + QLatin1String("</li>\n");
+    case QSnapdMarkdownNode::NodeTypeListItem:
+        if (node.childCount () == 0)
+            return QLatin1String("<li></li>\n");
+        if (node.childCount () == 1) {
+            QScopedPointer<QSnapdMarkdownNode> child (node.child (0));
+            if (child->type () == QSnapdMarkdownNode::NodeTypeParagraph)
+                return QLatin1String("<li>") + serialize_children (*child) + QLatin1String("</li>\n");
+        }
+        return QLatin1String("<li>\n") + serialize_children (node) + QLatin1String("</li>\n");
 
-   case QSnapdMarkdownNode::NodeTypeCodeBlock:
-       return QLatin1String("<pre><code>") + serialize_children (node) + QLatin1String("</code></pre>\n");
+    case QSnapdMarkdownNode::NodeTypeCodeBlock:
+        return QLatin1String("<pre><code>") + serialize_children (node) + QLatin1String("</code></pre>\n");
 
-   case QSnapdMarkdownNode::NodeTypeCodeSpan:
-       return QLatin1String("<code>") + serialize_children (node) + QLatin1String("</code>");
+    case QSnapdMarkdownNode::NodeTypeCodeSpan:
+        return QLatin1String("<code>") + serialize_children (node) + QLatin1String("</code>");
 
-   case QSnapdMarkdownNode::NodeTypeEmphasis:
-       return QLatin1String("<em>") + serialize_children (node) + QLatin1String("</em>");
+    case QSnapdMarkdownNode::NodeTypeEmphasis:
+        return QLatin1String("<em>") + serialize_children (node) + QLatin1String("</em>");
 
-   case QSnapdMarkdownNode::NodeTypeStrongEmphasis:
-       return QLatin1String("<strong>") + serialize_children (node) + QLatin1String("</strong>");
+    case QSnapdMarkdownNode::NodeTypeStrongEmphasis:
+        return QLatin1String("<strong>") + serialize_children (node) + QLatin1String("</strong>");
 
-   case QSnapdMarkdownNode::NodeTypeUrl:
-       return serialize_children (node);
+    case QSnapdMarkdownNode::NodeTypeUrl:
+        return serialize_children (node);
 
-   default:
-       return QString();
-   }
+    default:
+        return QString();
+    }
 }
 #endif
 
@@ -266,13 +266,13 @@ void SnapResource::fetchScreenshots()
 {
     QList<QUrl> screenshots;
 #ifdef SNAP_MEDIA
-    for(int i = 0, c = m_snap->mediaCount(); i<c; ++i) {
+    for (int i = 0, c = m_snap->mediaCount(); i<c; ++i) {
         QScopedPointer<QSnapdMedia> media(m_snap->media(i));
         if (media->type() == QLatin1String("screenshot"))
             screenshots << QUrl(media->url());
     }
 #else
-    for(int i = 0, c = m_snap->screenshotCount(); i<c; ++i) {
+    for (int i = 0, c = m_snap->screenshotCount(); i<c; ++i) {
         QScopedPointer<QSnapdScreenshot> screenshot(m_snap->screenshot(i));
         screenshots << QUrl(screenshot->url());
     }
@@ -411,7 +411,7 @@ QString SnapResource::appstreamId() const
 #if defined(SNAP_COMMON_IDS)
         = m_snap->commonIds()
 #endif
-    ;
+          ;
     return ids.isEmpty() ? QLatin1String("io.snapcraft.") + m_snap->name() + QLatin1Char('-') + m_snap->id() : ids.first();
 }
 
@@ -449,18 +449,18 @@ void SnapResource::setChannel(const QString& channelName)
     const auto currentChannel = channel();
     request->runAsync();
     connect(request, &QSnapdRequest::complete, this, [this, currentChannel]() {
-            const auto newChannel = channel();
-            if (newChannel != currentChannel) {
-                Q_EMIT channelChanged(newChannel);
-            }
-        });
+        const auto newChannel = channel();
+        if (newChannel != currentChannel) {
+            Q_EMIT channelChanged(newChannel);
+        }
+    });
 #endif
 }
 
 void SnapResource::refreshSnap()
 {
     auto request = client()->find(QSnapdClient::FindFlag::MatchName, m_snap->name());
-    connect(request, &QSnapdRequest::complete, this, [this, request](){
+    connect(request, &QSnapdRequest::complete, this, [this, request]() {
         if (request->error()) {
             qWarning() << "error" << request->error() << ": " << request->errorString();
             return;
@@ -494,7 +494,7 @@ public:
         m_channels.clear();
 
         auto s = m_res->snap();
-        for(int i=0, c=s->channelCount(); i<c; ++i) {
+        for (int i=0, c=s->channelCount(); i<c; ++i) {
             auto channel = s->channel(i);
             channel->setParent(this);
             m_channels << channel;

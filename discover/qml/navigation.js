@@ -35,6 +35,14 @@ function openApplication(app) {
     window.stack.push("qrc:/qml/ApplicationPage.qml", { application: app })
 }
 
+function openBigImg(imgArray) {
+    window.stack.layers.push("qrc:/qml/cus/BigImg.qml",{imgPathArray:imgArray})
+}
+
+function pop() {
+    window.stack.layers.pop()
+}
+
 function openReviews(model) {
     window.stack.push("qrc:/qml/ReviewsPage.qml", { model: model })
 }

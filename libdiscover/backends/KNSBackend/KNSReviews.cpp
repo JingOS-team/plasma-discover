@@ -19,7 +19,7 @@
 
 class SharedManager : public QObject
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     SharedManager() {
         atticaManager.loadDefaultProviders();
@@ -65,11 +65,11 @@ void KNSReviews::fetchReviews(AbstractResource* app, int page)
 
 static QVector<ReviewPtr> createReviewList(AbstractResource* app, Attica::Comment::List comments, int depth = 0) {
     QVector<ReviewPtr> reviews;
-    foreach(const Attica::Comment& comment, comments) {
+    foreach (const Attica::Comment& comment, comments) {
         //TODO: language lookup?
         ReviewPtr r(new Review(app->name(), app->packageName(), QStringLiteral("en"), comment.subject(), comment.text(), comment.user(),
-            comment.date(), true, comment.id().toInt(), comment.score()/10, 0, 0, QString()
-        ));
+                               comment.date(), true, comment.id().toInt(), comment.score()/10, 0, 0, QString()
+                              ));
         r->addMetadata(QStringLiteral("NumberOfParents"), depth);
         reviews += r;
         if (comment.childCount() > 0) {
@@ -158,7 +158,7 @@ QString KNSReviews::userName() const
 void KNSReviews::setProviderUrl(const QUrl& url)
 {
     m_providerUrl = url;
-    if(!m_providerUrl.isEmpty() && !s_shared->atticaManager.providerFiles().contains(url)) {
+    if (!m_providerUrl.isEmpty() && !s_shared->atticaManager.providerFiles().contains(url)) {
         s_shared->atticaManager.addProviderFile(url);
     }
 }

@@ -17,22 +17,24 @@ class DISCOVERCOMMON_EXPORT CategoryModel : public QObject
 {
     Q_OBJECT
     Q_PROPERTY(QVariantList rootCategories READ rootCategoriesVL NOTIFY rootCategoriesChanged)
-    public:
-        explicit CategoryModel(QObject* parent = nullptr);
+public:
+    explicit CategoryModel(QObject* parent = nullptr);
 
-        static CategoryModel* global();
+    static CategoryModel* global();
 
-        Q_SCRIPTABLE Category* findCategoryByName(const QString& name) const;
-        void blacklistPlugin(const QString& name);
-        QVector<Category*> rootCategories() const { return m_rootCategories; }
-        QVariantList rootCategoriesVL() const;
-        void populateCategories();
+    Q_INVOKABLE Category* findCategoryByName(const QString& name) const;
+    void blacklistPlugin(const QString& name);
+    QVector<Category*> rootCategories() const {
+        return m_rootCategories;
+    }
+    QVariantList rootCategoriesVL() const;
+    void populateCategories();
 
-    Q_SIGNALS:
-        void rootCategoriesChanged();
+Q_SIGNALS:
+    void rootCategoriesChanged();
 
-    private:
-        QVector<Category*> m_rootCategories;
+private:
+    QVector<Category*> m_rootCategories;
 };
 
 #endif // CATEGORYMODEL_H

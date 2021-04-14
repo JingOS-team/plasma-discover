@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -59,11 +59,15 @@
 #include <resources/StoredResultsStream.h>
 #include <utils.h>
 #include <QMimeDatabase>
+#include <QLocale>
 
 #ifdef WITH_FEEDBACK
 #include "plasmauserfeedback.h"
 #endif
 #include "discoversettings.h"
+
+// custom includes
+#include "cus/AppClassModel.h"
 
 class CachedNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 {
@@ -75,7 +79,9 @@ class CachedNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 class OurSortFilterProxyModel : public QSortFilterProxyModel, public QQmlParserStatus
 {
     Q_OBJECT
+    
     Q_INTERFACES(QQmlParserStatus)
+
 public:
     void classBegin() override {}
     void componentComplete() override {
@@ -106,11 +112,11 @@ DiscoverObject::DiscoverObject(CompactMode mode, const QVariantMap &initialPrope
     qmlRegisterSingletonType<PlasmaUserFeedback>("org.kde.discover.app", 1, 0, "UserFeedbackSettings", [](QQmlEngine*, QJSEngine*) -> QObject* { return new PlasmaUserFeedback(KSharedConfig::openConfig(QStringLiteral("PlasmaUserFeedback"), KConfig::NoGlobals)); });
 #endif
     qmlRegisterSingletonType<DiscoverSettings>("org.kde.discover.app", 1, 0, "DiscoverSettings", [](QQmlEngine*, QJSEngine*) -> QObject* {
-            auto r = new DiscoverSettings;
-            connect(r, &DiscoverSettings::installedPageSortingChanged, r, &DiscoverSettings::save);
-            connect(r, &DiscoverSettings::appsListPageSortingChanged, r, &DiscoverSettings::save);
-            return r;
-        });
+        auto r = new DiscoverSettings;
+        connect(r, &DiscoverSettings::installedPageSortingChanged, r, &DiscoverSettings::save);
+        connect(r, &DiscoverSettings::appsListPageSortingChanged, r, &DiscoverSettings::save);
+        return r;
+    });
     qmlRegisterAnonymousType<QQuickView>("org.kde.discover.app", 1);
     qmlRegisterAnonymousType<QActionGroup>("org.kde.discover.app", 1);
     qmlRegisterAnonymousType<QAction>("org.kde.discover.app", 1);
@@ -131,26 +137,28 @@ DiscoverObject::DiscoverObject(CompactMode mode, const QVariantMap &initialPrope
     m_engine->setInitialProperties(initialProperties);
     m_engine->rootContext()->setContextProperty(QStringLiteral("app"), this);
     m_engine->rootContext()->setContextProperty(QStringLiteral("discoverAboutData"), QVariant::fromValue(KAboutData::applicationData()));
+    m_engine->rootContext()->setContextProperty(QStringLiteral("cppClassModel"), new AppClassModel);
+    m_engine->rootContext()->setContextProperty("sysLang", QLocale::system().nativeLanguageName());
 
     connect(m_engine, &QQmlApplicationEngine::objectCreated, this, &DiscoverObject::integrateObject);
     m_engine->load(QUrl(QStringLiteral("qrc:/qml/DiscoverWindow.qml")));
 
-    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, [this](){
+    connect(QCoreApplication::instance(), &QCoreApplication::aboutToQuit, this, [this]() {
         const auto objs = m_engine->rootObjects();
-        for(auto o: objs)
+        for (auto o: objs)
             delete o;
     });
     auto action = new OneTimeAction(
-        [this]() {
-            bool found = DiscoverBackendsFactory::hasRequestedBackends();
-            const auto backends = ResourcesModel::global()->backends();
-            for (auto b : backends)
-                found |= b->hasApplications();
+    [this]() {
+        bool found = DiscoverBackendsFactory::hasRequestedBackends();
+        const auto backends = ResourcesModel::global()->backends();
+        for (auto b : backends)
+            found |= b->hasApplications();
 
-            if (!found)
-                Q_EMIT openErrorPage(i18n("No application back-ends found, please report to your distribution."));
-        }
-        , this);
+        if (!found)
+            Q_EMIT openErrorPage(i18n("No application back-ends found, please report to your distribution."));
+    }
+    , this);
 
     if (ResourcesModel::global()->backends().isEmpty()) {
         connect(ResourcesModel::global(), &ResourcesModel::allInitialized, action, &OneTimeAction::trigger);
@@ -173,10 +181,10 @@ QStringList DiscoverObject::modes() const
 {
     QStringList ret;
     QObject* obj = rootObject();
-    for(int i = obj->metaObject()->propertyOffset(); i<obj->metaObject()->propertyCount(); i++) {
+    for (int i = obj->metaObject()->propertyOffset(); i<obj->metaObject()->propertyCount(); i++) {
         QMetaProperty p = obj->metaObject()->property(i);
         QByteArray compName = p.name();
-        if(compName.startsWith("top") && compName.endsWith("Comp")) {
+        if (compName.startsWith("top") && compName.endsWith("Comp")) {
             ret += QString::fromLatin1(compName.mid(3, compName.length()-7));
         }
     }
@@ -191,7 +199,7 @@ void DiscoverObject::openMode(const QString& _mode)
         return;
     }
 
-    if(!modes().contains(_mode, Qt::CaseInsensitive))
+    if (!modes().contains(_mode, Qt::CaseInsensitive))
         qCWarning(DISCOVER_LOG) << "unknown mode" << _mode << modes();
 
     QString mode = _mode;
@@ -225,16 +233,16 @@ void DiscoverObject::openCategory(const QString& category)
 {
     showLoadingPage();
     auto action = new OneTimeAction(
-        [this, category]() {
-            Category* cat = CategoryModel::global()->findCategoryByName(category);
-            if (cat) {
-                emit listCategoryInternal(cat);
-            } else {
-                openMode(QStringLiteral("Browsing"));
-                showPassiveNotification(i18n("Could not find category '%1'", category));
-            }
+    [this, category]() {
+        Category* cat = CategoryModel::global()->findCategoryByName(category);
+        if (cat) {
+            emit listCategoryInternal(cat);
+        } else {
+            openMode(QStringLiteral("Browsing"));
+            showPassiveNotification(i18n("Could not find category '%1'", category));
         }
-        , this);
+    }
+    , this);
 
     if (CategoryModel::global()->rootCategories().isEmpty()) {
         connect(CategoryModel::global(), &CategoryModel::rootCategoriesChanged, action, &OneTimeAction::trigger);
@@ -252,28 +260,30 @@ void DiscoverObject::openLocalPackage(const QUrl& localfile)
     }
     showLoadingPage();
     auto action = new OneTimeAction(
-        [this, localfile]() {
-            AbstractResourcesBackend::Filters f;
-            f.resourceUrl = localfile;
-            auto stream = new StoredResultsStream({ResourcesModel::global()->search(f)});
-            connect(stream, &StoredResultsStream::finishedResources, this, [this, localfile](const QVector<AbstractResource*> &res) {
-                if (res.count() == 1) {
-                    emit openApplicationInternal(res.first());
+    [this, localfile]() {
+        AbstractResourcesBackend::Filters f;
+        f.resourceUrl = localfile;
+        auto stream = new StoredResultsStream({ResourcesModel::global()->search(f)});
+        connect(stream, &StoredResultsStream::finishedResources, this, [this, localfile](const QVector<AbstractResource*> &res) {
+            if (res.count() == 1) {
+                emit openApplicationInternal(res.first());
+            } else {
+                QMimeDatabase db;
+                auto mime = db.mimeTypeForUrl(localfile);
+                auto fIsFlatpakBackend = [](AbstractResourcesBackend* backend) {
+                    return backend->metaObject()->className() == QByteArray("FlatpakBackend");
+                };
+                if (mime.name().startsWith(QLatin1String("application/vnd.flatpak")) && !kContains(ResourcesModel::global()->backends(), fIsFlatpakBackend)) {
+                    openApplication(QUrl(QStringLiteral("appstream://org.kde.discover.flatpak")));
+                    showPassiveNotification(i18n("Cannot interact with flatpak resources without the flatpak backend %1. Please install it first.", localfile.toDisplayString()));
                 } else {
-                    QMimeDatabase db;
-                    auto mime = db.mimeTypeForUrl(localfile);
-                    auto fIsFlatpakBackend = [](AbstractResourcesBackend* backend) { return backend->metaObject()->className() == QByteArray("FlatpakBackend"); };
-                    if (mime.name().startsWith(QLatin1String("application/vnd.flatpak")) && !kContains(ResourcesModel::global()->backends(), fIsFlatpakBackend)) {
-                        openApplication(QUrl(QStringLiteral("appstream://org.kde.discover.flatpak")));
-                        showPassiveNotification(i18n("Cannot interact with flatpak resources without the flatpak backend %1. Please install it first.", localfile.toDisplayString()));
-                    } else {
-                        openMode(QStringLiteral("Browsing"));
-                        showPassiveNotification(i18n("Could not open %1", localfile.toDisplayString()));
-                    }
+                    openMode(QStringLiteral("Browsing"));
+                    showPassiveNotification(i18n("Could not open %1", localfile.toDisplayString()));
                 }
-            });
-        }
-        , this);
+            }
+        });
+    }
+    , this);
 
     if (ResourcesModel::global()->backends().isEmpty()) {
         connect(ResourcesModel::global(), &ResourcesModel::backendsChanged, action, &OneTimeAction::trigger);
@@ -287,22 +297,22 @@ void DiscoverObject::openApplication(const QUrl& url)
     Q_ASSERT(!url.isEmpty());
     showLoadingPage();
     auto action = new OneTimeAction(
-        [this, url]() {
-            AbstractResourcesBackend::Filters f;
-            f.resourceUrl = url;
-            auto stream = new StoredResultsStream({ResourcesModel::global()->search(f)});
-            connect(stream, &StoredResultsStream::finishedResources, this, [this, url](const QVector<AbstractResource*> &res) {
-                if (res.count() >= 1) {
-                    emit openApplicationInternal(res.first());
-                } else if (url.scheme() == QLatin1String("snap")) {
-                    openApplication(QUrl(QStringLiteral("appstream://org.kde.discover.snap")));
-                    showPassiveNotification(i18n("Please make sure Snap support is installed"));
-                } else {
-                    Q_EMIT openErrorPage(i18n("Could not open %1", url.toDisplayString()));
-                }
-            });
-        }
-        , this);
+    [this, url]() {
+        AbstractResourcesBackend::Filters f;
+        f.resourceUrl = url;
+        auto stream = new StoredResultsStream({ResourcesModel::global()->search(f)});
+        connect(stream, &StoredResultsStream::finishedResources, this, [this, url](const QVector<AbstractResource*> &res) {
+            if (res.count() >= 1) {
+                emit openApplicationInternal(res.first());
+            } else if (url.scheme() == QLatin1String("snap")) {
+                openApplication(QUrl(QStringLiteral("appstream://org.kde.discover.snap")));
+                showPassiveNotification(i18n("Please make sure Snap support is installed"));
+            } else {
+                Q_EMIT openErrorPage(i18n("Could not open %1", url.toDisplayString()));
+            }
+        });
+    }
+    , this);
 
     if (ResourcesModel::global()->backends().isEmpty()) {
         connect(ResourcesModel::global(), &ResourcesModel::backendsChanged, action, &OneTimeAction::trigger);
@@ -315,7 +325,7 @@ void DiscoverObject::integrateObject(QObject* object)
 {
     if (!object) {
         qCWarning(DISCOVER_LOG) << "Errors when loading the GUI";
-        QTimer::singleShot(0, QCoreApplication::instance(), [](){
+        QTimer::singleShot(0, QCoreApplication::instance(), []() {
             QCoreApplication::instance()->exit(1);
         });
         return;
@@ -447,7 +457,7 @@ public:
     }
 
     void processWarnings(const QList<QQmlError> &warnings) {
-        foreach(const QQmlError &warning, warnings) {
+        foreach (const QQmlError &warning, warnings) {
             if (warning.url().path().endsWith(QLatin1String("DiscoverTest.qml"))) {
                 qCWarning(DISCOVER_LOG) << "Test failed!" << warnings;
                 qGuiApp->exit(1);
@@ -486,7 +496,7 @@ QQuickWindow* DiscoverObject::rootObject() const
 
 void DiscoverObject::showPassiveNotification(const QString& msg)
 {
-    QTimer::singleShot(100, this, [this, msg](){
+    QTimer::singleShot(100, this, [this, msg]() {
         QMetaObject::invokeMethod(rootObject(), "showPassiveNotification", Qt::QueuedConnection, Q_ARG(QVariant, msg), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}));
     });
 }

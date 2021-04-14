@@ -24,9 +24,13 @@ public:
     QAbstractItemModel* sources() override;
     bool addSource(const QString& id) override;
     bool removeSource(const QString& id) override;
-    QString idDescription() override { return QString(); }
+    QString idDescription() override {
+        return QString();
+    }
     QVariantList actions() const override;
-    bool supportsAdding() const override { return false; }
+    bool supportsAdding() const override {
+        return false;
+    }
     void eulaRequired(const QString& remoteName, const QString& licenseAgreement);
     void populateSources();
 

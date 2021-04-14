@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2017 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -22,17 +22,12 @@ void PKResolveTransaction::start()
 {
     Q_EMIT started();
 
-    PackageKit::Transaction * tArch = PackageKit::Daemon::resolve(m_packageNames, PackageKit::Transaction::FilterArch);
+    PackageKit::Transaction * tArch = PackageKit::Daemon::resolve(m_packageNames, PackageKit::Transaction::FilterApplication);
     connect(tArch, &PackageKit::Transaction::package, m_backend, &PackageKitBackend::addPackageArch);
     connect(tArch, &PackageKit::Transaction::errorCode, m_backend, &PackageKitBackend::transactionError);
+    m_transactions = {tArch};
 
-    PackageKit::Transaction * tNotArch = PackageKit::Daemon::resolve(m_packageNames, PackageKit::Transaction::FilterNotArch);
-    connect(tNotArch, &PackageKit::Transaction::package, m_backend, &PackageKitBackend::addPackageNotArch);
-    connect(tNotArch, &PackageKit::Transaction::errorCode, m_backend, &PackageKitBackend::transactionError);
-
-    m_transactions = {tArch, tNotArch};
-
-    foreach(PackageKit::Transaction* t, m_transactions) {
+    foreach (PackageKit::Transaction* t, m_transactions) {
         connect(t, &PackageKit::Transaction::finished, this, &PKResolveTransaction::transactionFinished);
     }
 }

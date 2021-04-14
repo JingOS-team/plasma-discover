@@ -28,19 +28,19 @@ KNSResource::~KNSResource() = default;
 
 AbstractResource::State KNSResource::state()
 {
-    switch(m_entry.status()) {
-        case KNS3::Entry::Invalid:
-            return Broken;
-        case KNS3::Entry::Downloadable:
-            return None;
-        case KNS3::Entry::Installed:
-            return Installed;
-        case KNS3::Entry::Updateable:
-            return Upgradeable;
-        case KNS3::Entry::Deleted:
-        case KNS3::Entry::Installing:
-        case KNS3::Entry::Updating:
-            return None;
+    switch (m_entry.status()) {
+    case KNS3::Entry::Invalid:
+        return Broken;
+    case KNS3::Entry::Downloadable:
+        return None;
+    case KNS3::Entry::Installed:
+        return Installed;
+    case KNS3::Entry::Updateable:
+        return Upgradeable;
+    case KNS3::Entry::Deleted:
+    case KNS3::Entry::Installing:
+    case KNS3::Entry::Updating:
+        return None;
     }
     return None;
 }
@@ -59,10 +59,10 @@ QVariant KNSResource::icon() const
 QString KNSResource::comment()
 {
     QString ret = m_entry.shortSummary();
-    if(ret.isEmpty()) {
+    if (ret.isEmpty()) {
         ret = m_entry.summary();
         int newLine = ret.indexOf(QLatin1Char('\n'));
-        if(newLine>0) {
+        if (newLine>0) {
             ret.truncate(newLine);
         }
         ret.remove(QRegularExpression(QStringLiteral("\\[\\/?[a-z]*\\]")));
@@ -146,9 +146,9 @@ QString KNSResource::installedVersion() const
 QString KNSResource::availableVersion() const
 {
     return !m_entry.updateVersion().isEmpty() ? m_entry.updateVersion()
-         : !m_entry.updateReleaseDate().isNull() ? m_entry.updateReleaseDate().toString()
-         : !m_entry.version().isEmpty() ? m_entry.version()
-         : releaseDate().toString();
+           : !m_entry.updateReleaseDate().isNull() ? m_entry.updateReleaseDate().toString()
+           : !m_entry.version().isEmpty() ? m_entry.version()
+           : releaseDate().toString();
 }
 
 QString KNSResource::origin() const
@@ -225,7 +225,7 @@ QVector<int> KNSResource::linkIds() const
 {
     QVector<int> ids;
     const auto linkInfo = m_entry.downloadLinkInformationList();
-    for(const auto &e : linkInfo) {
+    for (const auto &e : linkInfo) {
         if (e.isDownloadtypeLink)
             ids << e.id;
     }
@@ -244,10 +244,10 @@ Rating * KNSResource::ratingInstance()
         const int rating = m_entry.rating();
         Q_ASSERT(rating <= 100);
         m_rating.reset(new Rating(
-            packageName(),
-            noc,
-            rating / 10
-        ));
+                           packageName(),
+                           noc,
+                           rating / 10
+                       ));
     }
     return m_rating.data();
 }

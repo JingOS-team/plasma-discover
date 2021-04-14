@@ -1,4 +1,4 @@
-add_subdirectory(icons)
+#add_subdirectory(icons)
 if(BUILD_TESTING)
     add_subdirectory(autotests)
 endif()    
@@ -21,6 +21,9 @@ add_executable(plasma-discover ${plasma_discover_SRCS}
     PaginateModel.cpp
     UnityLauncher.cpp
     ReadFile.cpp
+
+    cus/AppClass.cpp
+    cus/AppClassModel.cpp
 
     resources.qrc
 )
@@ -90,6 +93,9 @@ if(EXISTS "/etc/debian_version")
     configure_file(org.kde.discover.desktop.cmake ${CMAKE_CURRENT_BINARY_DIR}/org.kde.discover.apt.urlhandler.desktop)
     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/org.kde.discover.apt.urlhandler.desktop DESTINATION ${XDG_APPS_INSTALL_DIR} )
 endif()
+remove_definitions(-DQT_NO_CAST_FROM_ASCII)
 
 install(FILES plasmadiscoverui.rc  DESTINATION  ${KXMLGUI_INSTALL_DIR}/plasmadiscover)
 install( FILES org.kde.discover.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR} )
+install( FILES jingdiscover.png DESTINATION ${KDE_INSTALL_FULL_ICONDIR}/hicolor/scalable/apps )
+

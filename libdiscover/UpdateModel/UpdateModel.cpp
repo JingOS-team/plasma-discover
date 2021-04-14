@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2011 Jonathan Thomas <echidnaman@kubuntu.org>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -53,6 +53,7 @@ QHash<int,QByteArray> UpdateModel::roleNames() const
     ret.insert(SectionRole, "section");
     ret.insert(ChangelogRole, "changelog");
     ret.insert(UpgradeTextRole, "upgradeText");
+    ret.insert(ResourceApp, "resourceApp");
     return ret;
 }
 
@@ -66,8 +67,22 @@ void UpdateModel::setBackend(ResourcesUpdatesModel* updates)
 
     connect(m_updates, &ResourcesUpdatesModel::progressingChanged, this, &UpdateModel::activityChanged);
     connect(m_updates, &ResourcesUpdatesModel::resourceProgressed, this, &UpdateModel::resourceHasProgressed);
+    connect(m_updates, &ResourcesUpdatesModel::updateResourceResult, this, &UpdateModel::updateResourceResult);
 
     activityChanged();
+}
+
+void UpdateModel::updateResourceResult(AbstractResource* res)
+{
+    UpdateItem* item = itemFromResource(res);
+    if (!item)
+        return;
+    const auto residx = m_updateItems.indexOf(item);
+    if (residx < 0)
+        return;
+    beginRemoveRows({}, residx, residx);
+    m_updateItems.removeAt(residx);
+    endRemoveRows();
 }
 
 void UpdateModel::resourceHasProgressed(AbstractResource* res, qreal progress, AbstractBackendUpdater::State state)
@@ -89,7 +104,7 @@ void UpdateModel::activityChanged()
             m_updates->prepare();
             setResources(m_updates->toUpdate());
 
-            for(auto item : qAsConst(m_updateItems)) {
+            for (auto item : qAsConst(m_updateItems)) {
                 item->setProgress(0);
             }
         } else
@@ -122,14 +137,19 @@ QVariant UpdateModel::data(const QModelIndex &index, int role) const
         return item->state();
     case ChangelogRole:
         return item->changelog();
+    case ResourceApp:
+        return QVariant::fromValue<QObject*>(item->app());
     case SectionRole: {
         static const QString appUpdatesSection = i18nc("@item:inlistbox", "Application Updates");
         static const QString systemUpdateSection = i18nc("@item:inlistbox", "System Updates");
         static const QString addonsSection = i18nc("@item:inlistbox", "Addons");
-        switch(item->resource()->type()) {
-            case AbstractResource::Application: return appUpdatesSection;
-            case AbstractResource::Technical: return systemUpdateSection;
-            case AbstractResource::Addon: return addonsSection;
+        switch (item->resource()->type()) {
+        case AbstractResource::Application:
+            return appUpdatesSection;
+        case AbstractResource::Technical:
+            return systemUpdateSection;
+        case AbstractResource::Addon:
+            return addonsSection;
         }
         Q_UNREACHABLE();
     }
@@ -144,7 +164,7 @@ QVariant UpdateModel::data(const QModelIndex &index, int role) const
 
 void UpdateModel::checkResources(const QList<AbstractResource*>& resource, bool checked)
 {
-    if(checked)
+    if (checked)
         m_updates->addResources(resource);
     else
         m_updates->removeResources(resource);
@@ -193,6 +213,15 @@ void UpdateModel::fetchUpdateDetails(int row)
     item->app()->fetchUpdateDetails();
 }
 
+void UpdateModel::updateResourceByIndex(int row)
+{
+    UpdateItem *item = itemFromIndex(index(row, 0));
+    Q_ASSERT(item);
+    if (!item) return;
+
+    m_updates->updateResource(item->app());
+}
+
 void UpdateModel::integrateChangelog(const QString &changelog)
 {
     auto app = qobject_cast<AbstractResource*>(sender());
@@ -220,24 +249,26 @@ void UpdateModel::setResources(const QList<AbstractResource*>& resources)
     m_updateItems.clear();
 
     QVector<UpdateItem*> appItems, systemItems, addonItems;
-    foreach(AbstractResource* res, resources) {
+    foreach (AbstractResource* res, resources) {
         connect(res, &AbstractResource::changelogFetched, this, &UpdateModel::integrateChangelog, Qt::UniqueConnection);
 
         UpdateItem *updateItem = new UpdateItem(res);
 
-        switch(res->type()) {
-            case AbstractResource::Technical:
-                systemItems += updateItem;
-                break;
-            case AbstractResource::Application:
-                appItems += updateItem;
-                break;
-            case AbstractResource::Addon:
-                addonItems += updateItem;
-                break;
+        switch (res->type()) {
+        case AbstractResource::Technical:
+            systemItems += updateItem;
+            break;
+        case AbstractResource::Application:
+            appItems += updateItem;
+            break;
+        case AbstractResource::Addon:
+            addonItems += updateItem;
+            break;
         }
     }
-    const auto sortUpdateItems = [](UpdateItem *a, UpdateItem *b) { return a->name() < b->name(); };
+    const auto sortUpdateItems = [](UpdateItem *a, UpdateItem *b) {
+        return a->name() < b->name();
+    };
     std::sort(appItems.begin(), appItems.end(), sortUpdateItems);
     std::sort(systemItems.begin(), systemItems.end(), sortUpdateItems);
     std::sort(addonItems.begin(), addonItems.end(), sortUpdateItems);
@@ -329,14 +360,14 @@ void UpdateModel::resourceDataChanged(AbstractResource* res, const QVector<QByte
 
 void UpdateModel::checkAll()
 {
-    for(int i=0, c=rowCount(); i<c; ++i)
-        if(index(i,0).data(Qt::CheckStateRole) != Qt::Checked)
+    for (int i=0, c=rowCount(); i<c; ++i)
+        if (index(i,0).data(Qt::CheckStateRole) != Qt::Checked)
             setData(index(i,0), Qt::Checked, Qt::CheckStateRole);
 }
 
 void UpdateModel::uncheckAll()
 {
-    for(int i=0, c=rowCount(); i<c; ++i)
-        if(index(i,0).data(Qt::CheckStateRole) != Qt::Unchecked)
+    for (int i=0, c=rowCount(); i<c; ++i)
+        if (index(i,0).data(Qt::CheckStateRole) != Qt::Unchecked)
             setData(index(i,0), Qt::Unchecked, Qt::CheckStateRole);
 }

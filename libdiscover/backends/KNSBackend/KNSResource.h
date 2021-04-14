@@ -17,7 +17,7 @@
 class KNSBackend;
 class DISCOVERCOMMON_EXPORT KNSResource : public AbstractResource
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit KNSResource(const KNSCore::EntryInternal & c, QStringList categories, KNSBackend* parent);
     ~KNSResource() override;
@@ -31,7 +31,9 @@ public:
     QUrl homepage() override;
     QJsonArray licenses() override;
     QString longDescription() override;
-    QList<PackageState> addonsInformation() override { return QList<PackageState>(); }
+    QList<PackageState> addonsInformation() override {
+        return QList<PackageState>();
+    }
     QString availableVersion() const override;
     QString installedVersion() const override;
     QString origin() const override;
@@ -40,7 +42,9 @@ public:
     int size() override;
     void fetchChangelog() override;
     QStringList extends() const override;
-    AbstractResource::Type type() const override { return Addon; }
+    AbstractResource::Type type() const override {
+        return Addon;
+    }
     QString author() const override;
 
     KNSBackend* knsBackend() const;
@@ -53,7 +57,9 @@ public:
 
     QUrl url() const override;
     QString executeLabel() const override;
-    QString sourceIcon() const override { return QStringLiteral("get-hot-new-stuff"); }
+    QString sourceIcon() const override {
+        return QStringLiteral("get-hot-new-stuff");
+    }
     QDate releaseDate() const override;
     QVector<int> linkIds() const;
     QUrl donationURL() override;

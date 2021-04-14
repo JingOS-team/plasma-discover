@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 #include "PackageKitUpdater.h"
@@ -11,11 +11,13 @@
 #include <QDebug>
 #include <QAction>
 #include <QSet>
+#include <network/networkutils.h>
 
 #include <KLocalizedString>
 
 #include "libdiscover_backend_debug.h"
 #include "utils.h"
+#include <Transaction/TransactionModel.h>
 
 int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage)
 {
@@ -65,15 +67,31 @@ public:
         });
     }
 
-    QString packageName() const override { return QStringLiteral("discover-offline-upgrade");}
-    QString name() const override { return i18n("System upgrade"); }
-    QString comment() override { return upgradeText(); }
-    QVariant icon() const override { return QStringLiteral("system-upgrade"); }
-    bool canExecute() const override { return false; }
+    QString packageName() const override {
+        return QStringLiteral("discover-offline-upgrade");
+    }
+    QString name() const override {
+        return i18n("System upgrade");
+    }
+    QString comment() override {
+        return upgradeText();
+    }
+    QVariant icon() const override {
+        return QStringLiteral("system-upgrade");
+    }
+    bool canExecute() const override {
+        return false;
+    }
     void invokeApplication() const override {}
-    State state() override { return Upgradeable; }
-    QStringList categories() override { return {}; }
-    AbstractResource::Type type() const override { return Technical; }
+    State state() override {
+        return Upgradeable;
+    }
+    QStringList categories() override {
+        return {};
+    }
+    AbstractResource::Type type() const override {
+        return Technical;
+    }
     int size() override {
         int ret = 0;
         QSet<QString> donePkgs;
@@ -95,11 +113,21 @@ public:
         kRemoveDuplicates(ret, [] (const QJsonValueRef &val) -> QString { return val.toObject()[QLatin1String("name")].toString(); });
         return ret;
     }
-    QString section() override { return {}; }
-    QString longDescription() override { return {}; }
-    QString origin() const override { return {}; }
-    QString author() const override { return {}; }
-    QList<PackageState> addonsInformation() override { return {}; }
+    QString section() override {
+        return {};
+    }
+    QString longDescription() override {
+        return {};
+    }
+    QString origin() const override {
+        return {};
+    }
+    QString author() const override {
+        return {};
+    }
+    QList<PackageState> addonsInformation() override {
+        return {};
+    }
     QString upgradeText() const override {
         return i18np("1 package to upgrade", "%1 packages to upgrade", m_resources.count());
     }
@@ -120,10 +148,18 @@ public:
         Q_EMIT changelogFetched(QStringLiteral("<ul>") + changes.join(QString()) + QStringLiteral("</ul>\n"));
     }
 
-    QString installedVersion() const override { return i18n("Present"); }
-    QString availableVersion() const override { return i18n("Future"); }
-    QString sourceIcon() const override { return QStringLiteral("package-x-generic"); }
-    QDate releaseDate() const override { return {}; }
+    QString installedVersion() const override {
+        return i18n("Present");
+    }
+    QString availableVersion() const override {
+        return i18n("Future");
+    }
+    QString sourceIcon() const override {
+        return QStringLiteral("package-x-generic");
+    }
+    QDate releaseDate() const override {
+        return {};
+    }
 
     QSet<AbstractResource*> resources() const {
         return m_resources;
@@ -159,16 +195,20 @@ private:
 };
 
 PackageKitUpdater::PackageKitUpdater(PackageKitBackend * parent)
-  : AbstractBackendUpdater(parent),
-    m_transaction(nullptr),
-    m_backend(parent),
-    m_isCancelable(false),
-    m_isProgressing(false),
-    m_percentage(0),
-    m_lastUpdate(),
-    m_upgrade(new SystemUpgrade(m_backend))
+    : AbstractBackendUpdater(parent),
+      m_transaction(nullptr),
+      m_backend(parent),
+      m_isCancelable(false),
+      m_isProgressing(false),
+      m_percentage(0),
+      m_lastUpdate(),
+      m_upgrade(new SystemUpgrade(m_backend))
 {
     fetchLastUpdateTime();
+    connect(TransactionModel::global(),&TransactionModel::lastTransactionFinished,[this]() {
+        m_backend->fetchUpdates();
+        fetchLastUpdateTime();
+    });
 }
 
 PackageKitUpdater::~PackageKitUpdater()
@@ -222,7 +262,9 @@ void PackageKitUpdater::setupTransaction(PackageKit::Transaction::TransactionFla
 QSet<AbstractResource*> PackageKitUpdater::packagesForPackageId(const QSet<QString>& pkgids) const
 {
     const auto packages = kTransform<QSet<QString>>(pkgids,
-                                                    [] (const QString& pkgid) { return PackageKit::Daemon::packageName(pkgid); }
+    [] (const QString& pkgid) {
+        return PackageKit::Daemon::packageName(pkgid);
+    }
                                                    );
 
     QSet<AbstractResource*> ret;
@@ -327,8 +369,8 @@ void PackageKitUpdater::finished(PackageKit::Transaction::Exit exit, uint /*time
         if (!toremove.isEmpty()) {
             const auto toinstall = QStringList() << m_packagesModified.value(PackageKit::Transaction::InfoInstalling) << m_packagesModified.value(PackageKit::Transaction::InfoUpdating);
             Q_EMIT proceedRequest(i18n("Packages to remove"), i18n("The following packages will be removed by the update:<ul><li>%1</li></ul><br/>in order to install:<ul><li>%2</li></ul>",
-                                                                   PackageKitResource::joinPackages(toremove, QStringLiteral("</li><li>"), {}),
-                                                                   PackageKitResource::joinPackages(toinstall, QStringLiteral("</li><li>"), {})
+                                  PackageKitResource::joinPackages(toremove, QStringLiteral("</li><li>"), {}),
+                                  PackageKitResource::joinPackages(toinstall, QStringLiteral("</li><li>"), {})
                                                                   ));
         } else {
             proceed();
@@ -384,6 +426,11 @@ void PackageKitUpdater::addResources(const QList<AbstractResource*>& apps)
     m_toUpgrade.unite(packagesForPackageId(pkgs));
 }
 
+Transaction* PackageKitUpdater::updateResource(AbstractResource* app)
+{
+    return new PKTransaction({app},Transaction::UpdateRole);
+}
+
 QList<AbstractResource*> PackageKitUpdater::toUpdate() const
 {
     return m_toUpgrade.values();
@@ -433,11 +480,11 @@ void PackageKitUpdater::mediaChange(PackageKit::Transaction::MediaType media, co
 
 void PackageKitUpdater::eulaRequired(const QString& eulaID, const QString& packageID, const QString& vendor, const QString& licenseAgreement)
 {
-    m_proceedFunctions << [eulaID](){
+    m_proceedFunctions << [eulaID]() {
         return PackageKit::Daemon::acceptEula(eulaID);
     };
     Q_EMIT proceedRequest(i18n("Accept EULA"), i18n("The package %1 and its vendor %2 require that you accept their license:\n %3",
-                                                 PackageKit::Daemon::packageName(packageID), vendor, licenseAgreement));
+                          PackageKit::Daemon::packageName(packageID), vendor, licenseAgreement));
 }
 
 void PackageKitUpdater::setProgressing(bool progressing)
@@ -468,22 +515,22 @@ void PackageKitUpdater::lastUpdateTimeReceived(QDBusPendingCallWatcher* w)
 
 AbstractBackendUpdater::State toUpdateState(PackageKit::Transaction::Status t)
 {
-    switch(t) {
-        case PackageKit::Transaction::StatusUnknown:
-        case PackageKit::Transaction::StatusDownload:
-            return AbstractBackendUpdater::Downloading;
-        case PackageKit::Transaction::StatusDepResolve:
-        case PackageKit::Transaction::StatusSigCheck:
-        case PackageKit::Transaction::StatusTestCommit:
-        case PackageKit::Transaction::StatusInstall:
-        case PackageKit::Transaction::StatusCommit:
-            return AbstractBackendUpdater::Installing;
-        case PackageKit::Transaction::StatusFinished:
-        case PackageKit::Transaction::StatusCancel:
-            return AbstractBackendUpdater::Done;
-        default:
-            qCDebug(LIBDISCOVER_BACKEND_LOG) << "unknown packagekit status" << t;
-            return AbstractBackendUpdater::None;
+    switch (t) {
+    case PackageKit::Transaction::StatusUnknown:
+    case PackageKit::Transaction::StatusDownload:
+        return AbstractBackendUpdater::Downloading;
+    case PackageKit::Transaction::StatusDepResolve:
+    case PackageKit::Transaction::StatusSigCheck:
+    case PackageKit::Transaction::StatusTestCommit:
+    case PackageKit::Transaction::StatusInstall:
+    case PackageKit::Transaction::StatusCommit:
+        return AbstractBackendUpdater::Installing;
+    case PackageKit::Transaction::StatusFinished:
+    case PackageKit::Transaction::StatusCancel:
+        return AbstractBackendUpdater::Done;
+    default:
+        qCDebug(LIBDISCOVER_BACKEND_LOG) << "unknown packagekit status" << t;
+        return AbstractBackendUpdater::None;
     }
     Q_UNREACHABLE();
 }
@@ -492,7 +539,7 @@ void PackageKitUpdater::itemProgress(const QString& itemID, PackageKit::Transact
 {
     const auto res = packagesForPackageId({itemID});
 
-    foreach(auto r, res) {
+    foreach (auto r, res) {
         Q_EMIT resourceProgressed(r, percentage, toUpdateState(status));
     }
 }
@@ -500,7 +547,7 @@ void PackageKitUpdater::itemProgress(const QString& itemID, PackageKit::Transact
 void PackageKitUpdater::fetchChangelog() const
 {
     QStringList pkgids;
-    foreach(AbstractResource* res, m_allUpgradeable) {
+    foreach (AbstractResource* res, m_allUpgradeable) {
         if (auto upgrade = dynamic_cast<SystemUpgrade*>(res)) {
             upgrade->fetchChangelog();
         } else {
@@ -515,13 +562,13 @@ void PackageKitUpdater::fetchChangelog() const
 }
 
 void PackageKitUpdater::updateDetail(const QString& packageID, const QStringList& updates, const QStringList& obsoletes, const QStringList& vendorUrls,
-                                      const QStringList& bugzillaUrls, const QStringList& cveUrls, PackageKit::Transaction::Restart restart, const QString& updateText,
-                                      const QString& changelog, PackageKit::Transaction::UpdateState state, const QDateTime& issued, const QDateTime& updated)
+                                     const QStringList& bugzillaUrls, const QStringList& cveUrls, PackageKit::Transaction::Restart restart, const QString& updateText,
+                                     const QString& changelog, PackageKit::Transaction::UpdateState state, const QDateTime& issued, const QDateTime& updated)
 {
     auto res = packagesForPackageId({packageID});
-    foreach(auto r, res) {
+    foreach (auto r, res) {
         static_cast<PackageKitResource*>(r)->updateDetail(packageID, updates, obsoletes, vendorUrls, bugzillaUrls,
-                                                          cveUrls, restart, updateText, changelog, state, issued, updated);
+                cveUrls, restart, updateText, changelog, state, issued, updated);
     }
 }
 
@@ -531,14 +578,14 @@ void PackageKitUpdater::packageResolved(PackageKit::Transaction::Info info, cons
 }
 
 void PackageKitUpdater::repoSignatureRequired(const QString& packageID, const QString& repoName, const QString& keyUrl,
-                                              const QString& keyUserid, const QString& keyId, const QString& keyFingerprint,
-                                              const QString& keyTimestamp, PackageKit::Transaction::SigType type)
+        const QString& keyUserid, const QString& keyId, const QString& keyFingerprint,
+        const QString& keyTimestamp, PackageKit::Transaction::SigType type)
 {
     Q_EMIT proceedRequest(i18n("Missing signature for %1 in %2", packageID, repoName),
                           i18n("Do you trust the following key?\n\nUrl: %1\nUser: %2\nKey: %3\nFingerprint: %4\nTimestamp: %4\n",
                                keyUrl, keyUserid, keyFingerprint, keyTimestamp));
 
-    m_proceedFunctions << [type, keyId, packageID](){
+    m_proceedFunctions << [type, keyId, packageID]() {
         return PackageKit::Daemon::installSignature(type, keyId, packageID);
     };
 }

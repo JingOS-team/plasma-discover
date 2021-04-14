@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2011 Jonathan Thomas <echidnaman@kubuntu.org>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -19,13 +19,14 @@ class UpdateItem;
 class DISCOVERCOMMON_EXPORT UpdateModel : public QAbstractListModel
 {
     Q_OBJECT
+
     Q_PROPERTY(ResourcesUpdatesModel* backend READ backend WRITE setBackend)
     Q_PROPERTY(bool hasUpdates READ hasUpdates NOTIFY hasUpdatesChanged)
     Q_PROPERTY(int toUpdateCount READ toUpdateCount NOTIFY toUpdateChanged)
     Q_PROPERTY(int totalUpdatesCount READ totalUpdatesCount NOTIFY hasUpdatesChanged)
     Q_PROPERTY(QString updateSize READ updateSize NOTIFY updateSizeChanged)
-public:
 
+public:
     enum Roles {
         SizeRole = Qt::UserRole + 1,
         ResourceRole,
@@ -34,7 +35,8 @@ public:
         SectionResourceProgressRole,
         ChangelogRole,
         SectionRole,
-        UpgradeTextRole
+        UpgradeTextRole,
+        ResourceApp
     };
     Q_ENUM(Roles)
 
@@ -61,6 +63,7 @@ public:
     int toUpdateCount() const;
 
     Q_SCRIPTABLE void fetchUpdateDetails(int row);
+    Q_SCRIPTABLE void updateResourceByIndex(int row);
 
     QString updateSize() const;
 
@@ -84,6 +87,7 @@ private:
     UpdateItem* itemFromResource(AbstractResource* res);
     void resourceHasProgressed(AbstractResource* res, qreal progress, AbstractBackendUpdater::State state);
     void activityChanged();
+    void updateResourceResult(AbstractResource* res);
 
     QTimer* const m_updateSizeTimer;
     QVector<UpdateItem*> m_updateItems;

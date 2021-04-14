@@ -25,7 +25,7 @@ public:
     PaginateModelTest()
         : m_testModel(new QStringListModel)
     {
-        for(int i=0; i<13; ++i) {
+        for (int i=0; i<13; ++i) {
             appendRow(m_testModel, QStringLiteral("figui%1").arg(i));
         }
     }

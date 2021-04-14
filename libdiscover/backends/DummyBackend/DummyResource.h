@@ -12,7 +12,7 @@
 class AddonList;
 class DummyResource : public AbstractResource
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit DummyResource(QString name, AbstractResource::Type type, AbstractResourcesBackend* parent);
 
@@ -34,20 +34,32 @@ public:
     QString comment() override;
     QString name() const override;
     QString packageName() const override;
-    AbstractResource::Type type() const override { return m_type; }
-    bool canExecute() const override { return true; }
+    AbstractResource::Type type() const override {
+        return m_type;
+    }
+    bool canExecute() const override {
+        return true;
+    }
     void invokeApplication() const override;
     void fetchChangelog() override;
     void fetchScreenshots() override;
     QUrl url() const override;
-    QString author() const override { return QStringLiteral("BananaPerson"); }
+    QString author() const override {
+        return QStringLiteral("BananaPerson");
+    }
     void setState(State state);
-    void setSize(int size) { m_size = size; }
+    void setSize(int size) {
+        m_size = size;
+    }
     void setAddons(const AddonList& addons);
 
     void setAddonInstalled(const QString& addon, bool installed);
-    QString sourceIcon() const override { return QStringLiteral("player-time"); }
-    QDate releaseDate() const override { return {}; }
+    QString sourceIcon() const override {
+        return QStringLiteral("player-time");
+    }
+    QDate releaseDate() const override {
+        return {};
+    }
 
 public:
     const QString m_name;

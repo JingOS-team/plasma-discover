@@ -39,38 +39,38 @@ QHash< int, QByteArray > ReviewsModel::roleNames() const
 
 QVariant ReviewsModel::data(const QModelIndex& index, int role) const
 {
-    if(!index.isValid())
+    if (!index.isValid())
         return QVariant();
-    switch(role) {
-        case Qt::DisplayRole:
-            return m_reviews.at(index.row())->reviewText();
-        case ShouldShow:
-            return m_reviews.at(index.row())->shouldShow();
-        case Reviewer:
-            return m_reviews.at(index.row())->reviewer();
-        case CreationDate:
-            return m_reviews.at(index.row())->creationDate();
-        case UsefulnessTotal:
-            return m_reviews.at(index.row())->usefulnessTotal();
-        case UsefulnessFavorable:
-            return m_reviews.at(index.row())->usefulnessFavorable();
-        case UsefulChoice:
-            return m_reviews.at(index.row())->usefulChoice();
-        case Rating:
-            return m_reviews.at(index.row())->rating();
-        case Summary:
-            return m_reviews.at(index.row())->summary();
-        case PackageVersion:
-            return m_reviews.at(index.row())->packageVersion();
-        case Depth:
-            return m_reviews.at(index.row())->getMetadata(QStringLiteral("NumberOfParents")).toInt();
+    switch (role) {
+    case Qt::DisplayRole:
+        return m_reviews.at(index.row())->reviewText();
+    case ShouldShow:
+        return m_reviews.at(index.row())->shouldShow();
+    case Reviewer:
+        return m_reviews.at(index.row())->reviewer();
+    case CreationDate:
+        return m_reviews.at(index.row())->creationDate();
+    case UsefulnessTotal:
+        return m_reviews.at(index.row())->usefulnessTotal();
+    case UsefulnessFavorable:
+        return m_reviews.at(index.row())->usefulnessFavorable();
+    case UsefulChoice:
+        return m_reviews.at(index.row())->usefulChoice();
+    case Rating:
+        return m_reviews.at(index.row())->rating();
+    case Summary:
+        return m_reviews.at(index.row())->summary();
+    case PackageVersion:
+        return m_reviews.at(index.row())->packageVersion();
+    case Depth:
+        return m_reviews.at(index.row())->getMetadata(QStringLiteral("NumberOfParents")).toInt();
     }
     return QVariant();
 }
 
 int ReviewsModel::rowCount(const QModelIndex& parent) const
 {
-    if(parent.isValid())
+    if (parent.isValid())
         return 0;
     return m_reviews.count();
 }
@@ -87,17 +87,17 @@ AbstractReviewsBackend* ReviewsModel::backend() const
 
 void ReviewsModel::setResource(AbstractResource* app)
 {
-    if(m_app!=app) {
+    if (m_app!=app) {
         beginResetModel();
         m_reviews.clear();
         m_lastPage = 0;
 
-        if(m_backend) {
+        if (m_backend) {
             disconnect(m_backend, &AbstractReviewsBackend::reviewsReady, this, &ReviewsModel::addReviews);
         }
         m_app = app;
         m_backend = app ? app->backend()->reviewsBackend() : nullptr;
-        if(m_backend) {
+        if (m_backend) {
             connect(m_backend, &AbstractReviewsBackend::reviewsReady, this, &ReviewsModel::addReviews);
 
             QMetaObject::invokeMethod(this, "restartFetching", Qt::QueuedConnection);
@@ -110,7 +110,7 @@ void ReviewsModel::setResource(AbstractResource* app)
 
 void ReviewsModel::restartFetching()
 {
-    if(!m_app || !m_backend)
+    if (!m_app || !m_backend)
         return;
 
     m_canFetchMore=true;
@@ -121,7 +121,7 @@ void ReviewsModel::restartFetching()
 
 void ReviewsModel::fetchMore(const QModelIndex& parent)
 {
-    if(!m_backend || !m_app || parent.isValid() || m_backend->isFetching() || !m_canFetchMore)
+    if (!m_backend || !m_app || parent.isValid() || m_backend->isFetching() || !m_canFetchMore)
         return;
 
     m_lastPage++;
@@ -131,13 +131,13 @@ void ReviewsModel::fetchMore(const QModelIndex& parent)
 
 void ReviewsModel::addReviews(AbstractResource* app, const QVector<ReviewPtr>& reviews, bool canFetchMore)
 {
-    if(app!=m_app)
+    if (app!=m_app)
         return;
 
     m_canFetchMore = canFetchMore;
 //     qCDebug(LIBDISCOVER_LOG) << "reviews arrived..." << m_lastPage << reviews.size();
 
-    if(!reviews.isEmpty()) {
+    if (!reviews.isEmpty()) {
         beginInsertRows(QModelIndex(), rowCount(), rowCount()+reviews.size()-1);
         m_reviews += reviews;
         endInsertRows();

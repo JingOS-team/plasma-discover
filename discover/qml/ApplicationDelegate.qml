@@ -1,133 +1,211 @@
+
+
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
-
 import QtQuick 2.1
 import QtQuick.Controls 2.1
 import QtQuick.Layouts 1.1
 import QtQuick.Window 2.1
 import "navigation.js" as Navigation
 import org.kde.kirigami 2.6 as Kirigami
+import QtGraphicalEffects 1.0
+import org.kde.discover 2.0
+import org.kde.discover.app 1.0
+import "cus"
 
-Kirigami.AbstractCard
-{
+Kirigami.AbstractCard {
     id: delegateArea
+
     property alias application: installButton.application
     property bool compact: false
     property bool showRating: true
+    property int defaultFontSize: theme.defaultFont.pointSize
+    property string clickedBannerName
+    property alias installButtonText: installButton.text
+
+    onClickedBannerNameChanged: {
+        if (clickedBannerName === delegateArea.application.name) {
+            trigger()
+        }
+    }
+
+    function intoDetailPage() {
+        trigger()
+    }
+
     showClickFeedback: true
 
     function trigger() {
-        if (delegateRecycler.ListView.view)
-            delegateRecycler.ListView.view.currentIndex = index
-        Navigation.openApplication(application)
+        getDetails(application, true)
     }
-    highlighted: delegateRecycler && delegateRecycler.ListView.isCurrentItem
     Keys.onReturnPressed: trigger()
     onClicked: trigger()
+    topPadding: 0
+    bottomPadding: 0
+    leftPadding: 0
+    rightPadding: 0
+
+    hoverEnabled: true
+    background: RectDropshadow {
+        anchors.fill: parent
+        color: "#FFFFFF"
+        radius: 20
+        shadowColor: "#80C3C9D9"
+    }
+
+    Component {
+        id: highlightComponent
+
+        Rectangle {
+            width: delegateArea.width
+            height: delegateArea.height
+            radius: 20
+            color: delegateArea.pressed ? "#29787880" : "#1F767680"
+
+            Behavior on y {
+                SpringAnimation {
+                    spring: 3
+                    damping: 0.2
+                }
+            }
+        }
+    }
+
+    Loader {
+        id: hoverLoader
+
+        anchors.fill: delegateArea
+        sourceComponent: highlightComponent
+        active: hovered && !pressed
+    }
+
+    Loader {
+        id: pressLoader
+
+        anchors.fill: delegateArea
+        sourceComponent: highlightComponent
+        active: pressed
+    }
 
     contentItem: Item {
-        implicitHeight: delegateArea.compact ? Kirigami.Units.gridUnit * 2 : Kirigami.Units.gridUnit * 4
+        id: contentDetailItem
 
-        Kirigami.Icon {
+        property int itemMargins: (delegateArea.height) * 1 / 8
+        anchors {
+            top: parent.top
+            topMargin: contentDetailItem.itemMargins
+            left: parent.left
+            leftMargin: contentDetailItem.itemMargins
+            right: parent.right
+            rightMargin: contentDetailItem.itemMargins
+            bottom: parent.bottom
+            bottomMargin: contentDetailItem.itemMargins
+        }
+        clip: true
+
+        Rectangle {
             id: resourceIcon
-            source: application.icon
-            readonly property real contHeight: delegateArea.compact ? Kirigami.Units.gridUnit * 3 : Kirigami.Units.gridUnit * 5
-            height: contHeight
-            width: contHeight
+
             anchors {
-                verticalCenter: parent.verticalCenter
                 left: parent.left
+                top: contentDetailItem.top
+            }
+            height: (delegateArea.height) / 2
+            width: height
+            radius: height / 10
+            color: "#CCFFFFFF"
+
+            Kirigami.Icon {
+                id: resourceIconImage
+
+                anchors.centerIn: parent
+                placeholder: "qrc:/img/ic_app_list_empty.png"
+                source: application.icon
+                height: parent.height
+                width: parent.height
             }
         }
 
-        GridLayout {
-            columnSpacing: delegateArea.compact ? 0 : 5
-            rowSpacing: delegateArea.compact ? 0 : 5
+        InstallApplicationButton {
+            id: installButton
+
             anchors {
-                verticalCenter: parent.verticalCenter
+                bottom: contentDetailItem.bottom
+                left: parent.left
+            }
+            width: resourceIcon.width
+            height: width * 2 / 5
+
+            compact: delegateArea.compact
+            textSize: defaultFontSize - 3
+            text: ((stateFilter
+                    === AbstractResource.Installed) ? (installTextString) : (categoryTextString))
+        }
+
+        Column {
+            id: textColumn
+
+            readonly property bool bigTitle: (head.implicitWidth
+                                              + installButton.width) > parent.width
+            anchors {
                 right: parent.right
                 left: resourceIcon.right
-                leftMargin: Kirigami.Units.largeSpacing
+                leftMargin: resourceIcon.height / 6
+                top: resourceIcon.top
+                bottom: parent.bottom
             }
-            columns: 2
-            rows: delegateArea.compact ? 4 : 3
+            Layout.fillWidth: true
+            spacing: 10
 
-            RowLayout {
-                Layout.fillWidth: true
-                readonly property bool bigTitle: (head.implicitWidth + installButton.width) > parent.width
+            Kirigami.Heading {
+                id: head
 
-                Kirigami.Heading {
-                    id: head
-                    level: delegateArea.compact ? 3 : 2
-                    Layout.fillWidth: !category.visible || parent.bigTitle
-                    elide: Text.ElideRight
-                    text: delegateArea.application.name
-                    maximumLineCount: 1
+                anchors {
+                    left: parent.left
+                    right: parent.right
                 }
-
-                Kirigami.Heading {
-                    id: category
-                    level: 5
-                    Layout.fillWidth: true
-                    elide: Text.ElideRight
-                    text: i18nc("Part of a string like this: '<app name> - <category>'", "- %1", delegateArea.application.categoryDisplay)
-                    maximumLineCount: 1
-                    opacity: 0.6
-                    visible: delegateArea.application.categoryDisplay && delegateArea.application.categoryDisplay !== page.title && !parent.bigTitle
-                }
-            }
-
-            InstallApplicationButton {
-                id: installButton
-                Layout.alignment: Qt.AlignVCenter | Qt.AlignRight
-                Layout.rowSpan: delegateArea.compact ? 3 : 1
-                compact: delegateArea.compact
-            }
-
-            RowLayout {
-                visible: showRating
-                spacing: Kirigami.Units.largeSpacing
-                Layout.fillWidth: true
-                Rating {
-                    rating: delegateArea.application.rating ? delegateArea.application.rating.sortableRating : 0
-                    starSize: delegateArea.compact ? summary.font.pointSize : head.font.pointSize
-                }
-                Label {
-                    Layout.fillWidth: true
-                    text: delegateArea.application.rating ? i18np("%1 rating", "%1 ratings", delegateArea.application.rating.ratingCount) : i18n("No ratings yet")
-                    visible: delegateArea.application.rating || delegateArea.application.backend.reviewsBackend.isResourceSupported(delegateArea.application)
-                    opacity: 0.5
-                    elide: Text.ElideRight
-                }
-            }
-
-            Label {
-                id: summary
-                Layout.columnSpan: delegateArea.compact ? 1 : 2
-                Layout.fillWidth: true
-
-                rightPadding: soup.visible ? soup.width + soup.anchors.rightMargin : 0
+                Layout.fillWidth: !category.visible || parent.bigTitle
                 elide: Text.ElideRight
-                text: delegateArea.application.comment
+                text: delegateArea.application.name
                 maximumLineCount: 1
-                textFormat: Text.PlainText
+                font.pointSize: delegateArea.defaultFontSize + 2
+                font.bold: true
+            }
 
-                Kirigami.Icon {
-                    id: soup
-                    source: application.sourceIcon
-                    height: Kirigami.Units.gridUnit
-                    width: Kirigami.Units.gridUnit
-                    smooth: true
-                    visible: !delegateArea.compact && ResourcesModel.currentApplicationBackend !== application.backend && application.backend.hasApplications
-                    anchors {
-                        bottom: parent.bottom
-                        right: parent.right
-                        rightMargin: Kirigami.Units.smallSpacing
-                    }
+            Kirigami.Heading {
+                id: category
+
+                anchors {
+                    left: parent.left
+                    right: parent.right
                 }
+                Layout.fillWidth: true
+                elide: Text.ElideRight
+                text: delegateArea.application.categoryDisplay
+                maximumLineCount: 1
+                color: "#99000000"
+                font.pointSize: delegateArea.defaultFontSize - 5
+            }
+
+            Kirigami.Heading {
+                id: summary
+                
+                anchors {
+                    left: parent.left
+                    right: parent.right
+                }
+                height: textColumn.height - category.contentHeight - head.contentHeight - 20
+                elide: Text.ElideRight
+                verticalAlignment: Text.AlignTop
+                color: "#4D000000"
+                text: delegateArea.application.comment
+                maximumLineCount: 3
+                wrapMode: Text.WrapAnywhere
+                font.pointSize: delegateArea.defaultFontSize - 5
             }
         }
     }

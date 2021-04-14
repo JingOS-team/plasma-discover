@@ -34,7 +34,7 @@ int main(int argc, char** argv)
         about.processCommandLine(&parser);
         DiscoverBackendsFactory::processCommandLine(&parser, false);
 
-        if(parser.positionalArguments().count() != 1) {
+        if (parser.positionalArguments().count() != 1) {
             parser.showHelp(1);
         }
         exp.setExportPath(QUrl::fromUserInput(parser.positionalArguments().at(0), QString(), QUrl::AssumeLocalFile));

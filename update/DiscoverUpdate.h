@@ -19,20 +19,20 @@ class ResourcesUpdatesModel;
 class DiscoverUpdate : public QObject
 {
     Q_OBJECT
-    public:
-        explicit DiscoverUpdate();
-        ~DiscoverUpdate() override;
+public:
+    explicit DiscoverUpdate();
+    ~DiscoverUpdate() override;
 
-        void setOfflineUpdates(bool offline) {
-            m_offlineUpdates = offline;
-        }
-    private:
-        void start();
-        void transactionStatusChanged(Transaction::Status status);
+    void setOfflineUpdates(bool offline) {
+        m_offlineUpdates = offline;
+    }
+private:
+    void start();
+    void transactionStatusChanged(Transaction::Status status);
 
-        ResourcesUpdatesModel* const m_resourcesUpdatesModel;
-        bool m_done = false;
-        bool m_offlineUpdates = false;
+    ResourcesUpdatesModel* const m_resourcesUpdatesModel;
+    bool m_done = false;
+    bool m_offlineUpdates = false;
 };
 
 #endif // DISCOVERUPDATE_H

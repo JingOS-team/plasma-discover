@@ -11,7 +11,7 @@
 
 class DISCOVERCOMMON_EXPORT StoredResultsStream : public AggregatedResultsStream
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     StoredResultsStream(const QSet<ResultsStream*>& streams);
 

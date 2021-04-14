@@ -16,8 +16,12 @@ DummySourcesBackend::DummySourcesBackend(AbstractResourcesBackend * parent)
     for (int i = 0; i<10; ++i)
         addSource(QStringLiteral("DummySource%1").arg(i));
 
-    connect(m_testAction, &QAction::triggered, [](){ qDebug() << "action triggered!"; });
-    connect(m_sources, &QStandardItemModel::itemChanged, this, [](QStandardItem* item) { qDebug() << "DummySource changed" << item << item->checkState(); });
+    connect(m_testAction, &QAction::triggered, []() {
+        qDebug() << "action triggered!";
+    });
+    connect(m_sources, &QStandardItemModel::itemChanged, this, [](QStandardItem* item) {
+        qDebug() << "DummySource changed" << item << item->checkState();
+    });
 }
 
 QAbstractItemModel* DummySourcesBackend::sources()

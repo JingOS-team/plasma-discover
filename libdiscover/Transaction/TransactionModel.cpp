@@ -134,7 +134,7 @@ QModelIndex TransactionModel::indexOf(AbstractResource *res) const
 
 void TransactionModel::addTransaction(Transaction *trans)
 {
-    if(!trans)
+    if (!trans)
         return;
 
     if (m_transactions.contains(trans))
@@ -148,9 +148,16 @@ void TransactionModel::addTransaction(Transaction *trans)
     m_transactions.append(trans);
     endInsertRows();
 
-    connect(trans, &Transaction::statusChanged, this, [this](){ transactionChanged(StatusTextRole); });
-    connect(trans, &Transaction::cancellableChanged, this, [this](){ transactionChanged(CancellableRole); });
-    connect(trans, &Transaction::progressChanged, this, [this](){ transactionChanged(ProgressRole); Q_EMIT progressChanged(); });
+    connect(trans, &Transaction::statusChanged, this, [this]() {
+        transactionChanged(StatusTextRole);
+    });
+    connect(trans, &Transaction::cancellableChanged, this, [this]() {
+        transactionChanged(CancellableRole);
+    });
+    connect(trans, &Transaction::progressChanged, this, [this]() {
+        transactionChanged(ProgressRole);
+        Q_EMIT progressChanged();
+    });
 
     emit transactionAdded(trans);
 }
@@ -187,7 +194,7 @@ int TransactionModel::progress() const
 {
     int sum = 0;
     int count = 0;
-    foreach(Transaction* t, m_transactions) {
+    foreach (Transaction* t, m_transactions) {
         if (t->isActive() && t->isVisible()) {
             sum += t->progress();
             ++count;

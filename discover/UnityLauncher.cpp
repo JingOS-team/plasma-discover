@@ -63,8 +63,8 @@ void UnityLauncher::update(const QVariantMap &properties)
     }
 
     QDBusMessage message = QDBusMessage::createSignal(QStringLiteral("/org/discover/UnityLauncher"),
-                                                      QStringLiteral("com.canonical.Unity.LauncherEntry"),
-                                                      QStringLiteral("Update"));
+                           QStringLiteral("com.canonical.Unity.LauncherEntry"),
+                           QStringLiteral("Update"));
     message.setArguments({m_launcherId, properties});
     QDBusConnection::sessionBus().send(message);
 }

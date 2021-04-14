@@ -38,7 +38,7 @@ void ApplicationAddonsModel::setApplication(AbstractResource* app)
     m_app = app;
     resetState();
     if (m_app) {
-        connect(m_app, &QObject::destroyed, this, [this](){
+        connect(m_app, &QObject::destroyed, this, [this]() {
             setApplication(nullptr);
         });
     }
@@ -67,27 +67,27 @@ int ApplicationAddonsModel::rowCount(const QModelIndex& parent) const
 
 QVariant ApplicationAddonsModel::data(const QModelIndex& index, int role) const
 {
-    if(!index.isValid() || index.row()>=m_initial.size())
+    if (!index.isValid() || index.row()>=m_initial.size())
         return QVariant();
-    
-    switch(role) {
-        case Qt::DisplayRole:
-            return m_initial[index.row()].name();
-        case Qt::ToolTipRole:
-            return m_initial[index.row()].description();
-        case PackageNameRole:
-            return m_initial[index.row()].packageName();
-        case Qt::CheckStateRole: {
-            const PackageState init = m_initial[index.row()];
-            const AddonList::State state = m_state.addonState(init.name());
-            if(state == AddonList::None) {
-                return init.isInstalled() ? Qt::Checked : Qt::Unchecked;
-            } else {
-                return state == AddonList::ToInstall ? Qt::Checked : Qt::Unchecked;
-            }
+
+    switch (role) {
+    case Qt::DisplayRole:
+        return m_initial[index.row()].name();
+    case Qt::ToolTipRole:
+        return m_initial[index.row()].description();
+    case PackageNameRole:
+        return m_initial[index.row()].packageName();
+    case Qt::CheckStateRole: {
+        const PackageState init = m_initial[index.row()];
+        const AddonList::State state = m_state.addonState(init.name());
+        if (state == AddonList::None) {
+            return init.isInstalled() ? Qt::Checked : Qt::Unchecked;
+        } else {
+            return state == AddonList::ToInstall ? Qt::Checked : Qt::Unchecked;
         }
     }
-    
+    }
+
     return QVariant();
 }
 
@@ -108,15 +108,15 @@ void ApplicationAddonsModel::applyChanges()
 void ApplicationAddonsModel::changeState(const QString& packageName, bool installed)
 {
     auto it = m_initial.constBegin();
-    for(; it != m_initial.constEnd(); ++it) {
-        if(it->packageName()==packageName)
+    for (; it != m_initial.constEnd(); ++it) {
+        if (it->packageName()==packageName)
             break;
     }
     Q_ASSERT(it != m_initial.constEnd());
-    
+
     const bool restored = it->isInstalled()==installed;
 
-    if(restored)
+    if (restored)
         m_state.resetAddon(packageName);
     else
         m_state.addAddon(packageName, installed);

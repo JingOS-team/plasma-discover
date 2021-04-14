@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -15,6 +15,7 @@
 #include <QList>
 #include <QProcess>
 #include "libdiscover_debug.h"
+#include <QJsonDocument>
 
 AbstractResource::AbstractResource(AbstractResourcesBackend* parent)
     : QObject(parent)
@@ -66,9 +67,32 @@ bool AbstractResource::isInstalled()
     return state() >= Installed;
 }
 
+QString AbstractResource::screenShots()
+{
+    return m_screenShotsJson;
+}
+
+void AbstractResource::setScreenShots(QString shotsJson)
+{
+    m_screenShotsJson = shotsJson;
+    fetchScreenshots();
+}
+
 void AbstractResource::fetchScreenshots()
 {
-    emit screenshotsFetched({}, {});
+    QList<QUrl> thumbnails;
+    QList<QUrl> screenshots;
+    auto shotsJson = screenShots();
+    auto shotArray = QJsonDocument::fromJson(shotsJson.toUtf8()).array();
+    for (int i = 0; i < shotArray.size(); i++) {
+        auto shotObj = shotArray.at(i).toObject();
+        auto shotUrl = shotObj.value("url").toString();
+        auto shotType = shotObj.value("type").toString();
+        QUrl url(shotUrl);
+        screenshots.append(url);
+        thumbnails.append(url);
+    }
+    emit screenshotsFetched(thumbnails, screenshots);
 }
 
 QStringList AbstractResource::mimetypes() const
@@ -83,11 +107,15 @@ AbstractResourcesBackend* AbstractResource::backend() const
 
 QString AbstractResource::status()
 {
-    switch(state()) {
-        case Broken: return i18n("Broken");
-        case None: return i18n("Available");
-        case Installed: return i18n("Installed");
-        case Upgradeable: return i18n("Upgradeable");
+    switch (state()) {
+    case Broken:
+        return i18n("Broken");
+    case None:
+        return i18n("Available");
+    case Installed:
+        return i18n("Installed");
+    case Upgradeable:
+        return i18n("Upgradeable");
     }
     return QString();
 }
@@ -140,27 +168,29 @@ static bool shouldFilter(AbstractResource* res, const QPair<FilterType, QString>
 {
     bool ret = true;
     switch (filter.first) {
-        case CategoryFilter:
-            ret = res->categories().contains(filter.second);
-            break;
-        case PkgSectionFilter:
-            ret = res->section() == filter.second;
-            break;
-        case PkgWildcardFilter: {
-            QString wildcard = filter.second;
-            wildcard.remove(QLatin1Char('*'));
-            ret = res->packageName().contains(wildcard);
-        }   break;
-        case AppstreamIdWildcardFilter: {
-            QString wildcard = filter.second;
-            wildcard.remove(QLatin1Char('*'));
-            ret = res->appstreamId().contains(wildcard);
-        }   break;
-        case PkgNameFilter: // Only useful in the not filters
-            ret = res->packageName() == filter.second;
-            break;
-        case InvalidFilter:
-            break;
+    case CategoryFilter:
+        ret = res->categories().contains(filter.second);
+        break;
+    case PkgSectionFilter:
+        ret = res->section() == filter.second;
+        break;
+    case PkgWildcardFilter: {
+        QString wildcard = filter.second;
+        wildcard.remove(QLatin1Char('*'));
+        ret = res->packageName().contains(wildcard);
+    }
+    break;
+    case AppstreamIdWildcardFilter: {
+        QString wildcard = filter.second;
+        wildcard.remove(QLatin1Char('*'));
+        ret = res->appstreamId().contains(wildcard);
+    }
+    break;
+    case PkgNameFilter: // Only useful in the not filters
+        ret = res->packageName() == filter.second;
+        break;
+    case InvalidFilter:
+        break;
     }
     return ret;
 }
@@ -171,22 +201,22 @@ bool AbstractResource::categoryMatches(Category* cat)
         const auto orFilters = cat->orFilters();
         bool orValue = orFilters.isEmpty();
         for (const auto& filter: orFilters) {
-            if(shouldFilter(this, filter)) {
+            if (shouldFilter(this, filter)) {
                 orValue = true;
                 break;
             }
         }
-        if(!orValue)
+        if (!orValue)
             return false;
     }
 
     Q_FOREACH (const auto &filter, cat->andFilters()) {
-        if(!shouldFilter(this, filter))
+        if (!shouldFilter(this, filter))
             return false;
     }
 
     Q_FOREACH (const auto &filter, cat->notFilters()) {
-        if(shouldFilter(this, filter))
+        if (shouldFilter(this, filter))
             return false;
     }
     return true;
@@ -216,13 +246,14 @@ QSet<Category*> AbstractResource::categoryObjects(const QVector<Category*>& cats
 
 QString AbstractResource::categoryDisplay() const
 {
-    const auto matchedCategories = categoryObjects(CategoryModel::global()->rootCategories());
-    QStringList ret;
-    foreach(auto cat, matchedCategories) {
-        ret.append(cat->name());
-    }
-    ret.sort();
-    return ret.join(QLatin1String(", "));
+    // const auto matchedCategories = categoryObjects(CategoryModel::global()->rootCategories());
+    // QStringList ret;
+    // foreach(auto cat, matchedCategories) {
+    //     ret.append(cat->name());
+    // }
+    // ret.sort();
+    // return ret.join(QLatin1String(", "));
+    return m_categoryDisplay;
 }
 
 QUrl AbstractResource::url() const

@@ -1,22 +1,27 @@
+
+
 /*
  *   SPDX-FileCopyrightText: 2015 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
-
 import QtQuick 2.5
 import org.kde.kirigami 2.0 as Kirigami
+import "cus/"
 
-Kirigami.ScrollablePage
-{
+JScrollablePage {
     id: root
-
+    background: Rectangle {
+        color: "transparent"
+    }
     readonly property var s1: Shortcut {
         sequence: StandardKey.MoveToNextPage
         enabled: root.isCurrentPage
         onActivated: {
-            root.flickable.contentY = Math.min(root.flickable.contentHeight - root.flickable.height,
-                                               root.flickable.contentY + root.flickable.height);
+            root.flickable.contentY = Math.min(
+                        root.flickable.contentHeight - root.flickable.height,
+                        root.flickable.contentY + root.flickable.height)
         }
     }
 
@@ -24,13 +29,14 @@ Kirigami.ScrollablePage
         sequence: StandardKey.MoveToPreviousPage
         enabled: root.isCurrentPage
         onActivated: {
-            root.flickable.contentY = Math.max(0, root.flickable.contentY - root.flickable.height);
+            root.flickable.contentY = Math.max(
+                        0, root.flickable.contentY - root.flickable.height)
         }
     }
 
     readonly property var sClose: Shortcut {
         sequence: StandardKey.Cancel
-        enabled: root.isCurrentPage && applicationWindow().pageStack.depth>1
+        enabled: root.isCurrentPage && applicationWindow().pageStack.depth > 1
         onActivated: {
             applicationWindow().pageStack.pop()
         }
@@ -47,7 +53,8 @@ Kirigami.ScrollablePage
 
     readonly property var readableCharacters: /\w+/
     Keys.onPressed: {
-        if(event.text.length > 0 && event.modifiers === Qt.NoModifier && event.text.match(readableCharacters)) {
+        if (event.text.length > 0 && event.modifiers === Qt.NoModifier
+                && event.text.match(readableCharacters)) {
             window.globalDrawer.suggestSearchText(event.text)
         }
     }

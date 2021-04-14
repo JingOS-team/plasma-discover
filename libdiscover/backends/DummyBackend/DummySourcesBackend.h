@@ -18,11 +18,17 @@ public:
     QAbstractItemModel* sources() override;
     bool addSource(const QString& id) override;
     bool removeSource(const QString& id) override;
-    QString idDescription() override { return QStringLiteral("Random weird text"); }
+    QString idDescription() override {
+        return QStringLiteral("Random weird text");
+    }
     QVariantList actions() const override;
-    bool supportsAdding() const override { return true; }
+    bool supportsAdding() const override {
+        return true;
+    }
 
-    bool canMoveSources() const override { return true; }
+    bool canMoveSources() const override {
+        return true;
+    }
     bool moveSource(const QString & sourceId, int delta) override;
 
 private:

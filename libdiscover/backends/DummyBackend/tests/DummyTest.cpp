@@ -27,8 +27,8 @@ QTEST_MAIN(DummyTest)
 AbstractResourcesBackend* backendByName(ResourcesModel* m, const QString& name)
 {
     QVector<AbstractResourcesBackend*> backends = m->backends();
-    foreach(AbstractResourcesBackend* backend, backends) {
-        if(QString::fromLatin1(backend->metaObject()->className()) == name) {
+    foreach (AbstractResourcesBackend* backend, backends) {
+        if (QString::fromLatin1(backend->metaObject()->className()) == name) {
             return backend;
         }
     }
@@ -48,7 +48,7 @@ DummyTest::DummyTest(QObject* parent): QObject(parent)
 void DummyTest::initTestCase()
 {
     QVERIFY(m_appBackend);
-    while(m_appBackend->isFetching()) {
+    while (m_appBackend->isFetching()) {
         QSignalSpy spy(m_appBackend, &AbstractResourcesBackend::fetchingChanged);
         QVERIFY(spy.wait());
     }
@@ -57,7 +57,9 @@ void DummyTest::initTestCase()
 QVector<AbstractResource*> fetchResources(ResultsStream* stream)
 {
     QVector<AbstractResource*> ret;
-    QObject::connect(stream, &ResultsStream::resourcesFound, stream, [&ret](const QVector<AbstractResource*>& res) { ret += res; });
+    QObject::connect(stream, &ResultsStream::resourcesFound, stream, [&ret](const QVector<AbstractResource*>& res) {
+        ret += res;
+    });
     QSignalSpy spy(stream, &ResultsStream::destroyed);
     Q_ASSERT(spy.wait());
     return ret;
@@ -69,7 +71,7 @@ void DummyTest::testReadData()
 
     QCOMPARE(m_appBackend->property("startElements").toInt() * 2, resources.size());
     QBENCHMARK {
-        for(AbstractResource* res: resources) {
+        for (AbstractResource* res: resources) {
             QVERIFY(!res->name().isEmpty());
         }
     }
@@ -119,7 +121,7 @@ void DummyTest::testProxySorting()
 
     QCOMPARE(m_appBackend->property("startElements").toInt() * 2, pm.rowCount());
     QVariant lastRatingCount;
-    for(int i=0, rc=pm.rowCount(); i<rc; ++i) {
+    for (int i=0, rc=pm.rowCount(); i<rc; ++i) {
         const QModelIndex mi = pm.index(i, 0);
 
         const auto value = mi.data(pm.sortRole());
@@ -151,7 +153,7 @@ void DummyTest::testSort()
         pm.sort(0);
         QCOMPARE(pm.sortOrder(), Qt::AscendingOrder);
         QString last;
-        for(int i = 0, count = pm.rowCount(); i<count; ++i) {
+        for (int i = 0, count = pm.rowCount(); i<count; ++i) {
             const QString current = pm.index(i, 0).data(pm.sortRole()).toString();
             if (!last.isEmpty()) {
                 QCOMPARE(c.compare(last, current), -1);
@@ -163,7 +165,7 @@ void DummyTest::testSort()
     QBENCHMARK_ONCE {
         pm.setSortRole(ResourcesProxyModel::SortableRatingRole);
         int last=-1;
-        for(int i = 0, count = pm.rowCount(); i<count; ++i) {
+        for (int i = 0, count = pm.rowCount(); i<count; ++i) {
             const int current = pm.index(i, 0).data(pm.sortRole()).toInt();
             QVERIFY(last<=current);
             last = current;
@@ -202,7 +204,7 @@ void DummyTest::testInstallAddons()
 
     m.changeState(m.data(m.index(1,0)).toString(), true);
     QVERIFY(m.hasChanges());
-    for(int i=0, c=m.rowCount(); i<c; ++i) {
+    for (int i=0, c=m.rowCount(); i<c; ++i) {
         const auto idx = m.index(i, 0);
         QCOMPARE(idx.data(Qt::CheckStateRole).toInt(), int(i<=1 ? Qt::Checked : Qt::Unchecked));
         QVERIFY(!idx.data(ApplicationAddonsModel::PackageNameRole).toString().isEmpty());
@@ -274,7 +276,7 @@ void DummyTest::testScreenshotsModel()
     QCOMPARE(res, m.resource());
 
     int c=m.rowCount();
-    for(int i=0; i<c; ++i) {
+    for (int i=0; i<c; ++i) {
         const auto idx = m.index(i, 0);
         QVERIFY(!idx.data(ScreenshotsModel::ThumbnailUrl).isNull());
         QVERIFY(!idx.data(ScreenshotsModel::ScreenshotUrl).isNull());

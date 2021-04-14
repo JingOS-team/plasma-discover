@@ -12,27 +12,27 @@
 
 /**
  * The @class PackageState will be used to expose resources related to an @class AbstractResource.
- * 
+ *
  * @see ApplicationAddonsModel
  */
 class DISCOVERCOMMON_EXPORT PackageState
 {
-    public:
-        PackageState(QString packageName, QString name, QString description, bool installed);
-        PackageState(const QString &name, const QString &description, bool installed);
-        PackageState& operator=(const PackageState& other);
-        
-        QString packageName() const;
-        QString name() const;
-        QString description() const;
-        bool isInstalled() const;
-        void setInstalled(bool installed);
-        
-    private:
-        const QString m_packageName;
-        const QString m_name;
-        const QString m_description;
-        bool m_installed;
+public:
+    PackageState(QString packageName, QString name, QString description, bool installed);
+    PackageState(const QString &name, const QString &description, bool installed);
+    PackageState& operator=(const PackageState& other);
+
+    QString packageName() const;
+    QString name() const;
+    QString description() const;
+    bool isInstalled() const;
+    void setInstalled(bool installed);
+
+private:
+    const QString m_packageName;
+    const QString m_name;
+    const QString m_description;
+    bool m_installed;
 };
 
 DISCOVERCOMMON_EXPORT QDebug operator<<(QDebug dbg, const PackageState &state);

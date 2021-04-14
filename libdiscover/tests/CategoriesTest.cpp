@@ -33,7 +33,7 @@ public:
         Q_FOREACH (const QString& name, categoryFiles) {
             const QVector<Category*> cats = reader.loadCategoriesPath(name);
 
-            if(ret.isEmpty()) {
+            if (ret.isEmpty()) {
                 ret = cats;
             } else {
                 Q_FOREACH (Category* c, cats)

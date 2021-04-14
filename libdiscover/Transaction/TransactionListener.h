@@ -26,9 +26,13 @@ class DISCOVERCOMMON_EXPORT TransactionListener : public QObject
     Q_PROPERTY(int progress READ progress NOTIFY progressChanged)
 public:
     explicit TransactionListener(QObject *parent = nullptr);
-    
-    AbstractResource *resource() const { return m_resource; }
-    Transaction *transaction() const { return m_transaction; }
+
+    AbstractResource *resource() const {
+        return m_resource;
+    }
+    Transaction *transaction() const {
+        return m_transaction;
+    }
     bool isCancellable() const;
     bool isActive() const;
     QString statusText() const;

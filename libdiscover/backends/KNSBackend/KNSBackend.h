@@ -18,11 +18,13 @@ class KNSReviews;
 class KNSResource;
 class StandardBackendUpdater;
 
-namespace KNSCore { class Engine; }
+namespace KNSCore {
+class Engine;
+}
 
 class DISCOVERCOMMON_EXPORT KNSBackend : public AbstractResourcesBackend
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit KNSBackend(QObject* parent, const QString& iconName, const QString &knsrc);
     ~KNSBackend() override;
@@ -37,16 +39,26 @@ public:
     ResultsStream* search(const AbstractResourcesBackend::Filters & filter) override;
     ResultsStream* findResourceByPackageName(const QUrl & search);
 
-    QVector<Category*> category() const override { return m_rootCategories; }
-    bool hasApplications() const override { return m_hasApplications; }
+    QVector<Category*> category() const override {
+        return m_rootCategories;
+    }
+    bool hasApplications() const override {
+        return m_hasApplications;
+    }
 
     bool isValid() const override;
 
-    QStringList extends() const override { return m_extends; }
+    QStringList extends() const override {
+        return m_extends;
+    }
 
-    QString iconName() const { return m_iconName; }
+    QString iconName() const {
+        return m_iconName;
+    }
 
-    KNSCore::Engine* engine() const { return m_engine; }
+    KNSCore::Engine* engine() const {
+        return m_engine;
+    }
 
     void checkForUpdates() override;
 

@@ -25,8 +25,8 @@ public:
     AbstractResourcesBackend* backendByName(ResourcesModel* m, const QString& name)
     {
         QVector<AbstractResourcesBackend*> backends = m->backends();
-        foreach(AbstractResourcesBackend* backend, backends) {
-            if(QLatin1String(backend->metaObject()->className()) == name) {
+        foreach (AbstractResourcesBackend* backend, backends) {
+            if (QLatin1String(backend->metaObject()->className()) == name) {
                 return backend;
             }
         }
@@ -47,7 +47,7 @@ private Q_SLOTS:
         QDir(QStandardPaths::writableLocation(QStandardPaths::TempLocation) + QLatin1String("/discover-flatpak-test")).removeRecursively();
 
         QVERIFY(m_appBackend);
-        while(m_appBackend->isFetching()) {
+        while (m_appBackend->isFetching()) {
             QSignalSpy spy(m_appBackend, &AbstractResourcesBackend::fetchingChanged);
             QVERIFY(spy.wait());
         }
@@ -133,7 +133,9 @@ private:
         Q_ASSERT(stream);
         QSignalSpy spyResources(stream, &ResultsStream::destroyed);
         QVector<AbstractResource*> resources;
-        connect(stream, &ResultsStream::resourcesFound, this, [&resources](const QVector<AbstractResource*>& res) { resources += res; });
+        connect(stream, &ResultsStream::resourcesFound, this, [&resources](const QVector<AbstractResource*>& res) {
+            resources += res;
+        });
         Q_ASSERT(spyResources.wait(10000));
         Q_ASSERT(!resources.isEmpty() || canBeEmpty);
         return resources;

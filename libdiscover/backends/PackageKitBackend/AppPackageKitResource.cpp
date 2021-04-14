@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -19,6 +19,10 @@
 #include <QDebug>
 #include "config-paths.h"
 #include "utils.h"
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QJsonValue>
 
 AppPackageKitResource::AppPackageKitResource(const AppStream::Component& data, const QString &packageName, PackageKitBackend* parent)
     : PackageKitResource(packageName, QString(), parent)
@@ -57,34 +61,44 @@ QString AppPackageKitResource::longDescription()
 static QIcon componentIcon(const AppStream::Component &comp)
 {
     QIcon ret;
-    foreach(const AppStream::Icon &icon, comp.icons()) {
+    foreach (const AppStream::Icon &icon, comp.icons()) {
         QStringList stock;
-        switch(icon.kind()) {
-            case AppStream::Icon::KindLocal:
-                ret.addFile(icon.url().toLocalFile(), icon.size());
-                break;
-            case AppStream::Icon::KindCached:
-                ret.addFile(icon.url().toLocalFile(), icon.size());
-                break;
-            case AppStream::Icon::KindStock: {
-                const auto ret = QIcon::fromTheme(icon.name());
-                if (!ret.isNull())
-                    return ret;
-                break;
-            }
-            default:
-                break;
+        switch (icon.kind()) {
+        case AppStream::Icon::KindLocal:
+            qDebug()<<Q_FUNC_INFO<< " appstream icon KindCached url:"<<icon.url().toLocalFile();
+
+            ret.addFile(icon.url().toLocalFile(), icon.size());
+            break;
+        case AppStream::Icon::KindCached:
+            qDebug()<<Q_FUNC_INFO<< " appstream icon KindLocal url:"<<icon.url().toLocalFile();
+            ret.addFile(icon.url().toLocalFile(), icon.size());
+            break;
+        case AppStream::Icon::KindStock: {
+            const auto ret = QIcon::fromTheme(icon.name());
+            if (!ret.isNull())
+                return ret;
+            break;
+        }
+        default:
+            break;
         }
     }
-    if (ret.isNull()) {
-        ret = QIcon::fromTheme(QStringLiteral("package-x-generic"));
-    }
+//    if (ret.isNull()) {
+//        ret = QIcon::fromTheme(QStringLiteral("package-x-generic"));
+//    }
     return ret;
 }
 
 QVariant AppPackageKitResource::icon() const
 {
-    return componentIcon(m_appdata);
+    if (!m_icon.isNull()) {
+        return m_icon;
+    }
+    QIcon requestIcon = componentIcon(m_appdata);
+    if (requestIcon.isNull()) {
+        return "qrc:/img/ic_app_list_empty.png";
+    }
+    return requestIcon;
 }
 
 QJsonArray AppPackageKitResource::licenses()
@@ -154,13 +168,7 @@ AbstractResource::Type AppPackageKitResource::type() const
     const auto desktops = m_appdata.compulsoryForDesktops();
     return kContainsValue(s_addonKinds, m_appdata.kind())        ? Addon
            : (desktops.isEmpty() || !desktops.contains(desktop)) ? Application
-                                                                 : Technical;
-}
-
-void AppPackageKitResource::fetchScreenshots()
-{
-    const auto sc = AppStreamUtils::fetchScreenshots(m_appdata);
-    Q_EMIT screenshotsFetched(sc.first, sc.second);
+           : Technical;
 }
 
 QStringList AppPackageKitResource::allPackageNames() const
@@ -174,10 +182,13 @@ QStringList AppPackageKitResource::allPackageNames() const
 
 QList<PackageState> AppPackageKitResource::addonsInformation()
 {
-    const auto res = kFilter<QVector<AppPackageKitResource*>>(backend()->extendedBy(m_appdata.id()), [this](AppPackageKitResource* r){ return r->allPackageNames() != allPackageNames(); });
+    const auto res = kFilter<QVector<AppPackageKitResource*>>(backend()->extendedBy(m_appdata.id()), [this](AppPackageKitResource* r) {
+        return r->allPackageNames() != allPackageNames();
+    });
     return kTransform<QList<PackageState>>(res,
-        [](AppPackageKitResource* r) { return PackageState(r->appstreamId(), r->name(), r->comment(), r->isInstalled()); }
-    );
+    [](AppPackageKitResource* r) {
+        return PackageState(r->appstreamId(), r->name(), r->comment(), r->isInstalled());
+    });
 }
 
 QStringList AppPackageKitResource::extends() const
@@ -190,7 +201,6 @@ QString AppPackageKitResource::changelog() const
     return AppStreamUtils::changelogToHtml(m_appdata);
 }
 
-
 bool AppPackageKitResource::canExecute() const
 {
     static QSet<QString> cannotExecute = { QStringLiteral("org.kde.development") };
@@ -200,6 +210,7 @@ bool AppPackageKitResource::canExecute() const
 void AppPackageKitResource::invokeApplication() const
 {
     auto trans = PackageKit::Daemon::getFiles({installedPackageId()});
+    qDebug()<<Q_FUNC_INFO<< " installedPackageId():"<<installedPackageId();
     connect(trans, &PackageKit::Transaction::errorCode, backend(), &PackageKitBackend::transactionError);
     connect(trans, &PackageKit::Transaction::files, this, [this](const QString &/*packageID*/, const QStringList &_filenames) {
         //This workarounds bug in zypper's backend (suse) https://github.com/hughsie/PackageKit/issues/351
@@ -209,12 +220,16 @@ void AppPackageKitResource::invokeApplication() const
         }
         const auto allServices = QStandardPaths::locateAll(QStandardPaths::ApplicationsLocation, m_appdata.id());
         if (!allServices.isEmpty()) {
-            const auto packageServices = kFilter<QStringList>(allServices, [filenames](const QString &file) { return filenames.contains(file); });
+            const auto packageServices = kFilter<QStringList>(allServices, [filenames](const QString &file) {
+                return filenames.contains(file);
+            });
             QProcess::startDetached(QStringLiteral(CMAKE_INSTALL_FULL_LIBEXECDIR_KF5 "/discover/runservice"), {packageServices});
             return;
         } else {
             const QStringList exes = m_appdata.provided(AppStream::Provided::KindBinary).items();
-            const auto packageExecutables = kFilter<QStringList>(exes, [filenames](const QString &exe) { return filenames.contains(QLatin1Char('/') + exe); });
+            const auto packageExecutables = kFilter<QStringList>(exes, [filenames](const QString &exe) {
+                return filenames.contains(QLatin1Char('/') + exe);
+            });
             if (!packageExecutables.isEmpty()) {
                 QProcess::startDetached(exes.constFirst(), QStringList());
                 return;

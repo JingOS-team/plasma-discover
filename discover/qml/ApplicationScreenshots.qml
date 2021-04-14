@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
  *   SPDX-FileCopyrightText: 2020 Carl Schwan <carl@carlschwan.eu>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -11,16 +11,20 @@ import QtQuick.Layouts 1.1
 import QtQuick.Controls 2.1
 import org.kde.discover 2.0
 import org.kde.kirigami 2.12 as Kirigami
+import "navigation.js" as Nav
+import "./cus"
 
 ListView {
     id: root
+
     readonly property alias count: screenshotsModel.count
     property alias resource: screenshotsModel.application
     property var resource
 
-    spacing: Kirigami.Units.largeSpacing
+    spacing: 20//Kirigami.Units.largeSpacing
     focus: overlay.visible
     orientation: Qt.Horizontal
+    clip: true
 
     Layout.preferredHeight: Kirigami.Units.gridUnit * 10
 
@@ -33,19 +37,19 @@ ListView {
 
     delegate: AbstractButton {
         readonly property url imageSource: large_image_url
-        readonly property real proportion: thumbnail.sourceSize.width>1 ? thumbnail.sourceSize.height/thumbnail.sourceSize.width : 1
 
         implicitWidth: thumbnail.width
         implicitHeight: root.height
         padding: Kirigami.Units.largeSpacing
         hoverEnabled: true
-        onClicked: overlay.open()
-        // TODO cursorShape: Qt.PointingHandCursor
+        onClicked: {
+            Nav.openBigImg(appScreenShots)
+        }
 
-        background: Image {
+        background: BigImgItem {
             id: thumbnail
-            readonly property real proportion: thumbnail.sourceSize.width>1 ? thumbnail.sourceSize.height/thumbnail.sourceSize.width : 1
-            width: root.height / proportion
+
+            width: root.width / 2.5 //root.height / proportion
             height: root.height
 
             BusyIndicator {
@@ -53,12 +57,13 @@ ListView {
                 running: thumbnail.status == Image.Loading
                 anchors.centerIn: parent
             }
-            source: small_image_url
+            url: small_image_url
         }
     }
 
     Popup {
         id: overlay
+
         parent: applicationWindow().overlay
         modal: true
         clip: false
@@ -71,6 +76,7 @@ ListView {
 
         BusyIndicator {
             id: indicator
+
             visible: running
             running: overlayImage.status == Image.Loading
             anchors.fill: parent
@@ -78,6 +84,7 @@ ListView {
 
         Image {
             id: overlayImage
+
             anchors.fill: parent
             source: root.currentItem ? root.currentItem.imageSource : ""
             fillMode: Image.PreserveAspectFit
@@ -106,6 +113,7 @@ ListView {
 
         Kirigami.Action {
             id: leftAction
+
             icon.name: "arrow-left"
             enabled: overlay.visible && visible
             visible: root.currentIndex >= 1 && !indicator.running
@@ -114,15 +122,13 @@ ListView {
 
         Kirigami.Action {
             id: rightAction
+            
             icon.name: "arrow-right"
             enabled: overlay.visible && visible
             visible: root.currentIndex < (root.count - 1) && !indicator.running
             onTriggered: root.currentIndex = (root.currentIndex + 1) % screenshotsModel.count
         }
     }
-
-
-    clip: true
 
     Shadow {
         parent: root
@@ -144,33 +150,5 @@ ListView {
         }
         edge: Qt.RightEdge
         width: Math.max(0, Math.min(root.contentWidth - root.contentX - root.width)/5)
-    }
-
-    RoundButton {
-        anchors {
-            left: parent.left
-            leftMargin: Kirigami.Units.largeSpacing
-            verticalCenter: parent.verticalCenter
-        }
-        width: Kirigami.Units.gridUnit * 2
-        height: width
-        icon.name: "arrow-left"
-        visible: !Kirigami.Settings.isMobile && root.currentIndex > 0
-        Keys.forwardTo: [root]
-        onClicked: root.currentIndex -= 1
-    }
-
-    RoundButton {
-        anchors {
-            right: parent.right
-            rightMargin: Kirigami.Units.largeSpacing
-            verticalCenter: parent.verticalCenter
-        }
-        width: Kirigami.Units.gridUnit * 2
-        height: width
-        icon.name: "arrow-right"
-        visible: !Kirigami.Settings.isMobile && root.currentIndex < root.count - 1
-        Keys.forwardTo: [root]
-        onClicked: root.currentIndex += 1
     }
 }

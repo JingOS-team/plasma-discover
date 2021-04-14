@@ -1,4 +1,12 @@
-install( FILES
+install( 
+    DIRECTORY 
+    categorys/
+    DESTINATION ${KDE_INSTALL_FULL_DATAROOTDIR}/discover/pkcategories
+    FILES_MATCHING PATTERN "*.png"
+    PERMISSIONS WORLD_EXECUTE WORLD_WRITE WORLD_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ OWNER_EXECUTE OWNER_WRITE OWNER_READ
+    )
+install( 
+    FILES
     educationcrop.jpg
     fontcrop.jpg
     gamecrop.jpg
@@ -15,4 +23,7 @@ install( FILES
     applicationcrop.jpg
     internetcrop.jpg
     settingscrop.jpg
-    DESTINATION ${KDE_INSTALL_FULL_DATAROOTDIR}/discover/pkcategories)
+    categoriesinfo.json
+    PERMISSIONS WORLD_EXECUTE WORLD_WRITE WORLD_READ GROUP_EXECUTE GROUP_WRITE GROUP_READ OWNER_EXECUTE OWNER_WRITE OWNER_READ
+    DESTINATION ${KDE_INSTALL_FULL_DATAROOTDIR}/discover/pkcategories
+    )

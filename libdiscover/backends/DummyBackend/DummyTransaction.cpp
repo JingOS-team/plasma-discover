@@ -33,7 +33,7 @@ void DummyTransaction::iterateTransaction()
     if (!m_iterate)
         return;
 
-    if(progress()<100) {
+    if (progress()<100) {
         setProgress(qBound(0, progress()+(KRandom::random()%30), 100));
         QTimer::singleShot(/*KRandom::random()%*/100, this, &DummyTransaction::iterateTransaction);
     } else if (status() == DownloadingStatus) {
@@ -62,7 +62,7 @@ void DummyTransaction::cancel()
 void DummyTransaction::finishTransaction()
 {
     AbstractResource::State newState;
-    switch(role()) {
+    switch (role()) {
     case InstallRole:
     case ChangeAddonsRole:
         newState = AbstractResource::Installed;

@@ -14,21 +14,27 @@
 class DummyBackend;
 class DummyReviewsBackend : public AbstractReviewsBackend
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit DummyReviewsBackend(DummyBackend* parent = nullptr);
     ~DummyReviewsBackend() override;
 
-    QString userName() const override { return QStringLiteral("dummy"); }
+    QString userName() const override {
+        return QStringLiteral("dummy");
+    }
     void login() override {}
     void logout() override {}
     void registerAndLogin() override {}
 
     Rating* ratingForApplication(AbstractResource* app) const override;
-    bool hasCredentials() const override { return false; }
+    bool hasCredentials() const override {
+        return false;
+    }
     void deleteReview(Review*) override {}
     void fetchReviews(AbstractResource* app, int page = 1) override;
-    bool isFetching() const override { return false; }
+    bool isFetching() const override {
+        return false;
+    }
     void submitReview(AbstractResource*, const QString&, const QString&, const QString&) override;
     void flagReview(Review*, const QString&, const QString&) override {}
     void submitUsefulness(Review*, bool) override;

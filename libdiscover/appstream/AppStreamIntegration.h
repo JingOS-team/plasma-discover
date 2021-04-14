@@ -19,7 +19,9 @@ public:
     static AppStreamIntegration* global();
 
     QSharedPointer<OdrsReviewsBackend> reviews();
-    KOSRelease* osRelease() { return &m_osrelease; }
+    KOSRelease* osRelease() {
+        return &m_osrelease;
+    }
 
 private:
     QWeakPointer<OdrsReviewsBackend> m_reviews;

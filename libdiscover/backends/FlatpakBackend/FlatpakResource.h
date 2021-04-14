@@ -23,7 +23,7 @@ class AddonList;
 class FlatpakBackend;
 class FlatpakResource : public AbstractResource
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit FlatpakResource(const AppStream::Component &component, FlatpakInstallation* installation, FlatpakBackend *parent);
 
@@ -57,15 +57,19 @@ public:
         const QString id;
         QString branch;
         QString arch;
-        bool operator!=(const Id& other) const { return !operator==(other); }
-        bool operator==(const Id& other) const { return &other == this || (
-               other.installation == installation
-            && other.origin == origin
-            && other.type == type
-            && other.id == id
-            && other.branch == branch
-            && other.arch == arch
-        ); }
+        bool operator!=(const Id& other) const {
+            return !operator==(other);
+        }
+        bool operator==(const Id& other) const {
+            return &other == this || (
+                       other.installation == installation
+                       && other.origin == origin
+                       && other.type == type
+                       && other.id == id
+                       && other.branch == branch
+                       && other.arch == arch
+                   );
+        }
     };
 
     static QString typeAsString(ResourceType type) {
@@ -119,7 +123,9 @@ public:
     QString author() const override;
     QStringList extends() const override;
 
-    FlatpakInstallation* installation() const { return m_id.installation; }
+    FlatpakInstallation* installation() const {
+        return m_id.installation;
+    }
 
     void invokeApplication() const override;
     void fetchChangelog() override;
@@ -173,12 +179,12 @@ private:
 inline uint qHash(const FlatpakResource::Id &key)
 {
     return qHash(key.installation)
-         ^ qHash(key.origin)
-         ^ qHash(key.type)
-         ^ qHash(key.id)
-         ^ qHash(key.branch)
-         ^ qHash(key.arch)
-         ;
+           ^ qHash(key.origin)
+           ^ qHash(key.type)
+           ^ qHash(key.id)
+           ^ qHash(key.branch)
+           ^ qHash(key.arch)
+           ;
 }
 
 #endif // FLATPAKRESOURCE_H

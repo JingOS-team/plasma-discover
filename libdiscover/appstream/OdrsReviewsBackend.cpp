@@ -107,12 +107,12 @@ void OdrsReviewsBackend::fetchReviews(AbstractResource *app, int page)
     m_isFetching = true;
 
     const QJsonDocument document(QJsonObject{
-            {QStringLiteral("app_id"), app->appstreamId()},
-            {QStringLiteral("distro"), osName()},
-            {QStringLiteral("user_hash"), userHash()},
-            {QStringLiteral("version"), app->isInstalled() ? app->installedVersion() : app->availableVersion()},
-            {QStringLiteral("locale"), QLocale::system().name()},
-            {QStringLiteral("limit"), -1}
+        {QStringLiteral("app_id"), app->appstreamId()},
+        {QStringLiteral("distro"), osName()},
+        {QStringLiteral("user_hash"), userHash()},
+        {QStringLiteral("version"), app->isInstalled() ? app->installedVersion() : app->availableVersion()},
+        {QStringLiteral("locale"), QLocale::system().name()},
+        {QStringLiteral("limit"), -1}
     });
 
     const auto json = document.toJson(QJsonDocument::Compact);
@@ -157,11 +157,11 @@ Rating * OdrsReviewsBackend::ratingForApplication(AbstractResource *app) const
 void OdrsReviewsBackend::submitUsefulness(Review *review, bool useful)
 {
     const QJsonDocument document(QJsonObject{
-                     {QStringLiteral("app_id"), review->applicationName()},
-                     {QStringLiteral("user_skey"), review->getMetadata(QStringLiteral("ODRS::user_skey")).toString()},
-                     {QStringLiteral("user_hash"), userHash()},
-                     {QStringLiteral("distro"), osName()},
-                     {QStringLiteral("review_id"), QJsonValue(double(review->id()))} //if we really need uint64 we should get it in QJsonValue
+        {QStringLiteral("app_id"), review->applicationName()},
+        {QStringLiteral("user_skey"), review->getMetadata(QStringLiteral("ODRS::user_skey")).toString()},
+        {QStringLiteral("user_hash"), userHash()},
+        {QStringLiteral("distro"), osName()},
+        {QStringLiteral("review_id"), QJsonValue(double(review->id()))} //if we really need uint64 we should get it in QJsonValue
     });
 
     QNetworkRequest request(QUrl(QStringLiteral(APIURL) + (useful ? QLatin1String("/upvote") : QLatin1String("/downvote"))));
@@ -194,15 +194,16 @@ void OdrsReviewsBackend::submitReview(AbstractResource *res, const QString &summ
 {
     Q_ASSERT(res);
     QJsonObject map = {{QStringLiteral("app_id"), res->appstreamId()},
-                     {QStringLiteral("user_skey"), res->getMetadata(QStringLiteral("ODRS::user_skey")).toString()},
-                     {QStringLiteral("user_hash"), userHash()},
-                     {QStringLiteral("version"), res->isInstalled() ? res->installedVersion() : res->availableVersion()},
-                     {QStringLiteral("locale"), QLocale::system().name()},
-                     {QStringLiteral("distro"), osName()},
-                     {QStringLiteral("user_display"), QJsonValue::fromVariant(KUser().property(KUser::FullName))},
-                     {QStringLiteral("summary"), summary},
-                     {QStringLiteral("description"), description},
-                     {QStringLiteral("rating"), rating.toInt() * 10}};
+        {QStringLiteral("user_skey"), res->getMetadata(QStringLiteral("ODRS::user_skey")).toString()},
+        {QStringLiteral("user_hash"), userHash()},
+        {QStringLiteral("version"), res->isInstalled() ? res->installedVersion() : res->availableVersion()},
+        {QStringLiteral("locale"), QLocale::system().name()},
+        {QStringLiteral("distro"), osName()},
+        {QStringLiteral("user_display"), QJsonValue::fromVariant(KUser().property(KUser::FullName))},
+        {QStringLiteral("summary"), summary},
+        {QStringLiteral("description"), description},
+        {QStringLiteral("rating"), rating.toInt() * 10}
+    };
 
     const QJsonDocument document(map);
 
@@ -257,7 +258,8 @@ void OdrsReviewsBackend::parseRatings()
                                 appJsonObject.value(QLatin1String("star2")).toInt(),
                                 appJsonObject.value(QLatin1String("star3")).toInt(),
                                 appJsonObject.value(QLatin1String("star4")).toInt(),
-                                appJsonObject.value(QLatin1String("star5")).toInt() };
+                                appJsonObject.value(QLatin1String("star5")).toInt()
+                              };
 
             Rating *rating = new Rating(it.key(), ratingCount, ratingMap);
             m_ratings.insert(it.key(), rating);
@@ -316,7 +318,7 @@ bool OdrsReviewsBackend::isResourceSupported(AbstractResource* res) const
 void OdrsReviewsBackend::emitRatingFetched(AbstractResourcesBackend* b, const QList<AbstractResource *>& resources) const
 {
     b->emitRatingsReady();
-    foreach(AbstractResource* res, resources) {
+    foreach (AbstractResource* res, resources) {
         if (m_ratings.contains(res->appstreamId())) {
             Q_EMIT res->ratingFetched();
         }

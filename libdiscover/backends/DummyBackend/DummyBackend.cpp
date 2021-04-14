@@ -46,7 +46,7 @@ DummyBackend::DummyBackend(QObject* parent)
 void DummyBackend::populate(const QString& n)
 {
     const int start = m_resources.count();
-    for(int i=start; i<start+m_startElements; i++) {
+    for (int i=start; i<start+m_startElements; i++) {
         const QString name = n+QLatin1Char(' ')+QString::number(i);
         DummyResource* res = new DummyResource(name, AbstractResource::Application, this);
         res->setSize(100+(m_startElements-i));
@@ -55,7 +55,7 @@ void DummyBackend::populate(const QString& n)
         connect(res, &DummyResource::stateChanged, this, &DummyBackend::updatesCountChanged);
     }
 
-    for(int i=start; i<start+m_startElements; i++) {
+    for (int i=start; i<start+m_startElements; i++) {
         const QString name = QLatin1String("addon")+QString::number(i);
         DummyResource* res = new DummyResource(name, AbstractResource::Addon, this);
         res->setState(AbstractResource::State(1+(i%3)));
@@ -64,7 +64,7 @@ void DummyBackend::populate(const QString& n)
         connect(res, &DummyResource::stateChanged, this, &DummyBackend::updatesCountChanged);
     }
 
-    for(int i=start; i<start+m_startElements; i++) {
+    for (int i=start; i<start+m_startElements; i++) {
         const QString name = QLatin1String("techie")+QString::number(i);
         DummyResource* res = new DummyResource(name, AbstractResource::Technical, this);
         res->setState(AbstractResource::State(1+(i%3)));
@@ -93,23 +93,23 @@ ResultsStream* DummyBackend::search(const AbstractResourcesBackend::Filters& fil
     QVector<AbstractResource*> ret;
     if (!filter.resourceUrl.isEmpty())
         return findResourceByPackageName(filter.resourceUrl);
-    else foreach(AbstractResource* r, m_resources) {
-        if (r->type() == AbstractResource::Technical && filter.state != AbstractResource::Upgradeable) {
-            continue;
+    else foreach (AbstractResource* r, m_resources) {
+            if (r->type() == AbstractResource::Technical && filter.state != AbstractResource::Upgradeable) {
+                continue;
+            }
+
+            if (r->state() < filter.state)
+                continue;
+
+            if (r->name().contains(filter.search, Qt::CaseInsensitive) || r->comment().contains(filter.search, Qt::CaseInsensitive))
+                ret += r;
         }
-
-        if (r->state() < filter.state)
-            continue;
-
-        if(r->name().contains(filter.search, Qt::CaseInsensitive) || r->comment().contains(filter.search, Qt::CaseInsensitive))
-            ret += r;
-    }
     return new ResultsStream(QStringLiteral("DummyStream"), ret);
 }
 
 ResultsStream * DummyBackend::findResourceByPackageName(const QUrl& search)
 {
-    if(search.isLocalFile()) {
+    if (search.isLocalFile()) {
         DummyResource* res = new DummyResource(search.fileName(), AbstractResource::Technical, this);
         res->setSize(666);
         res->setState(AbstractResource::None);
@@ -142,17 +142,17 @@ Transaction* DummyBackend::installApplication(AbstractResource* app, const Addon
 
 Transaction* DummyBackend::installApplication(AbstractResource* app)
 {
-	return new DummyTransaction(qobject_cast<DummyResource*>(app), Transaction::InstallRole);
+    return new DummyTransaction(qobject_cast<DummyResource*>(app), Transaction::InstallRole);
 }
 
 Transaction* DummyBackend::removeApplication(AbstractResource* app)
 {
-	return new DummyTransaction(qobject_cast<DummyResource*>(app), Transaction::RemoveRole);
+    return new DummyTransaction(qobject_cast<DummyResource*>(app), Transaction::RemoveRole);
 }
 
 void DummyBackend::checkForUpdates()
 {
-    if(m_fetching)
+    if (m_fetching)
         return;
     toggleFetching();
     populate(QStringLiteral("Moar"));

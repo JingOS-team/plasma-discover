@@ -50,9 +50,9 @@ void AddonList::clear()
 
 AddonList::State AddonList::addonState(const QString& addonName) const
 {
-    if(m_toInstall.contains(addonName))
+    if (m_toInstall.contains(addonName))
         return ToInstall;
-    else if(m_toRemove.contains(addonName))
+    else if (m_toRemove.contains(addonName))
         return ToRemove;
     else
         return None;

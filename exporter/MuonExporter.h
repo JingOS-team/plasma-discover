@@ -16,22 +16,22 @@ class AbstractResource;
 class MuonExporter : public QObject
 {
     Q_OBJECT
-    public:
-        explicit MuonExporter();
-        ~MuonExporter() override;
+public:
+    explicit MuonExporter();
+    ~MuonExporter() override;
 
-        void setExportPath(const QUrl& url);
+    void setExportPath(const QUrl& url);
 
-    public Q_SLOTS:
-        void fetchResources();
-        void exportResources(const QVector<AbstractResource*>& resources);
+public Q_SLOTS:
+    void fetchResources();
+    void exportResources(const QVector<AbstractResource*>& resources);
 
-    Q_SIGNALS:
-        void exportDone();
+Q_SIGNALS:
+    void exportDone();
 
-    private:
-        QUrl m_path;
-        const QSet<QByteArray> m_exculdedProperties;
+private:
+    QUrl m_path;
+    const QSet<QByteArray> m_exculdedProperties;
 };
 
 #endif // MUONEXPORTER_H

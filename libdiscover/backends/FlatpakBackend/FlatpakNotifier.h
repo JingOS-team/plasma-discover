@@ -16,17 +16,21 @@ extern "C" {
 
 class FlatpakNotifier : public BackendNotifierModule
 {
-Q_OBJECT
-Q_PLUGIN_METADATA(IID "org.kde.discover.BackendNotifierModule")
-Q_INTERFACES(BackendNotifierModule)
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "org.kde.discover.BackendNotifierModule")
+    Q_INTERFACES(BackendNotifierModule)
 public:
     explicit FlatpakNotifier(QObject* parent = nullptr);
     ~FlatpakNotifier() override;
 
     bool hasUpdates() override;
-    bool hasSecurityUpdates() override { return false; }
+    bool hasSecurityUpdates() override {
+        return false;
+    }
     void recheckSystemUpdateNeeded() override;
-    bool needsReboot() const override { return false; }
+    bool needsReboot() const override {
+        return false;
+    }
 
     struct Installation {
         explicit Installation(FlatpakNotifier *notifier);

@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2010 Jonathan Thomas <echidnaman@kubuntu.org>
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -24,6 +24,7 @@ class AggregatedResultsStream;
 class DISCOVERCOMMON_EXPORT ResourcesProxyModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
+
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(Roles sortRole READ sortRole WRITE setSortRole NOTIFY sortRoleChanged)
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
@@ -40,6 +41,7 @@ class DISCOVERCOMMON_EXPORT ResourcesProxyModel : public QAbstractListModel, pub
     Q_PROPERTY(bool isBusy READ isBusy NOTIFY busyChanged)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(bool sortByRelevancy READ sortByRelevancy NOTIFY sortByRelevancyChanged)
+
 public:
     explicit ResourcesProxyModel(QObject* parent = nullptr);
     enum Roles {
@@ -78,14 +80,18 @@ public:
     void setStateFilter(AbstractResource::State s);
     AbstractResource::State stateFilter() const;
     void setSortRole(Roles sortRole);
-    Roles sortRole() const { return m_sortRole; }
+    Roles sortRole() const {
+        return m_sortRole;
+    }
     void setSortOrder(Qt::SortOrder sortOrder);
-    Qt::SortOrder sortOrder() const { return m_sortOrder; }
+    Qt::SortOrder sortOrder() const {
+        return m_sortOrder;
+    }
     void setFilterMinimumState(bool filterMinimumState);
     bool filterMinimumState() const;
 
     Category* filteredCategory() const;
-    
+
     QString mimeTypeFilter() const;
     void setMimeTypeFilter(const QString& mime);
 
@@ -105,8 +111,11 @@ public:
 
     Q_SCRIPTABLE int indexOf(AbstractResource* res);
     Q_SCRIPTABLE AbstractResource* resourceAt(int row) const;
+    Q_SCRIPTABLE AbstractResource* findIndexByName(QString appName);
 
-    bool isBusy() const { return m_currentStream != nullptr; }
+    bool isBusy() const {
+        return m_currentStream != nullptr;
+    }
 
     bool lessThan(AbstractResource* rl, AbstractResource* rr) const;
     Q_SCRIPTABLE void invalidateFilter();
@@ -123,6 +132,7 @@ private Q_SLOTS:
     void refreshBackend(AbstractResourcesBackend* backend, const QVector<QByteArray>& properties);
     void refreshResource(AbstractResource* resource, const QVector<QByteArray>& properties);
     void removeResource(AbstractResource* resource);
+    
 private:
     void sortedInsertion(const QVector<AbstractResource*> &res);
     QVariant roleToValue(AbstractResource* res, int role) const;

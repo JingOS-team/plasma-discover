@@ -19,7 +19,7 @@ extern "C" {
 class FlatpakResource;
 class FlatpakTransactionThread : public QThread
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     FlatpakTransactionThread(FlatpakResource *app, Transaction::Role role);
     ~FlatpakTransactionThread() override;
@@ -27,7 +27,9 @@ public:
     void cancel();
     void run() override;
 
-    int progress() const { return m_progress; }
+    int progress() const {
+        return m_progress;
+    }
     void setProgress(int progress);
     void setSpeed(quint64 speed);
 

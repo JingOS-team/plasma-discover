@@ -63,20 +63,20 @@ QVariant SourcesModel::data(const QModelIndex& index, int role) const
 {
     if (!index.isValid()) return {};
     switch (role) {
-        case SourceNameRole:
-            return modelAt(index)->property(DisplayName);
-        case SourcesBackend:
-            return modelAt(index)->property(SourcesBackendId);
-        case EnabledRole:
-            return QVariant(flags(index) & Qt::ItemIsEnabled);
-        default:
-            return KConcatenateRowsProxyModel::data(index, role);
+    case SourceNameRole:
+        return modelAt(index)->property(DisplayName);
+    case SourcesBackend:
+        return modelAt(index)->property(SourcesBackendId);
+    case EnabledRole:
+        return QVariant(flags(index) & Qt::ItemIsEnabled);
+    default:
+        return KConcatenateRowsProxyModel::data(index, role);
     }
 }
 
 AbstractSourcesBackend * SourcesModel::sourcesBackendByName(const QString& id) const
 {
-    for(int i = 0, c = rowCount(); i < c; ++i) {
+    for (int i = 0, c = rowCount(); i < c; ++i) {
         const auto idx = index(i, 0);
         if (idx.data(SourceNameRole) == id) {
             return qobject_cast<AbstractSourcesBackend *>(idx.data(SourcesBackend).value<QObject*>());

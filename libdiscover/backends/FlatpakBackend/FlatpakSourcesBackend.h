@@ -20,7 +20,7 @@ extern "C" {
 class FlatpakResource;
 class FlatpakSourcesBackend : public AbstractSourcesBackend
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     explicit FlatpakSourcesBackend(const QVector<FlatpakInstallation *>& installations, AbstractResourcesBackend *parent);
     ~FlatpakSourcesBackend() override;
@@ -32,11 +32,17 @@ public:
     bool removeSource(const QString &id) override;
     QString idDescription() override;
     QVariantList actions() const override;
-    bool supportsAdding() const override { return true; }
-    bool canFilterSources() const override { return true; }
+    bool supportsAdding() const override {
+        return true;
+    }
+    bool canFilterSources() const override {
+        return true;
+    }
 
     FlatpakRemote * installSource(FlatpakResource *resource);
-    bool canMoveSources() const override { return true; }
+    bool canMoveSources() const override {
+        return true;
+    }
 
     bool moveSource(const QString & sourceId, int delta) override;
     int originIndex(const QString& sourceId) const;

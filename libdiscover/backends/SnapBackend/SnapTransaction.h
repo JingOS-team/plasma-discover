@@ -18,23 +18,23 @@ class QSnapdClient;
 class SnapTransaction : public Transaction
 {
     Q_OBJECT
-    public:
-        SnapTransaction(QSnapdClient* client, SnapResource* app, Role role, AbstractResource::State newState);
+public:
+    SnapTransaction(QSnapdClient* client, SnapResource* app, Role role, AbstractResource::State newState);
 
-        void cancel() override;
-        void proceed() override;
+    void cancel() override;
+    void proceed() override;
 
-    private Q_SLOTS:
-        void finishTransaction();
+private Q_SLOTS:
+    void finishTransaction();
 
-    private:
-        void setRequest(QSnapdRequest* req);
-        void progressed();
+private:
+    void setRequest(QSnapdRequest* req);
+    void progressed();
 
-        QSnapdClient * const m_client;
-        SnapResource * const m_app;
-        QScopedPointer<QSnapdRequest> m_request;
-        const AbstractResource::State m_newState;
+    QSnapdClient * const m_client;
+    SnapResource * const m_app;
+    QScopedPointer<QSnapdRequest> m_request;
+    const AbstractResource::State m_newState;
 };
 
 #endif // SNAPTRANSACTION_H

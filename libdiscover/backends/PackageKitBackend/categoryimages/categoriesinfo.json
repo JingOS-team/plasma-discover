@@ -1,0 +1,72 @@
+
+{
+    "code": 200,
+    "categories":[
+
+        {
+            "type": "Weather",
+            "displays": [
+                {
+                    "lang": "en",
+                    "display": "Weather"
+                },
+                {
+                    "lang": "cn",
+                    "display": "音乐"
+                }
+            ]
+        },
+        {
+            "type": "Medical",
+            "displays": [
+                {
+                    "lang": "en",
+                    "display": "Medical"
+                },
+                {
+                    "lang": "cn",
+                    "display": "音乐"
+                }
+            ]
+        },
+        {
+            "type": "Entertainment",
+            "displays": [
+                {
+                    "lang": "en",
+                    "display": "Entertainment"
+                },
+                {
+                    "lang": "cn",
+                    "display": "音乐"
+                }
+            ]
+        },
+        {
+            "type": "Education",
+            "displays": [
+                {
+                    "lang": "en",
+                    "display": "Education"
+                },
+                {
+                    "lang": "cn",
+                    "display": "音乐"
+                }
+            ]
+        },
+        {
+            "type": "Business",
+            "displays": [
+                {
+                    "lang": "en",
+                    "display": "Business"
+                },
+                {
+                    "lang": "cn",
+                    "display": "音乐"
+                }
+            ]
+        }
+]
+}

@@ -21,7 +21,7 @@ class FlatpakResource;
 class FlatpakTransactionThread;
 class FlatpakJobTransaction : public Transaction
 {
-Q_OBJECT
+    Q_OBJECT
 public:
     FlatpakJobTransaction(FlatpakResource *app, Role role, bool delayStart = false);
 

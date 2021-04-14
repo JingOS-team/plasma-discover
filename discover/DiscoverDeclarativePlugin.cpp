@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *
+ *                           2021 Wang Rui <wangrui@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -29,6 +29,8 @@
 #include <QQmlEngine>
 #include <QQmlContext>
 #include <QAction>
+#include <resources/bannerresourcemodel.h>
+#include <resources/bannerappresource.h>
 
 void DiscoverDeclarativePlugin::initializeEngine(QQmlEngine* engine, const char* uri)
 {
@@ -36,6 +38,8 @@ void DiscoverDeclarativePlugin::initializeEngine(QQmlEngine* engine, const char*
     engine->rootContext()->setContextProperty(QStringLiteral("TransactionModel"), TransactionModel::global());
     engine->rootContext()->setContextProperty(QStringLiteral("SourcesModel"), SourcesModel::global());
     engine->rootContext()->setContextProperty(QStringLiteral("CategoryModel"), CategoryModel::global());
+    engine->rootContext()->setContextProperty(QStringLiteral("BannerModel"), BannerResourceModel::global());
+
     QQmlExtensionPlugin::initializeEngine(engine, uri);
 }
 
@@ -63,6 +67,7 @@ void DiscoverDeclarativePlugin::registerTypes(const char* /*uri*/)
     qmlRegisterAnonymousType<AbstractResourcesBackend>("org.kde.discover", 1);
     qmlRegisterAnonymousType<AbstractReviewsBackend>("org.kde.discover", 1);
     qmlRegisterAnonymousType<Category>("org.kde.discover", 1);
+    qmlRegisterAnonymousType<BannerAppResource>("org.kde.discover", 1);
     qmlRegisterAnonymousType<ResourcesModel>("org.kde.discover", 1);
     qmlProtectModule("org.kde.discover", 2);
     qRegisterMetaType<QList<QAction*>>();

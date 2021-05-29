@@ -13,6 +13,7 @@ import org.kde.discover.app 1.0
 import "../navigation.js" as Nav
 
 Item {
+
     id: bannerRootView
 
     property alias headCount: rcmdApp.count
@@ -24,7 +25,6 @@ Item {
 
     ListView {
         id: rcmdApp
-
         anchors {
             top: parent.top
         }
@@ -73,14 +73,13 @@ Item {
 
     ArrowView {
         id: leftArrow
-
         anchors {
             left: rcmdApp.left
             verticalCenter: rcmdApp.verticalCenter
         }
         imageUrl: "qrc:/img/arrow_left.png"
         isActive: leftArrowActive
-        width: 100
+        width: 50 * appScaleSize
         height: rcmdApp.height
         opacity: 0.0
         onArrowClicked: {
@@ -90,12 +89,11 @@ Item {
 
     ArrowView {
         id: rightArrow
-
         anchors {
             right: bannerRootView.right
             verticalCenter: rcmdApp.verticalCenter
         }
-        width: 100
+        width: 50 * appScaleSize
         height: rcmdApp.height
         imageUrl: "qrc:/img/arrow_right.png"
         isActive: rightArrowActive
@@ -107,7 +105,6 @@ Item {
 
     Timer {
         id: bannerTimer
-
         interval: 3000
         repeat: true
         running: rcmdApp.count > 1 & !isListViewPress
@@ -122,20 +119,19 @@ Item {
 
     PageIndicator {
         id: pageIndicator
-        
         anchors {
             bottom: rcmdApp.bottom
             horizontalCenter: parent.horizontalCenter
-            bottomMargin: 10
+            bottomMargin: 7 * appScaleSize
         }
 
         interactive: false
         visible: count > 1
         count: rcmdApp.count
-        spacing: 15
+        spacing: 10 * appScaleSize
         currentIndex: rcmdApp.currentIndex
         delegate: Rectangle {
-            width: 10
+            width: 5 * appScaleSize
             height: width
             radius: width / 2
             color: rcmdApp.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"

@@ -105,7 +105,6 @@ JScrollView {
 
             onYChanged: {
                 //it's overshooting enough and not reachable: start countdown for reachability
-                console.log("y ======= ",y)
                 if (y > root.topPadding + Units.gridUnit && (typeof(applicationWindow) == "undefined" || !applicationWindow().reachableMode)) {
                     overshootResetTimer.running = true;
                 //not reachable and not overshooting enough, stop reachability countdown

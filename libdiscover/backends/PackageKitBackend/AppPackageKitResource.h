@@ -13,14 +13,13 @@
 class AppPackageKitResource : public PackageKitResource
 {
     Q_OBJECT
-    
 public:
     explicit AppPackageKitResource(const AppStream::Component& data, const QString &packageName, PackageKitBackend* parent);
 
     QString appstreamId() const override;
     AbstractResource::Type type() const override;
-    QString name() const override;
-    QVariant icon() const override;
+//    QString name() const override;
+//    QVariant icon() const override;
     QStringList mimetypes() const override;
     QStringList categories() override;
     QString longDescription() override;

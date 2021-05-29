@@ -21,7 +21,6 @@ Rectangle {
 
     Component {
         id: highlightComponent
-
         Rectangle {
             width: hoverItem.width
             height: hoverItem.height
@@ -39,7 +38,6 @@ Rectangle {
 
     Loader {
         id: hoverLoader
-
         anchors.fill: hoverItem
         sourceComponent: highlightComponent
         active: hoverItem.itemHover && !hoverItem.itemPressed
@@ -47,7 +45,6 @@ Rectangle {
 
     Loader {
         id: pressLoader
-        
         anchors.fill: hoverItem
         sourceComponent: highlightComponent
         active: hoverItem.itemPressed && hoverItem.itemHover

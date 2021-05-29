@@ -20,13 +20,11 @@ class Transaction;
 class DISCOVERCOMMON_EXPORT ResourcesUpdatesModel : public QStandardItemModel
 {
     Q_OBJECT
-
     Q_PROPERTY(bool isProgressing READ isProgressing NOTIFY progressingChanged)
     Q_PROPERTY(QDateTime lastUpdate READ lastUpdate NOTIFY progressingChanged)
     Q_PROPERTY(qint64 secsToLastUpdate READ secsToLastUpdate NOTIFY progressingChanged)
     Q_PROPERTY(Transaction* transaction READ transaction NOTIFY progressingChanged)
     Q_PROPERTY(bool needsReboot READ needsReboot NOTIFY needsRebootChanged)
-    
 public:
     explicit ResourcesUpdatesModel(QObject* parent = nullptr);
 

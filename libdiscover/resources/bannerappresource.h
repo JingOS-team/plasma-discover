@@ -11,7 +11,6 @@
 class DISCOVERCOMMON_EXPORT BannerAppResource : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(QString appName READ appName NOTIFY appNameChanged)
     Q_PROPERTY(QString bannerUrl READ bannerUrl NOTIFY bannerUrlChanged)
 
@@ -25,11 +24,9 @@ public:
     };
     void setAppName(QString appName);
     void setBannerUrl(QString bannerUrl);
-
 Q_SIGNALS:
     void appNameChanged();
     void bannerUrlChanged();
-    
 private:
     QString m_appName;
     QString m_bannerUrl;

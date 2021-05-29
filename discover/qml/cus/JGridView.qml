@@ -12,10 +12,9 @@ import org.kde.kirigami 2.4 as Kirigami
 
 GridView {
     id: root
-    
     property Component component
     readonly property int columns: 3
-    property int gridSpacing: 20
+    property int gridSpacing: 13 * appScaleSize
     property int maximumColumns: Infinity
     property int maximumColumnWidth: Kirigami.Units.gridUnit * 20
     property int minimumColumnWidth: Kirigami.Units.gridUnit * 12

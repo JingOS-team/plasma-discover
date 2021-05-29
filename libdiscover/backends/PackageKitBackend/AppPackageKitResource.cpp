@@ -31,23 +31,23 @@ AppPackageKitResource::AppPackageKitResource(const AppStream::Component& data, c
     Q_ASSERT(data.isValid());
 }
 
-QString AppPackageKitResource::name() const
-{
-    if (m_name.isEmpty()) {
-        if (!m_appdata.extends().isEmpty()) {
-            const auto components = backend()->componentsById(m_appdata.extends().constFirst());
+//QString AppPackageKitResource::name() const
+//{
+//    if (m_name.isEmpty()) {
+//        if (!m_appdata.extends().isEmpty()) {
+//            const auto components = backend()->componentsById(m_appdata.extends().constFirst());
 
-            if (components.isEmpty())
-                qWarning() << "couldn't find" << m_appdata.extends() << "which is supposedly extended by" << m_appdata.id();
-            else
-                m_name = components.constFirst().name() + QLatin1String(" - ") + m_appdata.name();
-        }
+//            if (components.isEmpty())
+//                qWarning() << "couldn't find" << m_appdata.extends() << "which is supposedly extended by" << m_appdata.id();
+//            else
+//                m_name = components.constFirst().name() + QLatin1String(" - ") + m_appdata.name();
+//        }
 
-        if (m_name.isEmpty())
-            m_name = m_appdata.name();
-    }
-    return m_name;
-}
+//        if (m_name.isEmpty())
+//            m_name = m_appdata.name();
+//    }
+//    return m_name;
+//}
 
 QString AppPackageKitResource::longDescription()
 {
@@ -89,17 +89,18 @@ static QIcon componentIcon(const AppStream::Component &comp)
     return ret;
 }
 
-QVariant AppPackageKitResource::icon() const
-{
-    if (!m_icon.isNull()) {
-        return m_icon;
-    }
-    QIcon requestIcon = componentIcon(m_appdata);
-    if (requestIcon.isNull()) {
-        return "qrc:/img/ic_app_list_empty.png";
-    }
-    return requestIcon;
-}
+//QVariant AppPackageKitResource::icon() const
+//{
+//    if (!m_icon.isNull()) {
+//        return m_icon;
+//    }
+//    QIcon requestIcon = componentIcon(m_appdata);
+//    qDebug()<<Q_FUNC_INFO<<" app_name:"<< m_name << " icon url:"<<requestIcon.name();
+//    if (requestIcon.isNull()) {
+//        return "qrc:/img/ic_app_list_empty.png";
+//    }
+//    return requestIcon;
+//}
 
 QJsonArray AppPackageKitResource::licenses()
 {
@@ -188,7 +189,8 @@ QList<PackageState> AppPackageKitResource::addonsInformation()
     return kTransform<QList<PackageState>>(res,
     [](AppPackageKitResource* r) {
         return PackageState(r->appstreamId(), r->name(), r->comment(), r->isInstalled());
-    });
+    }
+                                          );
 }
 
 QStringList AppPackageKitResource::extends() const
@@ -201,6 +203,7 @@ QString AppPackageKitResource::changelog() const
     return AppStreamUtils::changelogToHtml(m_appdata);
 }
 
+
 bool AppPackageKitResource::canExecute() const
 {
     static QSet<QString> cannotExecute = { QStringLiteral("org.kde.development") };
@@ -210,7 +213,6 @@ bool AppPackageKitResource::canExecute() const
 void AppPackageKitResource::invokeApplication() const
 {
     auto trans = PackageKit::Daemon::getFiles({installedPackageId()});
-    qDebug()<<Q_FUNC_INFO<< " installedPackageId():"<<installedPackageId();
     connect(trans, &PackageKit::Transaction::errorCode, backend(), &PackageKitBackend::transactionError);
     connect(trans, &PackageKit::Transaction::files, this, [this](const QString &/*packageID*/, const QStringList &_filenames) {
         //This workarounds bug in zypper's backend (suse) https://github.com/hughsie/PackageKit/issues/351
@@ -243,6 +245,7 @@ void AppPackageKitResource::invokeApplication() const
                     return false;
                 });
                 if (!desktopFiles.isEmpty()) {
+                    qDebug()<<Q_FUNC_INFO << " desktopFiles:" << desktopFiles;
                     QProcess::startDetached(QStringLiteral(CMAKE_INSTALL_FULL_LIBEXECDIR_KF5 "/discover/runservice"), { desktopFiles });
                     return;
                 }

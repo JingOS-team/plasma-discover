@@ -19,7 +19,6 @@ class QAction;
 class DISCOVERCOMMON_EXPORT AggregatedResultsStream : public ResultsStream
 {
     Q_OBJECT
-
 public:
     AggregatedResultsStream(const QSet<ResultsStream*>& streams);
     ~AggregatedResultsStream();
@@ -69,7 +68,6 @@ public:
 class DISCOVERCOMMON_EXPORT ResourcesModel : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(int updatesCount READ updatesCount NOTIFY updatesCountChanged)
     Q_PROPERTY(bool hasSecurityUpdates READ hasSecurityUpdates NOTIFY updatesCountChanged)
     Q_PROPERTY(bool isFetching READ isFetching NOTIFY fetchingChanged)
@@ -79,7 +77,6 @@ class DISCOVERCOMMON_EXPORT ResourcesModel : public QObject
     Q_PROPERTY(int fetchingUpdatesProgress READ fetchingUpdatesProgress NOTIFY fetchingUpdatesProgressChanged)
     Q_PROPERTY(QString applicationSourceName READ applicationSourceName NOTIFY currentApplicationBackendChanged)
     Q_PROPERTY(QString networkState READ networkState NOTIFY networkStateChanged)
-    
 public:
     /** This constructor should be only used by unit tests.
      *  @p backendName defines what backend will be loaded when the backend is constructed.
@@ -101,6 +98,7 @@ public:
 
     AggregatedResultsStream* search(const AbstractResourcesBackend::Filters &search);
     void checkForUpdates();
+    void refreshCache();
 
     QString applicationSourceName() const;
 

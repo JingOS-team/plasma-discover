@@ -11,7 +11,7 @@ import org.kde.kirigami 2.15 as Kirigami
 Kirigami.Page {
     id: discoverMain
 
-    property int defaultFontSize: theme.defaultFont.pointSize
+    property int defaultFontSize: 14//theme.defaultFont.pointSize
     property int defaultWidth: 1920
     property int defaultHeight: 1200
 
@@ -26,28 +26,26 @@ Kirigami.Page {
 
     DiscoverLeftPage {
         id: leftPage
-
         anchors {
             left: parent.left
-            leftMargin: 20
+            leftMargin: 20 * appScaleSize
             top: parent.top
-            topMargin: parent.height * 61 / defaultHeight
+            topMargin: 41 * appScaleSize//parent.height * 61 / defaultHeight
             bottom: parent.bottom
         }
-        width: discoverMain.width * 500 / defaultWidth
+        width: 225 * appScaleSize//discoverMain.width * 500 / defaultWidth
         height: discoverMain.height
     }
 
     DiscoverRightPage {
         id: rightPage
-        
         anchors {
             left: leftPage.right
             top: parent.top
-            topMargin: parent.height * 61 / defaultHeight
+            topMargin: 41 * appScaleSize///parent.height * 61 / defaultHeight
             bottom: parent.bottom
         }
-        width: parent.width - leftPage.width - 20
+        width: parent.width - leftPage.width - 20 * appScaleSize
         height: parent.height
     }
 }

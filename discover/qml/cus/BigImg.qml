@@ -12,10 +12,8 @@ import QtQuick.Layouts 1.3
 Rectangle {
     color: "#E8EFFF"
     property var imgPathArray
-
     SwipeView {
         id: view
-
         anchors {
             top: parent.top
             topMargin: screen.height * 0.1
@@ -54,14 +52,12 @@ Rectangle {
                 object.dismissVisibility = true
                 return object
             } else {
-                console.log("component create fail: " + component.errorString())
             }
         }
     }
 
     PageIndicator {
         id: pageIndicator
-        
         anchors {
             top: view.bottom
             topMargin: screen.height * 0.03
@@ -69,23 +65,24 @@ Rectangle {
         }
         interactive: true
         count: view.count
-        spacing: 10
+        spacing: 12 * appScaleSize
         currentIndex: view.currentIndex
 
         delegate: Rectangle {
-            width: 24
+            width: 6 * appScaleSize
             height: width
             radius: width / 2
-            border.width: 2
-            border.color: view.currentIndex === index ? "#B33C3C43" : "#00000000"
-            color: "transparent"
-            Rectangle {
-                anchors.centerIn: parent
-                width: 12
-                height: width
-                radius: width / 2
-                color: view.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"
-            }
+            color: view.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"
+            // border.width: 1
+            // border.color: view.currentIndex === index ? "#B33C3C43" : "#00000000"
+            // color: "transparent"
+            // Rectangle {
+            //     anchors.centerIn: parent
+            //     width: 6 * appScaleSize
+            //     height: width
+            //     radius: width / 2
+            //     color: view.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"
+            // }
         }
     }
 }

@@ -44,6 +44,7 @@ function pop() {
 }
 
 function openReviews(model) {
+
     window.stack.push("qrc:/qml/ReviewsPage.qml", { model: model })
 }
 

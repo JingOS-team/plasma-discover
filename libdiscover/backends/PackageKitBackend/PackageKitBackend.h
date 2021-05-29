@@ -20,6 +20,8 @@
 #include <AppStreamQt/pool.h>
 #include <QString>
 #include <Category/Category.h>
+#include <packageserverresourcemanager.h>
+#include <QHash>
 
 class AppPackageKitResource;
 class PackageKitUpdater;
@@ -30,7 +32,6 @@ class PKResolveTransaction;
 class DISCOVERCOMMON_EXPORT PackageKitBackend : public AbstractResourcesBackend
 {
     Q_OBJECT
-    
 public:
     explicit PackageKitBackend(QObject* parent = nullptr);
     ~PackageKitBackend() override;
@@ -64,6 +65,7 @@ public:
     void fetchDetails(const QSet<QString>& pkgid);
 
     void checkForUpdates() override;
+    void refreshCache() override;
     QString displayName() const override;
 
     bool hasApplications() const override {
@@ -82,6 +84,7 @@ public:
 
 public Q_SLOTS:
     void reloadPackageList();
+    void loadServerPackageList();
     void transactionError(PackageKit::Transaction::Error, const QString& message);
 
 private Q_SLOTS:
@@ -101,12 +104,15 @@ private:
     T resourcesByPackageNames(const QStringList& names) const;
 
     void runWhenInitialized(const std::function<void()> &f, QObject* stream);
+    void runWhenLoadedCache(const std::function<void()> &f, QObject* stream);
 
     void checkDaemonRunning();
     void acquireFetching(bool f);
     void includePackagesToAdd();
     void performDetailsFetch();
     ResultsStream *getAppList(QString category,QString keyword,PKResultsStream * stream);
+    void loadLocalPackageData(QString category,QString keyword,PKResultsStream *stream);
+    void searchPackagekitResources();
     void showResource();
     AppPackageKitResource* addComponent(const AppStream::Component& component, const QStringList& pkgNames);
     void updateProxy();
@@ -126,17 +132,18 @@ private:
         QHash<QString, AbstractResource*> packages;
         QHash<QString, QStringList> packageToApp;
         QHash<QString, QVector<AppPackageKitResource*>> extendedBy;
+        QHash<QString, AbstractResource*> installsApplications;
     } m_packages;
 
-    struct ServerData {
-        QString appId;
-        QString appName;
-        QString banner;
-        QString icon;
-        QString name;
-        QString categoryDisplay;
-        QString comment;
-    };
+//    struct ServerData {
+//        QString appId;
+//        QString appName;
+//        QString banner;
+//        QString icon;
+//        QString name;
+//        QString categoryDisplay;
+//        QString comment;
+//    };
 
     QTimer m_delayedDetailsFetch;
     QSet<QString> m_packageNamesToFetchDetails;
@@ -144,6 +151,11 @@ private:
     QPointer<PackageKit::Transaction> m_getUpdatesTransaction;
     QThreadPool m_threadPool;
     QPointer<PKResolveTransaction> m_resolveTransaction;
+    PackageServerResourceManager* m_packageServerResourceManager;
+    bool isLoaded = false;
+    QMetaObject::Connection ec;
+    QMetaObject::Connection sc;
+
 };
 
 #endif // PACKAGEKITBACKEND_H

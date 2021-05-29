@@ -33,6 +33,7 @@
 #include <PackageKit/Details>
 #include <KLocalizedString>
 #include <KProtocolManager>
+
 #include "utils.h"
 #include "config-paths.h"
 #include "libdiscover_backend_debug.h"
@@ -114,6 +115,8 @@ PackageKitBackend::PackageKitBackend(QObject* parent)
         auto networkState = PackageKit::Daemon::networkState();
         emit networkStateChanged(networkState);
     });
+
+    loadServerPackageList();
 }
 
 PackageKitBackend::~PackageKitBackend()
@@ -198,6 +201,36 @@ static DelayedAppStreamLoad loadAppStream(AppStream::Pool* appdata)
     return ret;
 }
 
+void PackageKitBackend::loadServerPackageList()
+{
+    m_packageServerResourceManager = new PackageServerResourceManager();
+
+    connect(m_packageServerResourceManager, &PackageServerResourceManager::loadStart, this, [this] {
+        isLoaded = false;
+    });
+
+    connect(m_packageServerResourceManager, &PackageServerResourceManager::loadFinished, this, [this] {
+        isLoaded = true;
+        searchPackagekitResources();
+    });
+
+    connect(m_packageServerResourceManager, &PackageServerResourceManager::loadError, this, [this](QString errorStr) {
+        isLoaded = true;
+    });
+    m_packageServerResourceManager->loadCacheData();
+
+}
+
+void PackageKitBackend::searchPackagekitResources()
+{
+    PackageKit::Transaction * searchT = PackageKit::Daemon::searchNames(m_packageServerResourceManager->m_serverPackageNames);
+    connect(searchT, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageForPackageKit);
+
+    connect(searchT, &PackageKit::Transaction::finished, this, [this](PackageKit::Transaction::Exit status) {
+        getPackagesFinished();
+    }, Qt::QueuedConnection);
+}
+
 void PackageKitBackend::reloadPackageList()
 {
     acquireFetching(true);
@@ -276,7 +309,6 @@ void PackageKitBackend::fetchUpdates()
 {
     if (m_updater->isProgressing())
         return;
-
     m_getUpdatesTransaction = PackageKit::Daemon::getUpdates();
     connect(m_getUpdatesTransaction, &PackageKit::Transaction::finished, this, &PackageKitBackend::getUpdatesFinished);
     connect(m_getUpdatesTransaction, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageToUpdate);
@@ -333,6 +365,7 @@ void PackageKitBackend::getPackagesFinished()
     if (m_packageKitId.size() > 0) {
         fetchDetails(m_packageKitId);
     }
+    emit updatesCountChanged();
 }
 
 void PackageKitBackend::includePackagesToAdd()
@@ -404,6 +437,13 @@ T PackageKitBackend::resourcesByPackageNames(const QStringList &pkgnames) const
     return ret;
 }
 
+void PackageKitBackend::refreshCache()
+{
+    if (m_packageServerResourceManager) {
+        m_packageServerResourceManager->refreshData();
+    }
+}
+
 void PackageKitBackend::checkForUpdates()
 {
     if (PackageKit::Daemon::global()->offline()->updateTriggered()) {
@@ -433,7 +473,7 @@ QList<AppStream::Component> PackageKitBackend::componentsById(const QString& id)
 }
 
 static const auto needsResolveFilter = [] (AbstractResource* res) {
-    return res->state() == AbstractResource::Broken;
+    return res->state() == AbstractResource::Broken && res->type() == AbstractResource::Application;
 };
 static const auto installedFilter = [] (AbstractResource* res) {
     return res->state() >= AbstractResource::Installed && res->type() == AbstractResource::Application;
@@ -491,39 +531,79 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
         return new ResultsStream(QStringLiteral("PackageKitStream-upgradeable"), kTransform<QVector<AbstractResource*>>(upgradeablePackages())); //No need for it to be a PKResultsStream
     } else if (filter.state == AbstractResource::Installed) {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-installed"));
+
         auto f = [this, stream] {
+            m_packages.installsApplications.clear();
             const auto toResolve = kFilter<QVector<AbstractResource*>>(m_packages.packages, needsResolveFilter);
             if (!toResolve.isEmpty()) {
                 resolvePackages(kTransform<QStringList>(toResolve, [] (AbstractResource* res) {
                     return res->packageName();
                 }));
-                connect(m_resolveTransaction, &PKResolveTransaction::allFinished, this, [stream, toResolve] {
+                connect(m_resolveTransaction, &PKResolveTransaction::allFinished, this, [this,stream, toResolve] {
                     const auto resolved = kFilter<QVector<AbstractResource*>>(toResolve, installedFilter);
-                    if (!resolved.isEmpty())
-                        Q_EMIT stream->resourcesFound(resolved);
+                    const auto filterServerData = kFilter<QVector<AbstractResource*>>(resolved,
+                    [this] (AbstractResource* res) {
+//                                                                                     if(res->appstreamId() != ""){
+//                                                                                     return false;
+//                }
+                        if (m_packages.installsApplications.contains(res->packageName())) {
+                            return false;
+                        }
+
+                        m_packages.installsApplications.insert(res->packageName(),res);
+                        return m_packageServerResourceManager->existPackageName(res->packageName());
+                    });
+                    if (!filterServerData.isEmpty())
+                        Q_EMIT stream->resourcesFound(filterServerData);
                     stream->finish();
                 });
             }
-
             const auto resolved = kFilter<QVector<AbstractResource*>>(m_packages.packages, installedFilter);
-            if (!resolved.isEmpty()) {
-                QTimer::singleShot(0, this, [resolved, toResolve, stream] () {
-                    if (!resolved.isEmpty())
-                        Q_EMIT stream->resourcesFound(resolved);
+
+            const auto filterServerData = kFilter<QVector<AbstractResource*>>(resolved,
+            [this] (AbstractResource* res) {
+
+//                                                                             if(res->appstreamId() != ""){
+//                                                                             return false;
+//        }
+                if (m_packages.installsApplications.contains(res->packageName())) {
+                    return false;
+                }
+                m_packages.installsApplications.insert(res->packageName(),res);
+                return m_packageServerResourceManager->existPackageName(res->packageName());
+            });
+            if (!filterServerData.isEmpty()) {
+                QTimer::singleShot(0, this, [filterServerData, toResolve, stream] () {
+                    if (!filterServerData.isEmpty())
+                        Q_EMIT stream->resourcesFound(filterServerData);
 
                     if (toResolve.isEmpty())
                         stream->finish();
                 });
+            } else {
+                if (toResolve.isEmpty()) {
+                    stream->finish();
+                }
             }
         };
-        runWhenInitialized(f, stream);
+        if (!isLoaded) {
+            runWhenLoadedCache(f,stream);
+        } else {
+            runWhenInitialized(f, stream);
+        }
         return stream;
     } else if (filter.search.isEmpty()) {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-all"));
+
         auto f = [this, filter, stream] {
             getAppList(filter.category->typeName(),filter.search,stream);
         };
-        runWhenInitialized(f, stream);
+
+        if (!isLoaded) {
+            runWhenLoadedCache(f,stream);
+        } else {
+            runWhenInitialized(f, stream);
+        }
         return stream;
     } else {
         auto stream = new PKResultsStream(this, QStringLiteral("PackageKitStream-search"));
@@ -555,7 +635,11 @@ ResultsStream* PackageKitBackend::search(const AbstractResourcesBackend::Filters
                 }
             }, Qt::QueuedConnection);
         };
-        runWhenInitialized(f, stream);
+        if (!isLoaded) {
+            runWhenLoadedCache(f,stream);
+        } else {
+            runWhenInitialized(f, stream);
+        }
         return stream;
     }
 }
@@ -567,6 +651,20 @@ void PackageKitBackend::runWhenInitialized(const std::function<void ()>& f, QObj
     } else {
         QTimer::singleShot(0, this, f);
     }
+}
+
+void PackageKitBackend::runWhenLoadedCache(const std::function<void ()>& f, QObject* stream)
+{
+    disconnect(ec);
+    disconnect(sc);
+    auto onErrored = [this,f,stream] {
+        runWhenInitialized(f, stream);
+    };
+    auto onFinished =  [this,f,stream] {
+        runWhenInitialized(f, stream);
+    };
+    sc = connect(m_packageServerResourceManager, &PackageServerResourceManager::loadFinished, this,onFinished);
+    ec = connect(m_packageServerResourceManager, &PackageServerResourceManager::loadError, this, onErrored);
 }
 
 PKResultsStream * PackageKitBackend::findResourceByPackageName(const QUrl& url)
@@ -710,8 +808,9 @@ QSet<AbstractResource*> PackageKitBackend::upgradeablePackages() const
     }
     QList<AbstractResource*> listRet =  ret.values();
 
-    return kFilter<QSet<AbstractResource*>>(ret, [] (AbstractResource* res) {
-        return !static_cast<PackageKitResource*>(res)->extendsItself() && res->type() == AbstractResource::Application;
+    return kFilter<QSet<AbstractResource*>>(ret, [this] (AbstractResource* res) {
+        bool isExistPkgName = m_packageServerResourceManager->existPackageName(res->packageName());
+        return !static_cast<PackageKitResource*>(res)->extendsItself() && res->type() == AbstractResource::Application && isExistPkgName;
     });
 }
 
@@ -728,7 +827,6 @@ void PackageKitBackend::addPackageToUpdate(PackageKit::Transaction::Info info, c
 
     if (info == PackageKit::Transaction::InfoSecurity)
         m_hasSecurityUpdates = true;
-
     m_updatesPackageId += packageId;
     addPackage(info, packageId, summary, true);
 }
@@ -834,6 +932,75 @@ void PackageKitBackend::showResource()
 {
 }
 
+void PackageKitBackend::loadLocalPackageData(QString category,QString keyword,PKResultsStream *stream)
+{
+    QList<ServerData> categoriesData;
+    if (keyword != "") {
+        categoriesData =  m_packageServerResourceManager->resourceByKeyword(keyword);
+    } else {
+        categoriesData =  m_packageServerResourceManager->resourceByCategory(category);
+    }
+    QStringList notFindResources;
+    QVector<AbstractResource*> localdisplayRes;
+    foreach (ServerData itemData, categoriesData) {
+        QString itemPackageName = itemData.appName;
+        QSet<AbstractResource*> originResource = resourcesByPackageName(itemPackageName);
+        if (originResource.isEmpty()) {
+            notFindResources.append(itemPackageName);
+            continue;
+        }
+        QList<AbstractResource*> listResources = originResource.values();
+        foreach (AbstractResource* listItem, listResources) {
+            listItem->setAppId(itemData.appId);
+            listItem->setBanner(itemData.banner);
+            listItem->setIcon(itemData.icon);
+            listItem->setName(itemData.name);
+            listItem->setAppName(itemData.appName);
+            listItem->setCategoryDisplay(itemData.categoryDisplay);
+            listItem->setComment(itemData.comment);
+            localdisplayRes.append(listItem);
+        }
+    }
+    if (notFindResources.size() <= 0) {
+        stream->setResources(localdisplayRes);
+        stream->finish();
+        return;
+    }
+    stream->setResources(localdisplayRes);
+    m_packageKitId.clear();
+
+    PackageKit::Transaction * searchT = PackageKit::Daemon::searchNames(notFindResources);
+    connect(searchT, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageForPackageKit);
+
+    connect(searchT,&PackageKit::Transaction::errorCode,this,[this,stream] {
+        stream->finish();
+    });
+    connect(searchT, &PackageKit::Transaction::finished, this, [this,stream,notFindResources](PackageKit::Transaction::Exit status) {
+        getPackagesFinished();
+        if (status == PackageKit::Transaction::Exit::ExitSuccess) {
+            QVector<AbstractResource*> displayRes;
+
+            foreach (QString pkgname,notFindResources) {
+                ServerData pkgVaule = m_packageServerResourceManager->resourceByName(pkgname);
+                QSet<AbstractResource*> res = resourcesByPackageName(pkgname);
+                if (res.count() > 0) {
+                    AbstractResource* getResource = res.values().first();
+                    getResource->setAppId(pkgVaule.appId);
+                    getResource->setBanner(pkgVaule.banner);
+                    getResource->setIcon(pkgVaule.icon);
+                    getResource->setName(pkgVaule.name);
+                    getResource->setAppName(pkgVaule.appName);
+                    getResource->setCategoryDisplay(pkgVaule.categoryDisplay);
+                    getResource->setComment(pkgVaule.comment);
+                    displayRes.append(getResource);
+                }
+            }
+            stream->setResources(displayRes);
+            stream->finish();
+        }
+    }, Qt::QueuedConnection);
+}
+
 ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PKResultsStream *stream)
 {
     QString url;
@@ -842,7 +1009,11 @@ ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PK
     if (category == QLatin1String("feature_applications")) {
         requestParam = "label";
         category = "recommend";
+
     }
+//    else {
+//        loadLocalPackageData(category,keyword,stream);
+//    }
     if (keyword != "") {
         requestParam = "keyword";
         category = keyword;
@@ -878,12 +1049,17 @@ ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PK
             auto categories = appObj.value(QString::fromUtf8("categories")).toArray();
             auto display = appObj.value(QString::fromUtf8("display")).toArray();
             auto resource = m_packages.packages.value(appName);
+//            AbstractResource* resource = nullptr;
+//            QSet<AbstractResource*> res = resourcesByPackageName(appName);
+//            if (res.count() > 0) {
+//                resource = res.values().first();
+//            }
             QString name = "";
             QString comment = "";
             for (int j = 0; j < display.size(); j++) {
                 auto displayObj = display.at(j).toObject();
                 QString lang = "";
-                if (QLocale::system().nativeLanguageName().contains("china")) {
+                if (QLocale::system().bcp47Name().startsWith("zh")) {
                     lang = "cn";
                 } else {
                     lang = "en";
@@ -929,6 +1105,7 @@ ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PK
         }
         stream->setResources(displayRes);
         m_packageKitId.clear();
+        //,PackageKit::Transaction::FilterApplication
         PackageKit::Transaction * searchT = PackageKit::Daemon::searchNames(notResources);
         connect(searchT, &PackageKit::Transaction::package, this, &PackageKitBackend::addPackageForPackageKit);
 
@@ -936,6 +1113,7 @@ ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PK
             stream->finish();
         });
         connect(searchT, &PackageKit::Transaction::finished, this, [this,stream,cacheRequest,notResources](PackageKit::Transaction::Exit status) {
+            getPackagesFinished();
             if (status == PackageKit::Transaction::Exit::ExitSuccess) {
                 QVector<AbstractResource*> displayRes;
 
@@ -958,16 +1136,19 @@ ResultsStream *PackageKitBackend::getAppList(QString category,QString keyword,PK
                 stream->setResources(displayRes);
                 stream->finish();
             }
-            getPackagesFinished();
         }, Qt::QueuedConnection);
 
     })
     .onError([this,stream](QString errorStr) {
         stream->finish();
+        qDebug()<<Q_FUNC_INFO << " busy onError:" << errorStr;
+
         return;
     })
     .timeout(10 * 1000)
     .exec();
+
+
     return stream;
 }
 

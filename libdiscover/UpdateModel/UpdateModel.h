@@ -19,14 +19,13 @@ class UpdateItem;
 class DISCOVERCOMMON_EXPORT UpdateModel : public QAbstractListModel
 {
     Q_OBJECT
-
     Q_PROPERTY(ResourcesUpdatesModel* backend READ backend WRITE setBackend)
     Q_PROPERTY(bool hasUpdates READ hasUpdates NOTIFY hasUpdatesChanged)
     Q_PROPERTY(int toUpdateCount READ toUpdateCount NOTIFY toUpdateChanged)
     Q_PROPERTY(int totalUpdatesCount READ totalUpdatesCount NOTIFY hasUpdatesChanged)
     Q_PROPERTY(QString updateSize READ updateSize NOTIFY updateSizeChanged)
-
 public:
+
     enum Roles {
         SizeRole = Qt::UserRole + 1,
         ResourceRole,
@@ -64,6 +63,7 @@ public:
 
     Q_SCRIPTABLE void fetchUpdateDetails(int row);
     Q_SCRIPTABLE void updateResourceByIndex(int row);
+
 
     QString updateSize() const;
 

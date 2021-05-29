@@ -164,7 +164,9 @@ void Category::setIconBaseUrl(const QString& baseUrl)
         .timeout(10 * 1000)
         .exec();
     }
+
 }
+
 
 QString Category::iconSelect() const
 {

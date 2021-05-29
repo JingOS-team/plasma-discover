@@ -15,7 +15,6 @@
 class PKTransaction : public Transaction
 {
     Q_OBJECT
-    
 public:
     explicit PKTransaction(const QVector<AbstractResource*>& app, Transaction::Role role);
     PackageKit::Transaction* transaction();

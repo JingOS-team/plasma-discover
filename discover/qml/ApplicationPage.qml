@@ -14,10 +14,10 @@ import org.kde.discover.app 1.0
 import org.kde.kirigami 2.6 as Kirigami
 import "navigation.js" as Navigation
 import "cus/"
+import QtGraphicalEffects 1.0
 
 Column {
     id: appDetailsRoot
-
     property alias application: appInfo.application
     readonly property alias visibleReviews: appInfo.visibleReviews
     property var vLeftMargin: screen.width * 0.02
@@ -34,11 +34,12 @@ Column {
     property var homePage: ""
     property var buttonTextType
     property var currentUpdateModel
+    property int iconButtonTopMargin: 20 * appScaleSize
+    property int middleMargin: 35 * appScaleSize
 
     TopBar {
         id: topBar
-
-        Layout.preferredWidth: 50
+        height: 30 * appScaleSize
         textCont: getLeftMenuName()
         onBackClicked: {
             exitDetailsActions()
@@ -47,7 +48,6 @@ Column {
 
     DiscoverPage {
         id: appInfo
-
         property QtObject application: null
         readonly property int visibleReviews: 3
         title: appInfo.application.name
@@ -58,7 +58,7 @@ Column {
             right: parent.right
             rightMargin: screen.width * 0.02
             top: topBar.bottom
-            topMargin: topBar.height + 40 + parent.height * 0.03 //parent.height * 0.08
+            topMargin: 20 * appScaleSize//topBar.height + 40 + parent.height * 0.03 //parent.height * 0.08
             bottom: appDetailsRoot.bottom
             bottomMargin: parent.height * 0.03
         }
@@ -80,14 +80,13 @@ Column {
             color: "#CCFFFFFF" //Kirigami.Theme.backgroundColor
             Kirigami.Theme.colorSet: Kirigami.Theme.View
             Kirigami.Theme.inherit: false
-            radius: 20
+            radius: 10 * appScaleSize
         }
 
         contextualActions: [originsMenuAction]
 
         ActionGroup {
             id: sourcesGroup
-
             exclusive: true
         }
 
@@ -124,7 +123,6 @@ Column {
 
         Kirigami.Action {
             id: invokeAction
-
             visible: false //application.isInstalled && application.canExecute && !appbutton.isActive
             text: application.executeLabel
             icon.name: "media-playback-start"
@@ -133,7 +131,6 @@ Column {
 
         InstallApplicationButton {
             id: appbutton
-            
             Layout.rightMargin: Kirigami.Units.smallSpacing
             application: appInfo.application
             width: parent.width / 10
@@ -152,7 +149,7 @@ Column {
                 right: parent.right
                 rightMargin: parent.width * 0.03
                 top: parent.top
-                topMargin: screen.height * 0.04
+                topMargin: iconButtonTopMargin 
             }
             onUpdateButtonClicked: {
                 currentUpdateModel.updateResource(application)
@@ -164,23 +161,66 @@ Column {
 
         Column {
             spacing: 0
-            height: count > 0 ? appInfo.height + screen.height * 0.15 : appInfo.height
-            anchors {
-                bottom: appDetailsRoot.bottom
-            }
+            height: 50 + (appDetailsRoot.height * 0.03) + (topBar.height + 40 + parent.height * 0.03 ) + topRow.height + applicationScreenshots.height + appIntro.height + appIntroCont.height + appDetails.height + detailsContent.height
+//            height:  appInfo.height + (appDetailsRoot.height * 0.03) + (topBar.height + 40 + parent.height * 0.03 )
+//            anchors {
+//                bottom: appDetailsRoot.bottom
+//            }
             Row {
                 id: topRow
                 width: parent.width
-                height: 180
+                height: 90 * appScaleSize
                 anchors {
-                    top: parent.top
-                    topMargin: screen.height * 0.03
+                    top: appbutton.top
+                    // topMargin: iconButtonTopMargin
                 }
-                Kirigami.Icon {
+                Rectangle {
                     id: appIcon
-                    width: 180
-                    height: 180
-                    source: icon //appInfo.application.icon
+
+                    anchors {
+                        left: parent.left
+                        top: contentDetailItem.top
+                    }
+                    height: 90 * appScaleSize
+                    width: height
+                    radius: height / 10
+                    color: "#CCFFFFFF"
+                    border.color: "#CDD0D7"
+                    border.width: 1
+
+                    Image {
+                        id: bigImageView
+                        anchors.centerIn: appIcon
+                        width: parent.width - 2
+                        height: parent.height - 2
+                        source: icon
+                        visible: false
+                        asynchronous: true
+                        fillMode: Image.Stretch
+                    }
+
+                    Rectangle {
+                        id: maskRect
+                        anchors.centerIn: appIcon
+                        anchors.fill: bigImageView
+                        visible: false
+                        clip: true
+                        radius: appIcon.radius
+                    }
+
+                    OpacityMask {
+                        id: mask
+                        anchors.centerIn: appIcon
+                        anchors.fill: maskRect
+                        source: bigImageView
+                        maskSource: maskRect
+                    }
+//                    Kirigami.Icon {
+//                        id: appIconImage
+//                        width: 90 * appScaleSize
+//                        height: width
+//                        source: icon //appInfo.application.icon
+//                    }
                 }
                 Column {
                     id: clayout
@@ -191,34 +231,32 @@ Column {
                         right: parent.right
                         verticalCenter: appIcon.verticalCenter
                     }
-                    Kirigami.Heading {
+                    Text {
                         id: namee
-                        level: 1
                         text: name
                         maximumLineCount: 1
                         elide: Text.ElideRight
-                        font.pointSize: discoverMain.defaultFontSize + 21
+                        font.pixelSize: discoverMain.defaultFontSize + 14
                         font.bold: true
                         color: "black"
                     }
 
                     Label {
-                        text: categoryDisplay //appInfo.application.categoryDisplay
-                        font.pointSize: discoverMain.defaultFontSize + 4
+                        text: cppClassModel.currentCategoriesName(categoryDisplay) //appInfo.application.categoryDisplay
+                        font.pixelSize: discoverMain.defaultFontSize + 3
                         width: 100
                         color: "black"
                     }
 
-                    Kirigami.Heading {
+                    Text {
                         id: summary
-                        level: 4
                         text: appSummary //appInfo.application.comment
                         maximumLineCount: 2
                         // lineHeight: lineCount > 1 ? 0.75 : 1.2
                         elide: Text.ElideRight
                         Layout.fillWidth: true
                         // Layout.alignment: Qt.AlignTop
-                        font.pointSize: discoverMain.defaultFontSize - 2
+                        font.pixelSize: discoverMain.defaultFontSize
                         color: "black"
                         anchors {
                             left: parent.left
@@ -231,43 +269,40 @@ Column {
 
             ApplicationScreenshots {
                 id: applicationScreenshots
-
                 Layout.fillWidth: true
                 width: parent.width
-                height: count > 0 ? screen.height * 0.18 : 0
+                height: count > 0 ? 144 * appScaleSize : 0
                 visible: count > 0
                 resource: appInfo.application
                 anchors {
                     top: topRow.bottom
-                    topMargin: count > 0 ? screen.height * 0.04 : 0
+                    topMargin: count > 0 ? middleMargin : 0
                 }
             }
 
             Label {
                 id: appIntro
-
-                text: "Application Introduction"
+                text: i18n("Application Introduction")
                 color: '#FF000000'
                 font {
-                    pointSize: discoverMain.defaultFontSize + 9
+                    pixelSize: discoverMain.defaultFontSize + 6
                     bold: true
                 }
                 width: parent.width
                 anchors {
                     top: applicationScreenshots.bottom
-                    topMargin: screen.height * 0.04
+                    topMargin: middleMargin
                 }
             }
 
             Label {
                 id: appIntroCont
-
                 Layout.fillWidth: true
                 width: parent.width
                 wrapMode: Text.WordWrap
-                text: description //appInfo.application.longDescription
+                text: description//appInfo.application.longDescription
                 onLinkActivated: Qt.openUrlExternally(link)
-                font.pointSize: discoverMain.defaultFontSize
+                font.pixelSize: discoverMain.defaultFontSize
                 Layout.rightMargin: appbutton.rightMargin
                 anchors {
                     top: appIntro.bottom
@@ -279,20 +314,23 @@ Column {
 
             Label {
                 id: appDetails
-                
-                text: "Detailed information"
+                text: i18n("Detailed information")
                 color: '#FF000000'
                 font {
-                    pointSize: discoverMain.defaultFontSize + 9
+                    pixelSize: discoverMain.defaultFontSize + 6
                     bold: true
                 }
                 anchors {
                     top: appIntroCont.bottom
-                    topMargin: screen.height * 0.04
+                    topMargin: middleMargin
                 }
             }
 
+
             JFormLayout {
+                id:detailsContent
+                property int detailTextSize: discoverMain.defaultFontSize
+
                 anchors {
                     top: appDetails.bottom
                 }
@@ -322,7 +360,7 @@ Column {
                     Layout.fillWidth: true
                     elide: Text.ElideRight
                     text: versionName //versionString()
-                    font.pointSize: discoverMain.defaultFontSize
+                    font.pixelSize: detailsContent.detailTextSize
                 }
 
                 // Size row
@@ -332,7 +370,7 @@ Column {
                     Layout.alignment: Text.AlignTop
                     elide: Text.ElideRight
                     text: pkgSize
-                    font.pointSize: discoverMain.defaultFontSize
+                    font.pixelSize: detailsContent.detailTextSize
                 }
 
                 // Update date
@@ -342,7 +380,7 @@ Column {
                     Layout.alignment: Text.AlignTop
                     elide: Text.ElideRight
                     text: updateDate
-                    font.pointSize: discoverMain.defaultFontSize
+                    font.pixelSize: detailsContent.detailTextSize
                 }
 
                 // Author row
@@ -352,7 +390,7 @@ Column {
                     elide: Text.ElideRight
                     visible: text.length > 0
                     text: author //appInfo.application.author
-                    font.pointSize: discoverMain.defaultFontSize
+                    font.pixelSize: detailsContent.detailTextSize
                 }
 
                 Label {
@@ -361,7 +399,7 @@ Column {
                     // elide: Text.ElideRight
                     visible: text.length > 0
                     text: homePage //appInfo.application.author
-                    font.pointSize: discoverMain.defaultFontSize
+                    font.pixelSize: detailsContent.detailTextSize
                 }
             }
         }

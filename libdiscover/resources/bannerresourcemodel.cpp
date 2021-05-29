@@ -14,8 +14,8 @@ LocalBannerThread::LocalBannerThread()
 {
 }
 
-void LocalBannerThread::run() 
-{
+void LocalBannerThread::run() {
+
     QString path = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/bannersinfo.json");
     QFile app_json(path);
     if (app_json.open(QIODevice::ReadOnly)) {
@@ -37,10 +37,11 @@ void LocalBannerThread::onNetworkStop(bool isSuc)
     }
 }
 
+
 BannerResourceModel::BannerResourceModel()
 {
-    QString systemLan = QLocale::system().nativeLanguageName();
-    if (systemLan.contains("china")) {
+    QString systemLan = QLocale::system().bcp47Name();
+    if (systemLan.startsWith("china")) {
         currentLang = "cn";
     } else {
         currentLang = "en";
@@ -61,12 +62,10 @@ int BannerResourceModel::rowCount(const QModelIndex &parent) const
 {
     return m_banners.count();
 }
-
 QHash<int, QByteArray> BannerResourceModel::roleNames() const
 {
     return {{BANNER_APP,"bannerapp"}};
 }
-
 QVariant BannerResourceModel::data(const QModelIndex &index, int role) const
 {
     QVariant ret;
@@ -106,6 +105,8 @@ void BannerResourceModel::loadBannerData()
 
 void BannerResourceModel::createbannerData(QByteArray bannerData,bool isNetworkRequest)
 {
+    qDebug() << Q_FUNC_INFO << " isNetworkRequest*******"<<isNetworkRequest;
+
     if (isNetworkRequest) {
         QString path = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String("/bannersinfo.json");
         QFile app_json(path);
@@ -135,10 +136,20 @@ void BannerResourceModel::createbannerData(QByteArray bannerData,bool isNetworkR
         QString appName;
         QString banner =  json["banner"].toString();
         appName =  json["appName"].toString();
+
+//        QJsonArray displaysArray = json[QString::fromUtf8("display")].toArray();
+//        foreach(auto display , displaysArray){
+//            QJsonObject displayObject = display.toObject();
+//            QString langP =  displayObject[QString::fromUtf8("lang")].toString();
+//            if(langP == currentLang){
+//                appName =  displayObject[QString::fromUtf8("name")].toString();
+//            }
+//        }
         if (!appName.isEmpty()) {
             m_banners.append(new BannerAppResource(appName,banner));
         }
     }
     endResetModel();
+
 }
 

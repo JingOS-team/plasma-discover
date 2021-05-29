@@ -1,18 +1,45 @@
-# jing-appstore
+# discover
 
 #### Description
-Jingos app store based on  [discover](https://invent.kde.org/plasma/discover)
+应用商店
 
+#### Software Architecture
+Software architecture description
 
+#### Installation
 
-## Links
+1.  xxxx
+2.  xxxx
+3.  xxxx
 
-* discover page: https://invent.kde.org/plasma/discover
+#### Instructions
 
-* Home page: https://www.jingos.com/
+1.  xxxx
+2.  xxxx
+3.  xxxx
 
-* Project page: https://github.com/JingOS-team/jing-appstore
+#### Contribution
 
-* Issues: https://github.com/JingOS-team/jing-appstore/issues
+1.  Fork the repository
+2.  Create Feat_xxx branch
+3.  Commit your code
+4.  Create Pull Request
 
-* Development channel: https://forum.jingos.com/
+## Contributing
+
+Discover Project https://invent.kde.org/graphics/discover/.
+
+The [KDE Community Code of Conduct](https://kde.org/code-of-conduct) is applied.
+
+## Features
+
+* support appstream and packagekit manager 
+
+#### Gitee Feature
+
+1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
+2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
+3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
+4.  The most valuable open source project [GVP](https://gitee.com/gvp)
+5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
+6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)

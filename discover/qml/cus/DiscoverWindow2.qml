@@ -14,7 +14,6 @@ import "../"
 
 Window {
     id: window
-    
     width: screen.width
     height: screen.height
     visible: true
@@ -50,7 +49,7 @@ Window {
                     text: "Store"
                     font.bold: true
                     color: "black"
-                    font.pointSize: 20
+                    font.pixelSize: 20
                 }
             }
 

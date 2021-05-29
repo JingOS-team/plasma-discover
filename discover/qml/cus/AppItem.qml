@@ -51,7 +51,13 @@ Item {
             top: app_img.bottom
             horizontalCenter: app_img.horizontalCenter
         }
-        font.pointSize: 15
+        font.pixelSize: 15
+
+        MouseArea {
+            anchors.fill: parent
+            onClicked: {
+            }
+        }
     }
 
     Label {
@@ -64,7 +70,7 @@ Item {
         }
         text: application.name
         font.bold: true
-        font.pointSize: 20
+        font.pixelSize: 20
 
         MouseArea {
             anchors.fill: parent
@@ -86,7 +92,7 @@ Item {
         }
         text: "Social"
         color: "#99000000"
-        font.pointSize: 15
+        font.pixelSize: 15
         MouseArea {
             anchors.fill: parent
             onClicked: {
@@ -106,7 +112,7 @@ Item {
         }
         width: itemWidth - app_img.width
         Layout.preferredWidth: itemWidth - app_img.width
-        font.pointSize: 10
+        font.pixelSize: 10
         wrapMode: Text.WordWrap
         maximumLineCount: 3
         elide: Text.ElideRight

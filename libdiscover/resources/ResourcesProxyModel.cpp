@@ -6,9 +6,11 @@
  */
 
 #include "ResourcesProxyModel.h"
+
 #include "libdiscover_debug.h"
 #include <QMetaProperty>
 #include <utils.h>
+
 #include "ResourcesModel.h"
 #include <Category/CategoryModel.h>
 #include <ReviewsBackend/Rating.h>
@@ -43,10 +45,11 @@ ResourcesProxyModel::ResourcesProxyModel(QObject *parent)
     { SourceIconRole, "sourceIcon" },
     { SizeRole, "size" },
     { ReleaseDateRole, "releaseDate" }
-    })
-    , m_currentStream(nullptr)
+})
+, m_currentStream(nullptr)
 {
 //     new QAbstractItemModelTester(this, this);
+
     connect(ResourcesModel::global(), &ResourcesModel::backendsChanged, this, &ResourcesProxyModel::invalidateFilter);
     connect(ResourcesModel::global(), &ResourcesModel::backendDataChanged, this, &ResourcesProxyModel::refreshBackend);
     // connect(ResourcesModel::global(), &ResourcesModel::resourceDataChanged, this, &ResourcesProxyModel::refreshResource);
@@ -91,7 +94,7 @@ void ResourcesProxyModel::setSortOrder(Qt::SortOrder sortOrder)
 void ResourcesProxyModel::setSearch(const QString &_searchText)
 {
     // 1-character searches are painfully slow. >= 2 chars are fine, though
-    const QString searchText = _searchText.count() <= 1 ? QString() : _searchText;
+    const QString searchText = _searchText.count() <= 0 ? QString() : _searchText;
 
     const bool diff = searchText != m_filters.search;
 
@@ -295,6 +298,12 @@ QVariantList ResourcesProxyModel::subcategories() const
     return m_subcategories;
 }
 
+void ResourcesProxyModel::refreshCache()
+{
+    ResourcesModel::global()->refreshCache();
+    invalidateFilter();
+}
+
 void ResourcesProxyModel::invalidateFilter()
 {
     if (!m_setup || ResourcesModel::global()->backends().isEmpty()) {
@@ -318,6 +327,7 @@ void ResourcesProxyModel::invalidateFilter()
     connect(m_currentStream, &AggregatedResultsStream::resourcesFound, this, &ResourcesProxyModel::addResources);
     connect(m_currentStream, &AggregatedResultsStream::finished, this, [this]() {
         m_currentStream = nullptr;
+        qDebug()<<Q_FUNC_INFO << " busy finished:" << m_currentStream;
         Q_EMIT busyChanged(false);
     });
 }

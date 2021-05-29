@@ -157,7 +157,6 @@ void DummyBackend::checkForUpdates()
     toggleFetching();
     populate(QStringLiteral("Moar"));
     QTimer::singleShot(500, this, &DummyBackend::toggleFetching);
-    qDebug() << "DummyBackend::checkForUpdates";
 }
 
 QString DummyBackend::displayName() const

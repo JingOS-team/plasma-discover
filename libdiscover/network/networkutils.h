@@ -13,7 +13,6 @@
 class DISCOVERCOMMON_EXPORT NetworkUtils : public QObject
 {
     Q_OBJECT
-    
 public:
     NetworkUtils();
     enum Status {

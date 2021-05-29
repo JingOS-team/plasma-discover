@@ -10,8 +10,8 @@
 import QtQuick 2.0
 
 Item {
+
     id: arrowView
-    
     property bool isActive
     property string imageUrl
     signal arrowClicked
@@ -34,16 +34,16 @@ Item {
             id: leftRect
             color: "transparent"
             radius: 6
-            width: 42
-            height: 42
+            width: 26 * appScaleSize
+            height: 26 * appScaleSize
 
             Image {
                 id: leftImage
 
                 anchors.centerIn: parent
                 source: imageUrl
-                width: 32
-                height: 32
+                width: 16 * appScaleSize
+                height: 16 * appScaleSize
             }
 
             MouseArea {

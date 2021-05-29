@@ -20,12 +20,10 @@ Rectangle {
 
         Image {
             id: img_back
-
-            Layout.preferredWidth: 40
-            Layout.preferredHeight: 40
+            Layout.preferredWidth: 22 * appScaleSize
+            Layout.preferredHeight: 22 * appScaleSize
             source: "qrc:/img/ic_back.png"
             sourceSize: Qt.size(40, 40)
-            
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
@@ -41,7 +39,7 @@ Rectangle {
             }
             color: '#FF000000'
             font {
-                pointSize: discoverMain.defaultFontSize + 11
+                pixelSize: discoverMain.defaultFontSize + 6
                 bold: true
             }
         }

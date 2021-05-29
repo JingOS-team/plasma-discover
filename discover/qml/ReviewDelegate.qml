@@ -53,7 +53,7 @@ RowLayout {
                 Rating {
                     id: rating
                     rating: model.rating
-                    starSize: content.font.pointSize
+                    starSize: content.font.pixelSize
                 }
 
                 Label {

@@ -15,8 +15,8 @@
 int main(int argc, char** argv)
 {
     QGuiApplication app(argc, argv);
-    if (app.arguments().size() != 2)
-        return 1;
+//    if (app.arguments().size() != 2)
+//        return 1;
 
     KService::Ptr service(new KService(app.arguments().constLast()));
     if (!service->isValid())

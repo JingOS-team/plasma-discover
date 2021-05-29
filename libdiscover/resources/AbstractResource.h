@@ -72,7 +72,6 @@ class DISCOVERCOMMON_EXPORT AbstractResource : public QObject
     Q_PROPERTY(QDate releaseDate READ releaseDate NOTIFY versionsChanged)
     Q_PROPERTY(QString upgradeText READ upgradeText NOTIFY versionsChanged)
     Q_PROPERTY(QString screenShots READ screenShots WRITE setScreenShots)
-    
 public:
     /**
      * This describes the state of the resource

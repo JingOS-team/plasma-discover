@@ -9,13 +9,13 @@ import "cus/"
 
 DiscoverPage {
     id: page
+    title: i18n("Updates")
 
     property string footerLabel: ""
     property string footerToolTip: ""
     property int footerProgress: 0
     property bool isBusy: false
-    
-    title: i18n("Updates")
+
     leftPadding: 0
     rightPadding: 0
     bottomPadding: 0
@@ -23,7 +23,6 @@ DiscoverPage {
 
     readonly property var resourcesUpdatesModel: ResourcesUpdatesModel {
         id: resourcesUpdatesModel
-
         onPassiveMessage: {
             desc.text += message + "<br/>\n"
             sheet.sheetOpen = true
@@ -43,7 +42,6 @@ DiscoverPage {
 
     readonly property var sheet: Kirigami.OverlaySheet {
         id: sheet
-
         parent: applicationWindow().overlay
 
         header: Kirigami.Heading {
@@ -53,7 +51,6 @@ DiscoverPage {
         ColumnLayout {
             Label {
                 id: desc
-
                 Layout.fillWidth: true
                 textFormat: Text.StyledText
                 wrapMode: Text.WordWrap
@@ -79,7 +76,6 @@ DiscoverPage {
 
     readonly property var updateModel: UpdateModel {
         id: updateModel
-
         backend: resourcesUpdatesModel
     }
 
@@ -89,19 +85,18 @@ DiscoverPage {
 
         ScrollView {
             id: scv
-
             Layout.fillWidth: true
             Layout.preferredHeight: visible ? Kirigami.Units.gridUnit * 10 : 0
-            visible: log.contents.length > 0
+            visible: false
             TextArea {
                 readOnly: true
                 text: log.contents
+
                 cursorPosition: text.length - 1
                 font.family: "monospace"
 
                 ReadFile {
                     id: log
-
                     filter: ".*ALPM-SCRIPTLET\\] .*"
                     path: "/var/log/pacman.log"
                 }
@@ -109,7 +104,6 @@ DiscoverPage {
         }
         ToolBar {
             id: footerToolbar
-
             Layout.fillWidth: true
             visible: false //(updateModel.totalUpdatesCount > 0 && resourcesUpdatesModel.isProgressing) || updateModel.hasUpdates
 
@@ -147,7 +141,6 @@ DiscoverPage {
 
     Kirigami.Action {
         id: cancelUpdateAction
-
         iconName: "dialog-cancel"
         text: i18n("Cancel")
         enabled: resourcesUpdatesModel.transaction
@@ -173,7 +166,6 @@ DiscoverPage {
 
         LoaderAnimation {
             id: loaderAnim
-
             anchors.fill: parent
             timerRun: visible
             visible: page.isBusy
@@ -198,6 +190,11 @@ DiscoverPage {
             anchors.centerIn: parent
             visible: page.footerProgress === 0 && page.footerLabel !== ""
                      && !page.isBusy
+            onDeviceNetworkStateChanged: {
+                if(state === "2" & visible){
+                    ResourcesModel.updateAction.triggered()
+                }
+            }
         }
         Kirigami.Icon {
             Layout.alignment: Qt.AlignHCenter
@@ -209,7 +206,6 @@ DiscoverPage {
         }
         Kirigami.Heading {
             id: statusLabel
-
             Layout.fillWidth: true
             Layout.alignment: Qt.AlignHCenter
             horizontalAlignment: Text.AlignHCenter
@@ -222,7 +218,6 @@ DiscoverPage {
         }
         Button {
             id: restartButton
-
             Layout.alignment: Qt.AlignHCenter
             text: i18n("Restart")
             visible: false
@@ -236,7 +231,6 @@ DiscoverPage {
 
     JGridView {
         id: updatesView
-
         anchors.fill: parent
         maximumColumns: 3
         maximumColumnWidth: updatesView.width / 3
@@ -256,7 +250,6 @@ DiscoverPage {
 
         delegate: UpdateApplicationDelegate {
             id: appDelegate
-            
             width: updatesView.cellWidth - updatesView.gridSpacing
             height: updatesView.cellHeight - updatesView.gridSpacing
             application: resourceApp
@@ -309,7 +302,7 @@ DiscoverPage {
                 app.screenShots = screenShotsJson
                 var appScreenShots = screenShotsJson
                 var lang = ""
-                if (sysLang.includes("china")) {
+                if (sysLang === "zh") {
                     lang = "cn"
                 } else {
                     lang = "en"
@@ -346,7 +339,7 @@ DiscoverPage {
             }
         }
         xhr.open("GET",
-                 "" + appNameString)
+                 "https://appapi.jingos.com/v1/appinfo?architecture=x86&appName=" + appNameString)
         xhr.send()
     }
 

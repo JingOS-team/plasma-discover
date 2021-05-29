@@ -99,3 +99,5 @@ ecm_qt_install_logging_categories(
         FILE discover.categories
         DESTINATION ${KDE_INSTALL_LOGGINGCATEGORIESDIR}
         )
+find_package(KF5I18n CONFIG REQUIRED)
+ki18n_install(po)

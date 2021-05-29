@@ -8,9 +8,9 @@ import org.kde.kirigami 2.15 as Kirigami
 import "navigation.js" as Navigation
 
 import "cus/"
-Kirigami.ApplicationWindow {
+Kirigami.ApplicationWindow
+{
     id: window
-
     readonly property string topBrowsingComp: ("qrc:/qml/BrowsingPage.qml")
     readonly property string topInstalledComp: ("qrc:/qml/InstalledPage.qml")
     readonly property string topSearchComp: ("qrc:/qml/SearchPage.qml")
@@ -19,10 +19,18 @@ Kirigami.ApplicationWindow {
     readonly property string topAboutComp: ("qrc:/qml/AboutPage.qml")
     readonly property QtObject stack: window.pageStack
     property string currentTopLevel
+    property var appScaleSize: width / 888
 
     objectName: "DiscoverMainWindow"
     title: leftPage ? leftPage.title : ""
+
+//    width: app.initialGeometry.width>=10 ? app.initialGeometry.width : Kirigami.Units.gridUnit * 45
+//    height: app.initialGeometry.height>=10 ? app.initialGeometry.height : Kirigami.Units.gridUnit * 30
+
     visible: true
+
+//    minimumWidth: 300
+//    minimumHeight: 300
 
     pageStack.defaultColumnWidth: Kirigami.Units.gridUnit * 25
     pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
@@ -112,10 +120,12 @@ Kirigami.ApplicationWindow {
     Connections {
         target: app
         function onOpenApplicationInternal(app) {
+
             Navigation.clearStack()
             Navigation.openApplication(app)
         }
         function onListMimeInternal(mime)  {
+
             currentTopLevel = topBrowsingComp;
             Navigation.openApplicationMime(mime)
         }
@@ -148,7 +158,6 @@ Kirigami.ApplicationWindow {
         target: ResourcesModel
         function onPassiveMessage (message) {
             showPassiveNotification(message)
-            console.log("message:", message)
         }
     }
 
@@ -192,70 +201,89 @@ Kirigami.ApplicationWindow {
 
     Component {
         id: proceedDialog
-        Kirigami.OverlaySheet {
-            id: sheet
-            showCloseButton: false
+
+        JAlertDialog{
+            id:sheet
+            property string title
+            property string description
             property QtObject transaction
-            property alias title: heading.text
-            property alias description: desc.text
-            property bool acted: false
 
-            header: Kirigami.Heading {
-                id: heading
-                wrapMode: Text.WordWrap
+            msgContent: description
+            titleContent: title
+            rightButtonContent: i18n("Proceed")
+            onDialogLeftClicked: {
+                sheet.close()
             }
-
-            // No need to add our own ScrollView since OverlaySheet includes
-            // one automatically.
-            // But we do need to put the label into a Layout of some sort so we
-            // can limit the width of the sheet.
-            contentItem: ColumnLayout {
-                Label {
-                    id: desc
-
-                    Layout.fillWidth: true
-                    Layout.maximumWidth: Kirigami.Units.gridUnit * 30
-
-                    textFormat: Text.StyledText
-                    wrapMode: Text.WordWrap
-                }
-            }
-
-            footer: RowLayout {
-
-                Item { Layout.fillWidth : true }
-
-                Button {
-                    text: i18n("Proceed")
-                    icon.name: "dialog-ok"
-                    onClicked: {
-                        transaction.proceed()
-                        sheet.acted = true
-                        sheet.close()
-                    }
-                    Keys.onEnterPressed: clicked()
-                    Keys.onReturnPressed: clicked()
-                }
-
-                Button {
-                    Layout.alignment: Qt.AlignRight
-                    text: i18n("Cancel")
-                    icon.name: "dialog-cancel"
-                    onClicked: {
-                        transaction.cancel()
-                        sheet.acted = true
-                        sheet.close()
-                    }
-                    Keys.onEscapePressed: clicked()
-                }
-            }
-
-            onSheetOpenChanged: if(!sheetOpen) {
-                sheet.destroy(1000)
-                if (!sheet.acted)
-                    transaction.cancel()
+            onDialogRightClicked: {
+                transaction.proceed()
+                sheet.close()
             }
         }
+
+//        Kirigami.OverlaySheet {
+//            id: sheet
+//            showCloseButton: false
+//            property QtObject transaction
+//            property alias title: heading.text
+//            property alias description: desc.text
+//            property bool acted: false
+
+//            header: Kirigami.Heading {
+//                id: heading
+//                wrapMode: Text.WordWrap
+//            }
+
+//            // No need to add our own ScrollView since OverlaySheet includes
+//            // one automatically.
+//            // But we do need to put the label into a Layout of some sort so we
+//            // can limit the width of the sheet.
+//            contentItem: ColumnLayout {
+//                Label {
+//                    id: desc
+
+//                    Layout.fillWidth: true
+//                    Layout.maximumWidth: Kirigami.Units.gridUnit * 30
+
+//                    textFormat: Text.StyledText
+//                    wrapMode: Text.WordWrap
+//                }
+//            }
+
+//            footer: RowLayout {
+
+//                Item { Layout.fillWidth : true }
+
+//                Button {
+//                    text: i18n("Proceed")
+//                    icon.name: "dialog-ok"
+//                    onClicked: {
+//                        transaction.proceed()
+//                        sheet.acted = true
+//                        sheet.close()
+//                    }
+//                    Keys.onEnterPressed: clicked()
+//                    Keys.onReturnPressed: clicked()
+//                }
+
+//                Button {
+//                    Layout.alignment: Qt.AlignRight
+//                    text: i18n("Cancel")
+//                    icon.name: "dialog-cancel"
+//                    onClicked: {
+//                        transaction.cancel()
+//                        sheet.acted = true
+//                        sheet.close()
+//                    }
+//                    Keys.onEscapePressed: clicked()
+//                }
+//            }
+
+//            onSheetOpenChanged: if(!sheetOpen) {
+//                sheet.destroy(1000)
+//                if (!sheet.acted)
+//                    transaction.cancel()
+//            }
+//        }
     }
 
     Instantiator {
@@ -298,7 +326,8 @@ Kirigami.ApplicationWindow {
         progress: TransactionModel.progress
     }
 
-    pageStack.initialPage: DiscoverMainPage {
+  pageStack.initialPage:
+      DiscoverMainPage{
         id:mainPage
     }
 }

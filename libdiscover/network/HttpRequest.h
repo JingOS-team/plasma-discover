@@ -33,7 +33,6 @@ class HttpClient;
 
 class DISCOVERCOMMON_EXPORT HttpRequest
 {
-    
 public:
     enum BodyType {
         None = 0, // This request does not have a body.

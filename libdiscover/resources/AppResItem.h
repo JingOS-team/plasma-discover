@@ -11,7 +11,6 @@
 class AppResItem : public QObject
 {
     Q_OBJECT
-
     Q_PROPERTY(QString appId READ appId)
     Q_PROPERTY(QString appName READ appName)
     Q_PROPERTY(QString name READ name)
@@ -36,7 +35,6 @@ public:
     void setSummary(QString summary);
     AbstractResource *app();
     void setApp(AbstractResource *app);
-    
 private:
     QString m_appId;
     QString m_appName;

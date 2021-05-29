@@ -16,7 +16,6 @@ import "./cus"
 DiscoverPage
 {
     id: page
-
     title: i18n("Featured")
     leftPadding: 0
     rightPadding: 0
@@ -64,11 +63,22 @@ DiscoverPage
 
     readonly property bool compact: page.width < 550 || !applicationWindow().wideScreen
 
+    // Kirigami.CardsListView {
+    //     id: apps
+    //     model: FeaturedModel {}
+    //     Component.onCompleted: apps.bottomMargin = Kirigami.Units.largeSpacing * 2
+    //     currentIndex: -1
+    //     delegate: ApplicationDelegate {
+    //         application: model.application
+    //         compact: page.compact
+    //     }
+    // }
+
     JGridView{
         id: apps
-
         model: FeaturedModel {}
         maximumColumns:3
+        // maximumColumnWidth:page.width / 3
         cellHeight:200
         Component.onCompleted: apps.bottomMargin = Kirigami.Units.largeSpacing * 2
         currentIndex: -1
@@ -77,4 +87,5 @@ DiscoverPage
             compact: page.compact
         }
     }
+
 }

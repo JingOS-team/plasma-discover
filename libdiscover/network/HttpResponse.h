@@ -15,7 +15,6 @@
 
 class HttpResponseTimeout : public QObject {
     Q_OBJECT
-
 public:
     HttpResponseTimeout(QNetworkReply *parent = NULL, const int timeout = -1) : QObject(parent) {
         if (timeout > 0)
@@ -35,7 +34,6 @@ private Q_SLOTS:
 class DISCOVERCOMMON_EXPORT HttpResponse : public QObject
 {
     Q_OBJECT
-    
 public:
     /*
      * Support Reflex Method

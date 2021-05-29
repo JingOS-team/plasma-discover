@@ -24,25 +24,24 @@ Item {
 
     Component {
         id: sectionHeading
-
         Rectangle {
 
-            property string section
+            required property string section
 
             anchors {
                 left: parent.left
-                leftMargin: 20
+                leftMargin: 10 * appScaleSize
             }
             width: categoryList.width
-            height: section === "My" ? 70 : 50
+            height: section === i18n("My") ? 70 : 50
             color: "transparent"
 
             Text {
-                anchors.verticalCenter: parent.section === "My" ? parent : parent.verticalCenter
-                anchors.bottom: parent.section === "My" ? parent.bottom : parent
-                anchors.bottomMargin: parent.section === "My" ? 10 : parent
+                anchors.verticalCenter: parent.section === i18n("My") ? parent : parent.verticalCenter
+                anchors.bottom: parent.section === i18n("My") ? parent.bottom : parent
+                anchors.bottomMargin: parent.section === i18n("My") ? 10 : parent
                 text: parent.section
-                font.pointSize: discoverMain.defaultFontSize - 2
+                font.pixelSize: discoverMain.defaultFontSize - 2
                 color: "#4D000000"
             }
         }
@@ -50,11 +49,10 @@ Item {
 
     Component {
         id: updateCountComponent
-
         Rectangle {
-            width: categoryName.contentWidth + 14
-            height: updateCount > 9 ? 25 : width
-            radius: updateCount > 9 ? 13 : width / 2
+            width: categoryName.contentWidth + 14 * appScaleSize
+            height: updateCount > 9 ? 25 * appScaleSize : width
+            radius: updateCount > 9 ? 13 * appScaleSize : width / 2
             color: "red"
 
             Text {
@@ -63,7 +61,7 @@ Item {
                 anchors.centerIn: parent
 
                 text: updateCount
-                font.pointSize: discoverMain.defaultFontSize - 5
+                font.pixelSize: discoverMain.defaultFontSize - 5
                 color: "white"
             }
         }
@@ -71,7 +69,6 @@ Item {
 
     ListView {
         id: categoryList
-
         property int itemIndex
         property bool movementEndd
 
@@ -81,7 +78,7 @@ Item {
         section.property: "app_type"
         section.criteria: ViewSection.FullString
         section.delegate: sectionHeading
-        spacing: 10
+        spacing: 5 * appScaleSize
         cacheBuffer: height * 2
         currentIndex: itemIndex
 
@@ -92,10 +89,14 @@ Item {
         onMovementEnded: {
             movementEndd = true
         }
+        // delegate: ItemHoverView {
+        //     width: 200 * appScaleSize//parent.width
+        //     height: width / 6
+        //     color:"blue"
+        // }
 
         delegate: ItemHoverView {
             id: categoryItem
-
             listMovewMend: categoryList.movementEndd
             onListMovewMendChanged: {
                 if (!listMovewMend) {
@@ -103,7 +104,7 @@ Item {
                 }
             }
 
-            width: parent.width
+            width: 200 * appScaleSize//parent.width
             height: width / 6
             radius: height / 4
             color: itemSelectedBackShow & index === categoryList.itemIndex ? "#394BF1" : "#00000000"
@@ -118,34 +119,33 @@ Item {
 
             Image {
                 id: categoryIcon
-
                 anchors {
                     left: parent.left
-                    leftMargin: 20
+                    leftMargin: 10 * appScaleSize
                     verticalCenter: parent.verticalCenter
                 }
+                width: 16 //* appScaleSize
+                height: 16 //* appScaleSize
                 source: itemSelectedBackShow & categoryList.itemIndex
                         === index ? (category.icon_select
                                      === "" ? category.icon : category.icon_select) : category.icon
-                sourceSize: Qt.size(32, 32)
+//                sourceSize: Qt.size(32, 32)
                 asynchronous: true
             }
             Text {
                 id: categoryName
-
                 anchors {
                     left: categoryIcon.right
-                    leftMargin: 20
+                    leftMargin: 10 * appScaleSize
                     verticalCenter: parent.verticalCenter
                 }
                 text: category.name
-                font.pointSize: discoverMain.defaultFontSize
+                font.pixelSize: discoverMain.defaultFontSize
                 color: itemSelectedBackShow & index === categoryList.itemIndex ? "white" : "black"
             }
 
             Loader {
                 id: updateCountLoader
-                
                 anchors {
                     left: categoryName.right
                     leftMargin: 10

@@ -51,9 +51,9 @@ Item {
 
     Label {
         id: details_app_name
-        text: "App"
+        text: i18n("App")
         font.bold: true
-        font.pointSize: 20
+        font.pixelSize: 20
         anchors {
             top: details_back.bottom
             topMargin: 50
@@ -124,7 +124,7 @@ Item {
             topMargin: 50
         }
         font.bold: true
-        font.pointSize: 30
+        font.pixelSize: 30
     }
 
     Label {

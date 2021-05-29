@@ -9,6 +9,7 @@ BannerAppResource::BannerAppResource(QString appName,QString bannerUrl)
     : m_appName(appName)
     , m_bannerUrl(bannerUrl)
 {
+
 }
 
 void BannerAppResource::setAppName(QString appName) {

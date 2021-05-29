@@ -12,7 +12,7 @@
                 },
                 {
                     "lang": "cn",
-                    "display": "音乐"
+                    "display": "天气"
                 }
             ]
         },
@@ -25,7 +25,7 @@
                 },
                 {
                     "lang": "cn",
-                    "display": "音乐"
+                    "display": "医疗"
                 }
             ]
         },
@@ -38,7 +38,7 @@
                 },
                 {
                     "lang": "cn",
-                    "display": "音乐"
+                    "display": "娱乐"
                 }
             ]
         },
@@ -51,7 +51,7 @@
                 },
                 {
                     "lang": "cn",
-                    "display": "音乐"
+                    "display": "教育"
                 }
             ]
         },
@@ -64,7 +64,7 @@
                 },
                 {
                     "lang": "cn",
-                    "display": "音乐"
+                    "display": "商务"
                 }
             ]
         }

@@ -14,7 +14,6 @@ import org.kde.kirigami 2.0 as Kirigami
 
 Control {
     id: root
-
     property alias text: theLabel.text
     property real progress: 0.0
 
@@ -23,9 +22,11 @@ Control {
             color: "#0D000000"
             anchors.fill: parent
             radius: height / 5
+//            visible: progress === 0.0
         }
 
         Rectangle {
+            id: downloadingRect
             anchors {
                 fill: parent
                 rightMargin: (1 - root.progress) * parent.width
@@ -38,7 +39,6 @@ Control {
 
     contentItem: Label {
         id: theLabel
-        
         horizontalAlignment: Text.AlignHCenter
         color: Kirigami.Theme.highlightedTextColor
     }

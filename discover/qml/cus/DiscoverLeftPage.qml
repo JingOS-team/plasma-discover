@@ -16,30 +16,34 @@ Item {
     id: discoverLeft
 
     property string leftSearchContent: searchRect.text
+    property string netStateValue: ResourcesModel.networkState
 
+    onNetStateValueChanged:{
+         if ("1" !== netStateValue) {
+            cppClassModel.categoryCache()
+        }
+    }
     Rectangle {
         id: indexRom
-
         anchors.left: parent.left
-        anchors.leftMargin: 20
+        anchors.leftMargin: 10 * appScaleSize
 
         width: parent.width
-        height: indexText.contentHeight
+        height: 30 * appScaleSize
         color: "transparent"
 
         Text {
             id: indexText
 
             anchors.left: parent.left
-            anchors.leftMargin: 20
             anchors.verticalCenter: parent.verticalCenter
 
             width: parent.width
-            text: "Store"
+            text: i18n("Store")
             elide: Text.ElideRight
             color: '#FF000000'
             font {
-                pointSize: discoverMain.defaultFontSize + 18
+                pixelSize: discoverMain.defaultFontSize + 11
                 bold: true
             }
 
@@ -57,14 +61,15 @@ Item {
         id: searchRect
 
         anchors.top: indexRom.bottom
-        anchors.topMargin: 20 //searchRect.height / 4
-        anchors.left: indexRom.left
+        anchors.topMargin: 20 * appScaleSize //searchRect.height / 4
+        anchors.left: parent.left
+        anchors.leftMargin: 5 * appScaleSize
 
-        width: discoverLeft.width * 36 / 49
-        height: width / 7
+        width: 180 * appScaleSize//discoverLeft.width * 36 / 49
+//        height: 27 * appScaleSize//width / 7
         focus: false
         placeholderText: ""
-        Accessible.name: qsTr("Search")
+        Accessible.name: i18n("Search")
         Accessible.searchEdit: true
 
         background: Rectangle {
@@ -95,7 +100,6 @@ Item {
 
     Timer {
         id: loadFeatureTimer
-
         interval: 1000
         onTriggered: {
             rightPage.loaderRun = false
@@ -113,13 +117,12 @@ Item {
 
     JCategoryList {
         id: app_class_list
-        
         anchors {
             top: searchRect.bottom
-            topMargin: parent.height * 31 / discoverMain.defaultHeight
+            topMargin: 20 * appScaleSize//parent.height * 31 / discoverMain.defaultHeight
             bottom: parent.bottom
         }
-        width: searchRect.width + 60
+        width: searchRect.width + 40 * appScaleSize
         clip: true
         updateCount: ResourcesModel.updatesCount
         categoryModel: cppClassModel

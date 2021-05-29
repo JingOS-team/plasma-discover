@@ -16,9 +16,7 @@ class PackageKitBackend;
 class PackageKitResource : public AbstractResource
 {
     Q_OBJECT
-
     Q_PROPERTY(QStringList objects MEMBER m_objects CONSTANT)
-    
 public:
     explicit PackageKitResource(QString  packageName, QString  summary, PackageKitBackend* parent);
     QString packageName() const override;

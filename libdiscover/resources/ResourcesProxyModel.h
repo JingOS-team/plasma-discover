@@ -24,7 +24,6 @@ class AggregatedResultsStream;
 class DISCOVERCOMMON_EXPORT ResourcesProxyModel : public QAbstractListModel, public QQmlParserStatus
 {
     Q_OBJECT
-
     Q_INTERFACES(QQmlParserStatus)
     Q_PROPERTY(Roles sortRole READ sortRole WRITE setSortRole NOTIFY sortRoleChanged)
     Q_PROPERTY(Qt::SortOrder sortOrder READ sortOrder WRITE setSortOrder NOTIFY sortOrderChanged)
@@ -41,7 +40,6 @@ class DISCOVERCOMMON_EXPORT ResourcesProxyModel : public QAbstractListModel, pub
     Q_PROPERTY(bool isBusy READ isBusy NOTIFY busyChanged)
     Q_PROPERTY(int count READ rowCount NOTIFY countChanged)
     Q_PROPERTY(bool sortByRelevancy READ sortByRelevancy NOTIFY sortByRelevancyChanged)
-
 public:
     explicit ResourcesProxyModel(QObject* parent = nullptr);
     enum Roles {
@@ -119,6 +117,7 @@ public:
 
     bool lessThan(AbstractResource* rl, AbstractResource* rr) const;
     Q_SCRIPTABLE void invalidateFilter();
+    Q_SCRIPTABLE void refreshCache();
     void invalidateSorting();
 
     bool canFetchMore(const QModelIndex & parent) const override;
@@ -127,12 +126,10 @@ public:
 
     void classBegin() override {}
     void componentComplete() override;
-
 private Q_SLOTS:
     void refreshBackend(AbstractResourcesBackend* backend, const QVector<QByteArray>& properties);
     void refreshResource(AbstractResource* resource, const QVector<QByteArray>& properties);
     void removeResource(AbstractResource* resource);
-    
 private:
     void sortedInsertion(const QVector<AbstractResource*> &res);
     QVariant roleToValue(AbstractResource* res, int role) const;

@@ -1,5 +1,4 @@
 
-
 /*
  * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
  *
@@ -15,14 +14,12 @@ import QtGraphicalEffects 1.0
 
 ConditionalLoader {
     id: root
-
     property bool isActive: false
     property int updateProgress: 0
     readonly property string text: i18n("Update")
     property Component additionalItem: null
     readonly property alias progress: listener.progress
     property alias application: listener.resource
-
     property bool compact: false
 
     signal updateButtonClicked
@@ -50,19 +47,17 @@ ConditionalLoader {
             color: "black"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            text: compact ? "" : root.text
-            font.pointSize: delegateArea.defaultFontSize - 7
+            text: root.text
+            font.pixelSize: delegateArea.defaultFontSize - 5
         }
         background: Rectangle {
             id: installBg
-
             color: "#F2FBFBFB"
             radius: height / 5
             layer.enabled: true
             border.color: "#CDD0D7"
             layer.effect: DropShadow {
                 id: rectShadow
-                
                 anchors.fill: installBg
                 color: "#12000000"
                 source: installBg

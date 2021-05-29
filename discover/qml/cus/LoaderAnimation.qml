@@ -14,18 +14,16 @@ Rectangle {
 
     Component {
         id: animComponment
-        
         AnimatedImage {
             asynchronous: true
-            width: 50
-            height: 50
+            width: 25 * appScaleSize
+            height: 25 * appScaleSize
             source: "qrc:/img/loadanim.gif"
         }
     }
 
     Loader {
         id: animLoader
-
         sourceComponent: animComponment
         anchors.centerIn: parent
     }

@@ -15,6 +15,7 @@ set (packagekit-backend_SRCS
     PackageKitSourcesBackend.cpp
     LocalFilePKResource.cpp
     PKResolveTransaction.cpp
+    packageserverresourcemanager.cpp
     pkui.qrc
     )
 ecm_qt_declare_logging_category(packagekit-backend_SRCS HEADER libdiscover_backend_debug.h IDENTIFIER LIBDISCOVER_BACKEND_LOG CATEGORY_NAME org.kde.plasma.libdiscover.backend DESCRIPTION "libdiscover backend" EXPORT DISCOVER)

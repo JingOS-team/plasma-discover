@@ -10,8 +10,8 @@
 #include <QNetworkRequest>
 #include <QNetworkReply>
 #include "discovercommon_export.h"
-
-#define BASE_URL "https://search.deepinos.org.cn/"
+//https://search.deepinos.org.cn/
+#define BASE_URL "https://appapi.jingos.com/v1/"
 
 class DISCOVERCOMMON_EXPORT HttpClient : public QNetworkAccessManager
 {

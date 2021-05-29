@@ -127,7 +127,6 @@ QUrl PackageKitResource::homepage()
 
 QVariant PackageKitResource::icon() const
 {
-    qDebug()<<Q_FUNC_INFO<<" currentIcon::"<< m_icon << " name:"<< name();
     if (!m_icon.isValid() || m_icon == "") {
         return "qrc:/img/ic_app_list_empty.png";
     }
@@ -191,6 +190,7 @@ AbstractResource::State PackageKitResource::state()
 
 void PackageKitResource::addPackageId(PackageKit::Transaction::Info info, const QString &packageId, bool arch)
 {
+
     auto oldState = state();
     if (arch)
         m_packages[info].append(packageId);

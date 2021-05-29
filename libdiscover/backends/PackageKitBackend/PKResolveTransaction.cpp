@@ -22,7 +22,7 @@ void PKResolveTransaction::start()
 {
     Q_EMIT started();
 
-    PackageKit::Transaction * tArch = PackageKit::Daemon::resolve(m_packageNames, PackageKit::Transaction::FilterApplication);
+    PackageKit::Transaction * tArch = PackageKit::Daemon::resolve(m_packageNames, PackageKit::Transaction::FilterNone);
     connect(tArch, &PackageKit::Transaction::package, m_backend, &PackageKitBackend::addPackageArch);
     connect(tArch, &PackageKit::Transaction::errorCode, m_backend, &PackageKitBackend::transactionError);
     m_transactions = {tArch};

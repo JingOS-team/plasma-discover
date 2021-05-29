@@ -11,18 +11,18 @@ import QtGraphicalEffects 1.0
 Rectangle {
     id: installBg
 
-    property int rectRadius
+    property int rectRadius: height / 5
     property string shadowColor: "#80C3C9D9"
+    property string borderColor: "#C7D3DBEE"
     border {
         width: 1
-        color: "#C7D3DBEE"
+        color: borderColor
     }
     color: "#F2FBFBFB"
-    radius: height / 5
+    radius: rectRadius
     layer.enabled: true
     layer.effect: DropShadow {
         id: rectShadow
-        
         anchors.fill: installBg
         color: shadowColor
         source: installBg

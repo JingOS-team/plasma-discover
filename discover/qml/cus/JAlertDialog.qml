@@ -13,26 +13,18 @@ import QtQuick.Layouts 1.2
 Kirigami.JDialog {
     id: dialog
 
-    property var titleContent: "Uninstall"
-    property var msgContent: "Are you sure uninstall the app?"
-    property var rightButtonContent: "Uninstall"
-    property var leftButtonContent: "Cancel"
+    property var titleContent: i18n("Uninstall")
+    property var msgContent: i18n("Are you sure uninstall the app?")
+    property var rightButtonContent: i18n("Uninstall")
+    property var leftButtonContent: i18n("Cancel")
 
     signal dialogRightClicked
     signal dialogLeftClicked
 
     title: titleContent
     text: msgContent
-    rightButtonText: qsTr(rightButtonContent)
-    leftButtonText: qsTr(leftButtonContent)
-    visible: false
-
-    onVisibleChanged: {
-        if (!visible) {
-            albumView.rightMenuPhoto = false
-            albumView.rightMenuVideo = false
-        }
-    }
+    rightButtonText: rightButtonContent
+    leftButtonText: leftButtonContent
 
     onRightButtonClicked: {
         dialogRightClicked()

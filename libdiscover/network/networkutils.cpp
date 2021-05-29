@@ -33,7 +33,7 @@ void NetworkUtils::appStatusReport(Status status, AbstractResource *resource)
     } else if (status == Uninstalled) {
         actionType = "uninstall";
     }
-    QString appName = resource->name();
+    QString appName = resource->packageName();
 
     QString installedVersion =  resource->installedVersion();
     QJsonObject reportDataJson;

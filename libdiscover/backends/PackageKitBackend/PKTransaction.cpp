@@ -60,6 +60,7 @@ static QSet<QString> involvedPackages(const QSet<AbstractResource*>& packages)
 
 void PKTransaction::start()
 {
+    m_newPackageStates.clear();
     trigger(PackageKit::Transaction::TransactionFlagSimulate);
 }
 
@@ -67,7 +68,6 @@ void PKTransaction::trigger(PackageKit::Transaction::TransactionFlags flags)
 {
     if (m_trans)
         m_trans->deleteLater();
-    m_newPackageStates.clear();
 
     if (m_apps.size() == 1 && qobject_cast<LocalFilePKResource*>(m_apps.at(0))) {
         auto app = qobject_cast<LocalFilePKResource*>(m_apps.at(0));
@@ -84,7 +84,6 @@ void PKTransaction::trigger(PackageKit::Transaction::TransactionFlags flags)
             const QStringList ids = packageIds(m_apps, [](PackageKitResource* r) {
                 return r->availablePackageId();
             });
-            qDebug()<<Q_FUNC_INFO << " install info ids:"<< ids << " flgs:"<<flags;
             if (ids.isEmpty()) {
                 //FIXME this state shouldn't exist
                 qWarning() << "Installing no packages found!";
@@ -209,21 +208,21 @@ void PKTransaction::cleanup(PackageKit::Transaction::Exit exit, uint runtime)
         }
         removedResources.subtract(kToSet(m_apps));
 
-        if (!packagesToRemove.isEmpty() || !removedResources.isEmpty()) {
-            QString msg = QLatin1String("<ul><li>") + PackageKitResource::joinPackages(packagesToRemove, QLatin1String("</li><li>"), {});
-            if (!removedResources.isEmpty()) {
-                const QStringList removedResourcesStr = kTransform<QStringList>(removedResources, [](AbstractResource* a) {
-                    return a->name();
-                });
-                msg += QLatin1Char('\n');
-                msg += removedResourcesStr.join(QLatin1String("</li><li>"));
-            }
-            msg += QStringLiteral("</li></ul>");
+//        if (!packagesToRemove.isEmpty() || !removedResources.isEmpty()) {
+//            QString msg = QLatin1String("<ul><li>") + PackageKitResource::joinPackages(packagesToRemove, QLatin1String("</li><li>"), {});
+//            if (!removedResources.isEmpty()) {
+//                const QStringList removedResourcesStr = kTransform<QStringList>(removedResources, [](AbstractResource* a) {
+//                    return a->name();
+//                });
+//                msg += QLatin1Char('\n');
+//                msg += removedResourcesStr.join(QLatin1String("</li><li>"));
+//            }
+//            msg += QStringLiteral("</li></ul>");
 
-            Q_EMIT proceedRequest(i18n("Confirm package removal"), i18np("This action will also remove the following package:\n%2", "This action will also remove the following packages:\n%2", packagesToRemove.count(), msg));
-        } else {
-            proceed();
-        }
+//            Q_EMIT proceedRequest(i18n("Confirm package removal"), i18np("This action will also remove the following package:\n%2", "This action will also remove the following packages:\n%2", packagesToRemove.count(), msg));
+//        } else {
+        proceed();
+//        }
         return;
     }
 

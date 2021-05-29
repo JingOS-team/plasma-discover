@@ -194,6 +194,7 @@ public Q_SLOTS:
      * Notifies the backend that the user wants the information to be up to date
      */
     virtual void checkForUpdates() = 0;
+    virtual void refreshCache() = 0;
 
 Q_SIGNALS:
     /**

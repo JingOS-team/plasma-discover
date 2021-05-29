@@ -22,7 +22,6 @@
 class UpdateTransaction : public Transaction
 {
     Q_OBJECT
-
 public:
     UpdateTransaction(ResourcesUpdatesModel* /*parent*/, const QVector<AbstractBackendUpdater*> &updaters)
         : Transaction(nullptr, nullptr, Transaction::InstallRole)
@@ -250,6 +249,7 @@ void ResourcesUpdatesModel::removeResources(const QList< AbstractResource* >& re
 
 void ResourcesUpdatesModel::updateResource(AbstractResource* resources)
 {
+    qDebug()<<Q_FUNC_INFO <<" resource:"<< resources;
     if (resources) {
         Transaction *updateTrans = resources->backend()->backendUpdater()->updateResource(resources);
         connect(updateTrans,&Transaction::transactionResult,[this](AbstractResource *resource) {
@@ -258,6 +258,8 @@ void ResourcesUpdatesModel::updateResource(AbstractResource* resources)
                 emit updateResourceResult(resource);
             }
         });
+
+
         TransactionModel::global()->addTransaction(updateTrans);
     }
 }

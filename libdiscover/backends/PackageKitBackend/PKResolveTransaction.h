@@ -17,7 +17,6 @@ class PackageKitBackend;
 class PKResolveTransaction : public QObject
 {
     Q_OBJECT
-    
 public:
     PKResolveTransaction(PackageKitBackend* backend);
 

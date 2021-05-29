@@ -12,6 +12,7 @@
 #include <QEventLoop>
 #include <QJsonDocument>
 #include <QJsonObject>
+#include <resources/ResourcesModel.h>
 
 #define T2S(t) (QString(#t).remove(QRegExp("\\s"))) //type to string
 
@@ -124,11 +125,24 @@ HttpResponse::HttpResponse(QNetworkReply *networkReply,
     connect(m_networkReply, SIGNAL(finished()), this, SLOT(onFinished()));
     connect(m_networkReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onError(QNetworkReply::NetworkError)));
     connect(m_networkReply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
-
+    connect(ResourcesModel::global(),&ResourcesModel::networkStateChanged, this, [this](QString state) {
+        if (state == "1") {
+            if (m_networkReply->isRunning()) {
+                m_networkReply->abort();
+                m_networkReply->deleteLater();
+            }
+        }
+    });
     if (isBlock) {
         QEventLoop loop;
         QObject::connect(m_networkReply, SIGNAL(finished()), &loop, SLOT(quit()));
         loop.exec();
+    }
+    if (ResourcesModel::global()->networkState() == "1") {
+        if (m_networkReply->isRunning()) {
+            m_networkReply->abort();
+            m_networkReply->deleteLater();
+        }
     }
 }
 
@@ -179,6 +193,7 @@ void HttpResponse::onError(QNetworkReply::NetworkError error)
     const QMetaObject & metaObject = QNetworkReply::staticMetaObject;
     QMetaEnum metaEnum = metaObject.enumerator(metaObject.indexOfEnumerator("NetworkError"));
     QString errorString = reply->errorString().isEmpty() ? metaEnum.valueToKey(error) : reply->errorString();
+    qDebug()<<Q_FUNC_INFO << " busy onError:" << errorString;
 
     if (m_slotsMap.contains((onError_QString_QNetworkReply_A_Poniter))) {
         _exec2(m_slotsMap.value((onError_QString_QNetworkReply_A_Poniter)).second, QString, QNetworkReply*, errorString, reply) {
@@ -196,7 +211,6 @@ void HttpResponse::onError(QNetworkReply::NetworkError error)
         _exec(m_slotsMap.value((onError_QString)).second, QString, errorString) {
             emit this->error(errorString);
         }
-
         reply->deleteLater();
     }
     else if (m_slotsMap.contains((onError_QNetworkReply_To_NetworkError))) {

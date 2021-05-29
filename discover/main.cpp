@@ -20,6 +20,7 @@
 #include <QTextStream>
 #include <QStandardPaths>
 #include <kstartupinfo.h>
+#include <QDateTime>
 
 #include <QX11Info>
 
@@ -82,6 +83,7 @@ void processArgs(QCommandLineParser* parser, DiscoverObject* mainWindow)
 
 int main(int argc, char** argv)
 {
+    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
     // needs to be set before we create the QGuiApplication
     QCoreApplication::setAttribute(Qt::AA_DisableSessionManager, true);
 
@@ -91,7 +93,7 @@ int main(int argc, char** argv)
     app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);
     KCrash::initialize();
     KQuickAddons::QtQuickSettings::init();
-    KLocalizedString::setApplicationDomain("plasma-discover");
+    KLocalizedString::setApplicationDomain("appstore");
     KAboutData about(QStringLiteral("discover"), i18n("Discover"), version, i18n("An application explorer"),
                      KAboutLicense::GPL, i18n("© 2010-2020 Plasma Development Team"));
     about.addAuthor(i18n("Aleix Pol Gonzalez"), QString(), QStringLiteral("aleixpol@kde.org"));
@@ -180,6 +182,6 @@ int main(int argc, char** argv)
             mainWindow->loadTest(testFile);
         }
     }
-
+    qint64 endTime = QDateTime::currentMSecsSinceEpoch();
     return app.exec();
 }

@@ -19,17 +19,13 @@
 class LocalBannerThread :public QThread
 {
     Q_OBJECT
-
 public:
     LocalBannerThread();
     void run() override;
-
 Q_SIGNALS:
     void loadLocalSuc(QByteArray data,bool isNetworkRequest);
-
 public Q_SLOTS:
     void onNetworkStop(bool isSuc);
-
 private:
     bool isNetworkStop = false;
 };
@@ -37,7 +33,6 @@ private:
 class DISCOVERCOMMON_EXPORT BannerResourceModel : public QAbstractListModel
 {
     Q_OBJECT
-
 public:
     enum BannerRoleTypes
     {
@@ -51,11 +46,9 @@ public:
 
     static BannerResourceModel* global();
     void loadBannerData();
-
 Q_SIGNALS:
     void networkStart();
     void networkStop(bool isSuc);
-
 public Q_SLOTS:
     void createbannerData(QByteArray bannerData,bool isNetworkRequest);
 
@@ -64,6 +57,8 @@ private:
     bool netWorkSuc = false;
     LocalBannerThread *localThread;
     QString currentLang = "en";
+
+
 };
 
 #endif // BANNERRESOURCEMODEL_H

@@ -12,15 +12,20 @@
 #include <network/HttpClient.h>
 #include <QLocale>
 #include <QFileDevice>
+#include <QNetworkReply>
 
 #define CACHE_PATH "/usr/share/discover/pkcategories/categoriesinfo.json"
+#define IF_MODIFIED_SINCE "If-Modified-Since"
+#define IF_NONE_MATCH "If-None-Match"
+#define LAST_MODIFIED "Last-Modified"
+#define ETAG "Etag"
 
 LocalAppModelThread::LocalAppModelThread()
 {
 }
 
-void LocalAppModelThread::run() 
-{
+void LocalAppModelThread::run() {
+
     QString path = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QLatin1String("discover/pkcategories/categoriesinfo.json"));
     QFile app_json(path);
     if (path.isEmpty()) {
@@ -83,8 +88,8 @@ QHash<int, QByteArray> AppClassModel::roleNames() const
 
 void AppClassModel::populate()
 {
-    QString systemLan = QLocale::system().bcp47Name();
-    if (systemLan.startsWith("zh")) {
+    QString systemBcp = QLocale::system().bcp47Name();
+    if (systemBcp.startsWith("zh")) {
         currentLang = "cn";
     } else {
         currentLang = "en";
@@ -100,7 +105,7 @@ void AppClassModel::populate()
 
 void AppClassModel::iconBaseUrlget()
 {
-    HttpClient::global()->get(QLatin1String(BASE_URL) + QLatin1String(CONFIG_URL))
+    HttpClient::global() -> get(QLatin1String(BASE_URL) + QLatin1String(CONFIG_URL))
     .header("content-type", "application/json")
     .queryParam("keyword", "ssr")
     .onResponse([this](QByteArray result) {
@@ -125,17 +130,47 @@ void AppClassModel::setIconBaseUrl(QString iconBaseurl)
 
 }
 
+QString AppClassModel::currentCategoriesName(QString categories)
+{
+    QStringList sqlitData = categories.split(",");
+    if (sqlitData.size() > 1) {
+        QStringList newData;
+        foreach (QString category, sqlitData ) {
+            QString value = m_cacheCategoriesMap.value(category);
+            newData.append(value);
+        }
+        if (newData.size() > 1) {
+            categories = newData.join(",");
+        }
+    } else {
+        categories = m_cacheCategoriesMap.value(categories);
+    }
+    return categories;
+}
+
 
 QString AppClassModel::categoryCache()
 {
-    HttpClient::global()->get(QLatin1String(BASE_URL) + QLatin1String(CATEGORY_URL))
-    .header("content-type", "application/json")
-    .onResponse([this](QByteArray result) {
-        if (result.isEmpty()) {
+    if (lastModified != "") {
+        headers.insert(IF_MODIFIED_SINCE,lastModified);
+    }
+    if (etag != "") {
+        headers.insert(IF_NONE_MATCH,etag);
+    }
+    HttpClient::global() -> get(QLatin1String(BASE_URL) + QLatin1String(CATEGORY_URL))
+    .headers(headers)
+    .onResponse([this](QNetworkReply* result) {
+        bool isExistETAG = result->hasRawHeader(ETAG);
+        if (isExistETAG) {
+            etag = result->rawHeader(ETAG);
+            lastModified = result->rawHeader(LAST_MODIFIED);
+        }
+        QByteArray serverResult = result->readAll();
+        if (serverResult.isEmpty()) {
             return;
         }
         emit networkStop(true);
-        createbannerData(result,true);
+        createbannerData(serverResult,true);
     })
     .onError([this](QString errorStr) {
         emit networkStop(false);
@@ -169,9 +204,9 @@ void AppClassModel::createbannerData(QByteArray jsonData,bool isNetworkRequest)
     }
     beginResetModel();
     m_categories.clear();
-    m_categories.append(new Category(QString::fromUtf8("Feature applications")
+    m_categories.append(new Category(i18n("Feature applications")
                                      ,QString::fromUtf8("feature_applications")
-                                     ,QString::fromUtf8(APPTYPE_REMOTE)));
+                                     ,appTypeRemote));
 
     QJsonObject jsonObjet= QJsonDocument::fromJson(jsonData).object();
     if (jsonObjet.empty()) {
@@ -184,7 +219,7 @@ void AppClassModel::createbannerData(QByteArray jsonData,bool isNetworkRequest)
     QJsonArray jsonArray = jsonObjet["categories"].toArray();
     foreach (auto json, jsonArray) {
         Category *category = new Category();
-        category->setApptype(QLatin1String(APPTYPE_REMOTE));
+        category->setApptype(appTypeRemote);
         QJsonObject categoryObject = json.toObject();
         QString typeP =  categoryObject[QString::fromUtf8("type")].toString();
         category->setTypeName(typeP);
@@ -195,16 +230,17 @@ void AppClassModel::createbannerData(QByteArray jsonData,bool isNetworkRequest)
             if (langP == currentLang) {
                 QString displayP =  displayObject[QString::fromUtf8("display")].toString();
                 category->setName(displayP);
+                m_cacheCategoriesMap.insert(typeP,displayP);
             }
         }
         m_categories.append(category);
     }
-    m_categories.append(new Category(QString::fromUtf8("SoftWare update")
+    m_categories.append(new Category(i18n("SoftWare update")
                                      ,QString::fromUtf8("SoftWare update")
-                                     ,QString::fromUtf8(APPTYPE_LOCAL)));
-    m_categories.append(new Category(QString::fromUtf8("Installed apps")
+                                     ,appTypeMy));
+    m_categories.append(new Category(i18n("Installed apps")
                                      ,QString::fromUtf8("Installed apps")
-                                     ,QString::fromUtf8(APPTYPE_LOCAL)));
+                                     ,appTypeMy));
     endResetModel();
 }
 

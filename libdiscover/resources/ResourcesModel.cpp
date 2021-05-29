@@ -142,7 +142,6 @@ void ResourcesModel::addResourcesBackend(AbstractResourcesBackend* backend)
         connect(backend->reviewsBackend(), &AbstractReviewsBackend::error, this, &ResourcesModel::passiveMessage, Qt::UniqueConnection);
     }
     connect(backend,&AbstractResourcesBackend::networkStateChanged,this,[=](int state) {
-        qDebug() << "state === " << state;
         switch (state) {
         case 1:
             qDebug() << "offline";
@@ -376,7 +375,7 @@ void AggregatedResultsStream::clear()
 
 AggregatedResultsStream* ResourcesModel::search(const AbstractResourcesBackend::Filters& search)
 {
-    if (search.isEmpty()) {
+    if (search.isEmpty() || networkState() == "1") {
         return new AggregatedResultsStream ({new ResultsStream(QStringLiteral("emptysearch"), {})});
     }
 
@@ -390,6 +389,12 @@ void ResourcesModel::checkForUpdates()
 {
     for (auto backend: qAsConst(m_backends))
         backend->checkForUpdates();
+}
+
+void ResourcesModel::refreshCache()
+{
+    for (auto backend: qAsConst(m_backends))
+        backend->refreshCache();
 }
 
 QVariantList ResourcesModel::backendsVariant() const

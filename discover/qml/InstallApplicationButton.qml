@@ -9,7 +9,6 @@ import "cus"
 
 ConditionalLoader {
     id: root
-
     property alias application: listener.resource
     readonly property alias isActive: listener.isActive
     readonly property alias progress: listener.progress
@@ -24,10 +23,10 @@ ConditionalLoader {
     property string updateTextString: application.canUpgrade ? i18n("Update") : i18n(
                                                                    "OPEN")
 
-    property int defaultFontSize: theme.defaultFont.pointSize
+    property int defaultFontSize:14//theme.defaultFont.pointSize
 
     property bool compact: false
-    property int textSize: defaultFontSize + 2
+    property int textSize: defaultFontSize
 
     signal updateButtonClicked
 
@@ -56,8 +55,6 @@ ConditionalLoader {
     JAlertDialog {
         id: uninstallDialog
 
-        msgContent: updateMsg(tabBarSelectText, selectCount)
-
         onDialogLeftClicked: {
             uninstallDialog.close()
         }
@@ -69,13 +66,13 @@ ConditionalLoader {
 
     function click() {
         if (!isActive) {
-            if (text === "Uninstall") {
+            if (text === i18n("Uninstall")) {
                 uninstallDialog.open()
-            } else if (text === "GET") {
+            } else if (text === i18n("GET")) {
                 ResourcesModel.installApplication(application)
-            } else if (text === "OPEN") {
+            } else if (text === i18n("OPEN")) {
                 application.invokeApplication()
-            } else if (text === "Update") {
+            } else if (text === i18n("Update")) {
                 updateButtonClicked()
             }
         } else {
@@ -86,6 +83,7 @@ ConditionalLoader {
 
     condition: listener.isActive
     componentTrue: LabelBackground {
+        //            text: listener.statusText
         progress: listener.progress / 100
     }
 
@@ -93,32 +91,33 @@ ConditionalLoader {
         id: textButton
 
         enabled: application.state !== AbstractResource.Broken
+        //        text: compact ? "" : root.text
         contentItem: Text {
             id: installText
             color: "black"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
-            text: compact ? "" : root.text
-            font.pointSize: textSize
+            text: root.text
+            font.pixelSize: textSize
         }
         background: Rectangle {
             id: installBg
-            
             color: "#F2FBFBFB"
             radius: height / 5
-            layer.enabled: true
+//            layer.enabled: true
             border.color: "#CDD0D7"
-            layer.effect: DropShadow {
-                id: rectShadow
-                anchors.fill: installBg
-                color: "#12000000"
-                source: installBg
-                samples: 9
-                radius: 4
-                horizontalOffset: 0
-                verticalOffset: 0
-                spread: 0
-            }
+            border.width: 1
+//            layer.effect: DropShadow {
+//                id: rectShadow
+//                anchors.fill: installBg
+//                color: "#12000000"
+//                source: installBg
+//                samples: 9
+//                radius: 4
+//                horizontalOffset: 0
+//                verticalOffset: 0
+//                spread: 0
+//            }
         }
 
         icon.name: compact ? root.action.icon.name : ""

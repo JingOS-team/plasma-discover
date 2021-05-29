@@ -17,7 +17,6 @@ import "cus/"
 
 DiscoverPage {
     id: page
-
     readonly property var model: appsModel
     property alias category: appsModel.filteredCategory
     property alias sortRole: appsModel.sortRole
@@ -41,7 +40,7 @@ DiscoverPage {
     property int currentCategoryIndex
     property bool isFetching: ResourcesModel.isFetching
     property alias isNetworking: loaderAnim.visible
-    property int defaultFontSize: theme.defaultFont.pointSize
+    property int defaultFontSize:14//theme.defaultFont.pointSize
     verticalScrollBarPolicy: Qt.ScrollBarAlwaysOff
 
     function stripHtml(input) {
@@ -54,11 +53,15 @@ DiscoverPage {
 
     signal clearSearch
 
+    refreshing: false
     supportsRefreshing: true
-    onRefreshingChanged: if (refreshing) {
-                             appsModel.invalidateFilter()
-                             refreshing = false
-                         }
+    onRefreshingChanged: {
+        if (refreshing) {
+            appsModel.refreshCache()
+            //                             appsModel.invalidateFilter()
+            refreshing = false
+        }
+    }
 
     function componentExit() {
         page.destroy()
@@ -114,10 +117,8 @@ DiscoverPage {
 
     Component {
         id: headComponent
-
         BannerView {
             id: gridHeadView
-
             Component.onCompleted: {
                 if (gridHeadView.headCount === 0) {
                     currentCategoryIndex = 1
@@ -128,16 +129,14 @@ DiscoverPage {
             }
         }
     }
-
     TopBar {
         id: listTop
-
         anchors {
             top: parent.top
         }
-        height: search === "" ? 0 : 50
+        height: search === "" ? 0 : 30 * appScaleSize
         opacity: height === 0 ? 0 : 1
-        textCont: "Search Result"
+        textCont: i18n("Search Result")
         width: parent.width
         onBackClicked: {
             rightCurrentItem()
@@ -146,20 +145,18 @@ DiscoverPage {
 
     Rectangle {
         id: girdRect
-
         anchors {
             top: listTop.bottom
-            topMargin: search === "" ? 0 : 20
+            topMargin: search === "" ? 0 : 20 * appScaleSize
         }
         width: parent.width
         height: parent.height - listTop.height
         color: "transparent"
         JGridView {
             id: apps
-
             signal bannerClicked(var appName)
             anchors.fill: parent
-            Layout.topMargin: 50
+            // Layout.topMargin: 50
             maximumColumns: 3
             maximumColumnWidth: apps.width / 3
             cellHeight: cellWidth / 2
@@ -186,7 +183,6 @@ DiscoverPage {
 
             model: ResourcesProxyModel {
                 id: appsModel
-
                 sortRole: DiscoverSettings.appsListPageSorting
                 sortOrder: sortRole === ResourcesProxyModel.SortableRatingRole
                            || sortRole === ResourcesProxyModel.ReleaseDateRole ? Qt.DescendingOrder : Qt.AscendingOrder
@@ -202,7 +198,6 @@ DiscoverPage {
             }
             header: Item {
                 id: rcmdAppContainer
-
                 visible: currentCategoryIndex === 0
                 height: visible ? page.height * 446 / 1200 : 0
                 width: parent.width - apps.gridSpacing
@@ -218,11 +213,10 @@ DiscoverPage {
     }
     LoaderAnimation {
         id: loaderAnim
-
         height: parent.height
         width: parent.width
         timerRun: visible
-        visible: appsModel.isBusy
+//        visible: appsModel.isBusy
         onVisibleChanged: {
             apps.opacity = visible ? 0 : 1
         }
@@ -230,30 +224,34 @@ DiscoverPage {
 
     Component {
         id: nullComponent
-
         Rectangle {
             width: page.width
             height: page.height
             color: "transparent"
             NullPageView {
                 anchors.centerIn: parent
+                onDeviceNetworkStateChanged: {
+                    if(state === "2" & visible){
+                        appsModel.refreshCache()
+                    }
+                }
             }
         }
     }
 
     Loader {
         id: nullLoader
-
         sourceComponent: nullComponent
         active: apps.count <= 0 & !loaderAnim.visible
     }
 
     function getDetails(app, ispkg) {
         loaderAnim.visible = true
-        var appNameString = (ispkg & app.appstreamId !== "") ? app.appstreamId : app.packageName
+        var appNameString = app.packageName//(ispkg & app.appstreamId !== "") ? app.appstreamId : app.packageName
         ispkg = app.appstreamId !== "" ? ispkg : false
         var xhr = new XMLHttpRequest()
         xhr.onreadystatechange = function () {
+            console.log('onreadystatechange:' + xhr.readyState)
             if (xhr.readyState === XMLHttpRequest.HEADERS_RECEIVED) {
                 console.log('HEADERS_RECEIVED')
             } else if (xhr.readyState === XMLHttpRequest.DONE) {
@@ -276,9 +274,14 @@ DiscoverPage {
                     return
                 }
                 var icon = object.icon
-                if (icon === null || icon.length < 1) {
+                if(icon){
+                    if (icon === null || icon.length < 1) {
+                        icon = "qrc:/img/ic_app_details_empty.png"
+                    }
+                } else {
                     icon = "qrc:/img/ic_app_details_empty.png"
                 }
+                
                 var categories = ""
                 for (var i = 0; i < object.categories.length; i++) {
                     categories += object.categories[i]
@@ -289,10 +292,15 @@ DiscoverPage {
                 var screenShotsArray = object.screenshots
                 var screenShotsJson = JSON.stringify(object.screenshots, null,
                                                      2)
-                app.screenShots = screenShotsJson
+                // if (screenShotsArray == null || screenShotsArray.length < 1) {
+                //     screenShotsJson = "[{\"url\":\"qrc:/img/bg_screen_shot_empty.png\", \"type\":\"image\"},{\"url\":\"qrc:/img/bg_screen_shot_empty.png\", \"type\":\"image\"},{\"url\":\"qrc:/img/bg_screen_shot_empty.png\", \"type\":\"image\"}]"
+                // }
+                if (screenShotsJson !== undefined) {
+                    app.screenShots = screenShotsJson
+                }
                 var appScreenShots = screenShotsJson
                 var lang = ""
-                if (sysLang.includes("china")) {
+                if (sysLang === "zh") {
                     lang = "cn"
                 } else {
                     lang = "en"
@@ -327,7 +335,7 @@ DiscoverPage {
             }
         }
         xhr.open("GET",
-                 "" + appNameString)
+                 "https://appapi.jingos.com/v1/appinfo?architecture=x86&appName=" + appNameString)
         xhr.send()
     }
 

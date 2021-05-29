@@ -9,6 +9,7 @@
 #include "libdiscover_debug.h"
 // #include <QAbstractItemModelTester>
 
+
 ScreenshotsModel::ScreenshotsModel(QObject* parent)
     : QAbstractListModel(parent)
     , m_resource(nullptr)
@@ -25,6 +26,7 @@ QHash< int, QByteArray > ScreenshotsModel::roleNames() const
 
 void ScreenshotsModel::setResource(AbstractResource* res)
 {
+
     if (res == m_resource)
         return;
 
@@ -100,7 +102,5 @@ void ScreenshotsModel::remove(const QUrl& url)
         m_screenshots.removeAt(idxRemove);
         endRemoveRows();
         emit countChanged();
-
-        qDebug() << "screenshot removed" << url;
     }
 }

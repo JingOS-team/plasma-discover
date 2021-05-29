@@ -19,13 +19,13 @@ import "cus"
 
 Kirigami.AbstractCard {
     id: delegateArea
-
     property alias application: installButton.application
     property bool compact: false
     property bool showRating: true
-    property int defaultFontSize: theme.defaultFont.pointSize
+    property int defaultFontSize: 14//theme.defaultFont.pointSize
     property string clickedBannerName
     property alias installButtonText: installButton.text
+    property int itemRadius: 10 * appScaleSize
 
     onClickedBannerNameChanged: {
         if (clickedBannerName === delegateArea.application.name) {
@@ -53,19 +53,17 @@ Kirigami.AbstractCard {
     background: RectDropshadow {
         anchors.fill: parent
         color: "#FFFFFF"
-        radius: 20
+        radius: itemRadius
         shadowColor: "#80C3C9D9"
     }
 
     Component {
         id: highlightComponent
-
         Rectangle {
             width: delegateArea.width
             height: delegateArea.height
-            radius: 20
+            radius: itemRadius
             color: delegateArea.pressed ? "#29787880" : "#1F767680"
-
             Behavior on y {
                 SpringAnimation {
                     spring: 3
@@ -77,7 +75,6 @@ Kirigami.AbstractCard {
 
     Loader {
         id: hoverLoader
-
         anchors.fill: delegateArea
         sourceComponent: highlightComponent
         active: hovered && !pressed
@@ -85,7 +82,6 @@ Kirigami.AbstractCard {
 
     Loader {
         id: pressLoader
-
         anchors.fill: delegateArea
         sourceComponent: highlightComponent
         active: pressed
@@ -117,17 +113,47 @@ Kirigami.AbstractCard {
             height: (delegateArea.height) / 2
             width: height
             radius: height / 10
-            color: "#CCFFFFFF"
+            color: "#00000000"
+            border.color: "#CDD0D7"
+            border.width: 1
 
-            Kirigami.Icon {
-                id: resourceIconImage
-
-                anchors.centerIn: parent
-                placeholder: "qrc:/img/ic_app_list_empty.png"
+            Image {
+                id: bigImageView
+                anchors.centerIn: resourceIcon
+                width: parent.width - 2
+                height: parent.height - 2
                 source: application.icon
-                height: parent.height
-                width: parent.height
+                visible: false
+                asynchronous: true
+                fillMode: Image.Stretch
             }
+
+            Rectangle {
+                id: maskRect
+                anchors.centerIn: resourceIcon
+                anchors.fill: bigImageView
+                visible: false
+                clip: true
+                radius: resourceIcon.radius
+            }
+
+            OpacityMask {
+                id: mask
+                anchors.centerIn: resourceIcon
+                anchors.fill: maskRect
+                source: bigImageView
+                maskSource: maskRect
+            }
+
+//            Image {
+//                id: resourceIconImage
+////                anchors.fill: parent
+//                anchors.centerIn: resourceIcon
+////                placeholder: "qrc:/img/ic_app_list_empty.png"
+//                source: application.icon
+//                height: parent.height - 2
+//                width: height
+//            }
         }
 
         InstallApplicationButton {
@@ -141,7 +167,7 @@ Kirigami.AbstractCard {
             height: width * 2 / 5
 
             compact: delegateArea.compact
-            textSize: defaultFontSize - 3
+            textSize: defaultFontSize - 5
             text: ((stateFilter
                     === AbstractResource.Installed) ? (installTextString) : (categoryTextString))
         }
@@ -161,9 +187,8 @@ Kirigami.AbstractCard {
             Layout.fillWidth: true
             spacing: 10
 
-            Kirigami.Heading {
+            Text {
                 id: head
-
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -172,28 +197,26 @@ Kirigami.AbstractCard {
                 elide: Text.ElideRight
                 text: delegateArea.application.name
                 maximumLineCount: 1
-                font.pointSize: delegateArea.defaultFontSize + 2
+                font.pixelSize: delegateArea.defaultFontSize
                 font.bold: true
             }
 
-            Kirigami.Heading {
+            Text {
                 id: category
-
                 anchors {
                     left: parent.left
                     right: parent.right
                 }
                 Layout.fillWidth: true
                 elide: Text.ElideRight
-                text: delegateArea.application.categoryDisplay
+                text: cppClassModel.currentCategoriesName(delegateArea.application.categoryDisplay)
                 maximumLineCount: 1
                 color: "#99000000"
-                font.pointSize: delegateArea.defaultFontSize - 5
+                font.pixelSize: delegateArea.defaultFontSize - 4
             }
 
-            Kirigami.Heading {
+            Text {
                 id: summary
-                
                 anchors {
                     left: parent.left
                     right: parent.right
@@ -205,7 +228,7 @@ Kirigami.AbstractCard {
                 text: delegateArea.application.comment
                 maximumLineCount: 3
                 wrapMode: Text.WrapAnywhere
-                font.pointSize: delegateArea.defaultFontSize - 5
+                font.pixelSize: delegateArea.defaultFontSize - 4
             }
         }
     }

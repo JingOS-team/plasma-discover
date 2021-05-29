@@ -14,10 +14,10 @@ import org.kde.discover.app 1.0
 
 Rectangle {
     id: discoverRight
-
     color: "#0000ff00"
     property string categoryName: "Games"
-    property string softUpdateName: "SoftWare update"
+    property string softUpdateName: i18n("SoftWare update")
+
     property Component componentqml: Qt.createComponent(
                                          "qrc:/qml/ApplicationsListPage.qml")
     property var qmlObject
@@ -101,6 +101,7 @@ Rectangle {
     }
 
     function createInstallPage() {
+
         if (topInstalledComp.status === Component.Ready) {
             qmlObject = topInstalledComp.incubateObject(tabsObjectModel, {
                                                             "width": _browserList.width,
@@ -128,7 +129,6 @@ Rectangle {
         if (searchText === "") {
             category = currentCategory //CategoryModel.findCategoryByName(categoryName)
         }
-
         if (componentqml.status === Component.Ready) {
             qmlObject = componentqml.incubateObject(tabsObjectModel, {
                                                         "width": _browserList.width,
@@ -176,7 +176,7 @@ Rectangle {
         if (componentDetailQml.status === Component.Ready) {
             var buttonTextType = 0
             if (getLeftSearchContent() === "") {
-                if (getLeftMenuName() === "Installed apps") {
+                if (getLeftMenuName() === i18n("Installed apps")) {
                     buttonTextType = 1
                 } else if (getLeftMenuName() === softUpdateName) {
                     buttonTextType = 2
@@ -217,7 +217,6 @@ Rectangle {
 
     LoaderAnimation {
         id: loaderAnim
-        
         anchors.fill: parent
         timerRun: visible
         visible: loaderRun | isFetching

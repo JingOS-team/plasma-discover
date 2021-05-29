@@ -79,9 +79,7 @@ class CachedNetworkAccessManagerFactory : public QQmlNetworkAccessManagerFactory
 class OurSortFilterProxyModel : public QSortFilterProxyModel, public QQmlParserStatus
 {
     Q_OBJECT
-    
     Q_INTERFACES(QQmlParserStatus)
-
 public:
     void classBegin() override {}
     void componentComplete() override {
@@ -138,7 +136,7 @@ DiscoverObject::DiscoverObject(CompactMode mode, const QVariantMap &initialPrope
     m_engine->rootContext()->setContextProperty(QStringLiteral("app"), this);
     m_engine->rootContext()->setContextProperty(QStringLiteral("discoverAboutData"), QVariant::fromValue(KAboutData::applicationData()));
     m_engine->rootContext()->setContextProperty(QStringLiteral("cppClassModel"), new AppClassModel);
-    m_engine->rootContext()->setContextProperty("sysLang", QLocale::system().nativeLanguageName());
+    m_engine->rootContext()->setContextProperty("sysLang", QLocale::system().bcp47Name());
 
     connect(m_engine, &QQmlApplicationEngine::objectCreated, this, &DiscoverObject::integrateObject);
     m_engine->load(QUrl(QStringLiteral("qrc:/qml/DiscoverWindow.qml")));

@@ -228,7 +228,6 @@ HttpResponse *HttpRequest::exec()
     }
     log_debugger += "Header: " + headers;
     log_debugger += "Send buffer(Body):\r\n" + m_body;
-    qDebug()<<Q_FUNC_INFO << "network debug:log_debugger:"<<m_networkRequest.url().toString();
 
     reply = m_httpService->createRequest(m_op, m_networkRequest, sendBuffer);
 

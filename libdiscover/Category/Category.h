@@ -30,7 +30,6 @@ enum FilterType {
 class DISCOVERCOMMON_EXPORT Category : public QObject
 {
     Q_OBJECT
-    
 public:
     Q_PROPERTY(QString name READ name NOTIFY nameChanged)
     Q_PROPERTY(QString icon READ icon NOTIFY iconChanged)

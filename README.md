@@ -25,7 +25,7 @@ sudo make install
 ## Links
 - Home: [www.jingos.com](http://www.jingos.com/)
 - Project page: https://github.com/JingOS-team/appstore
-- File issues: github.com/jingOS-team/jing-appstore/issues
+- File issues: https://github.com/JingOS-team/appstore/issues
 - Development channel: [www.jingos.com](http://www.jingos.com/)
 
 

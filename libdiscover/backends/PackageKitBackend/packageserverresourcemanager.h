@@ -1,3 +1,10 @@
+/*
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
+ */
 #ifndef PACKAGESERVERRESOURCEMANAGER_H
 #define PACKAGESERVERRESOURCEMANAGER_H
 
@@ -45,6 +52,7 @@ private:
     QString lastModified;
     QThreadPool m_threadPool;
     bool isCacheData = false;
+    bool isNetworking = false;
 
 
 Q_SIGNALS:

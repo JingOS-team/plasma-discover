@@ -15,6 +15,7 @@ DiscoverPage {
     property string footerToolTip: ""
     property int footerProgress: 0
     property bool isBusy: false
+    property string localArchInfo: ResourcesModel.localArch
 
     leftPadding: 0
     rightPadding: 0
@@ -105,7 +106,7 @@ DiscoverPage {
         ToolBar {
             id: footerToolbar
             Layout.fillWidth: true
-            visible: false //(updateModel.totalUpdatesCount > 0 && resourcesUpdatesModel.isProgressing) || updateModel.hasUpdates
+            visible: false
 
             position: ToolBar.Footer
 
@@ -339,7 +340,7 @@ DiscoverPage {
             }
         }
         xhr.open("GET",
-                 "https://appapi.jingos.com/v1/appinfo?architecture=x86&appName=" + appNameString)
+                 "yourself url" + appNameString)
         xhr.send()
     }
 

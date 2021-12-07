@@ -6,6 +6,7 @@ import org.kde.discover.app 1.0
 import org.kde.kquickcontrolsaddons 2.0
 import org.kde.kirigami 2.15 as Kirigami
 import "navigation.js" as Navigation
+import jingos.display 1.0
 
 import "cus/"
 Kirigami.ApplicationWindow
@@ -19,24 +20,15 @@ Kirigami.ApplicationWindow
     readonly property string topAboutComp: ("qrc:/qml/AboutPage.qml")
     readonly property QtObject stack: window.pageStack
     property string currentTopLevel
-    property var appScaleSize: width / 888
+    property var appScaleSize: JDisplay.dp(1.0)//width / 888
+    property var appFontSize: JDisplay.sp(1.0)
 
     objectName: "DiscoverMainWindow"
     title: leftPage ? leftPage.title : ""
-
-//    width: app.initialGeometry.width>=10 ? app.initialGeometry.width : Kirigami.Units.gridUnit * 45
-//    height: app.initialGeometry.height>=10 ? app.initialGeometry.height : Kirigami.Units.gridUnit * 30
-
     visible: true
-
-//    minimumWidth: 300
-//    minimumHeight: 300
 
     pageStack.defaultColumnWidth: Kirigami.Units.gridUnit * 25
     pageStack.globalToolBar.style: Kirigami.ApplicationHeaderStyle.None
-    fastBlurMode:true
-    fastBlurOpacity:0.8
-    fastBlurColor:"#CCF7F7F7"
     width: screen.width
     height: screen.height
 
@@ -146,10 +138,12 @@ Kirigami.ApplicationWindow
         }
 
         function onPreventedClose() {
-            showPassiveNotification(i18n("Could not close Discover, there are tasks that need to be done."), 20000, i18n("Quit Anyway"), function() { Qt.quit() })
+            // showPassiveNotification(i18n("Could not close Discover, there are tasks that need to be done."), 20000, i18n("Quit Anyway"), function() { Qt.quit() })
+            console.log(" show toast ould not close Discover")
         }
         function onUnableToFind(resid) {
-            showPassiveNotification(i18n("Unable to find resource: %1", resid));
+            // showPassiveNotification(i18n("Unable to find resource: %1", resid));
+            console.log(" show toast onUnableToFind message:", resid)
             Navigation.openHome()
         }
     }
@@ -157,7 +151,8 @@ Kirigami.ApplicationWindow
     Connections {
         target: ResourcesModel
         function onPassiveMessage (message) {
-            showPassiveNotification(message)
+            // showPassiveNotification(message)
+            console.log("show toast ResourcesModel onPassiveMessage message:", message)
         }
     }
 
@@ -286,6 +281,16 @@ Kirigami.ApplicationWindow
 //        }
     }
 
+    Kirigami.JToolTip {
+        id: toast
+        font.pixelSize: 17 * appFontSize
+    }
+
+    function showToast(tips) {
+        toast.text = tips
+        toast.show(tips, 1500)
+    }
+
     Instantiator {
         model: TransactionModel
 
@@ -297,7 +302,9 @@ Kirigami.ApplicationWindow
                 dialog.open()
             }
             function onPassiveMessage(message) {
-                window.showPassiveNotification(message)
+                // window.showPassiveNotification(message)
+                showToast(message)
+                 console.log("show toast Instantiator onPassiveMessage message:", message)
             }
         }
     }

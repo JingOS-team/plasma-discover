@@ -1,6 +1,9 @@
 ﻿/*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 #ifndef HTTP_CLIENT_H
 #define HTTP_CLIENT_H
@@ -11,7 +14,7 @@
 #include <QNetworkReply>
 #include "discovercommon_export.h"
 //https://search.deepinos.org.cn/
-#define BASE_URL "https://appapi.jingos.com/v1/"
+#define BASE_URL "yourself url"
 
 class DISCOVERCOMMON_EXPORT HttpClient : public QNetworkAccessManager
 {

@@ -41,6 +41,7 @@ ResultsStream::ResultsStream(const QString &objectName, const QVector<AbstractRe
 
 ResultsStream::ResultsStream(const QString &objectName)
 {
+    connect(this,&ResultsStream::deleteObj,this,&ResultsStream::onDeleteObj,Qt::QueuedConnection);
     setObjectName(objectName);
     QTimer::singleShot(5000, this, [objectName]() {
         qCDebug(LIBDISCOVER_LOG) << "stream took really long" << objectName;
@@ -53,6 +54,16 @@ ResultsStream::~ResultsStream()
 
 void ResultsStream::finish()
 {
+    qDebug()<< " finish status::" << isStop;
+    if(!isStop){
+        isStop = true;
+        emit deleteObj();
+    }
+}
+
+void ResultsStream::onDeleteObj()
+{
+    qDebug()<< " finish after status::" << isStop;
     deleteLater();
 }
 

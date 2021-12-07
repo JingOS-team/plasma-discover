@@ -54,6 +54,8 @@ private:
     QVector<std::function<PackageKit::Transaction*()>> m_proceedFunctions;
 
     QMap<PackageKit::Transaction::Info, QStringList> m_newPackageStates;
+    bool isFristDownload = true;
+    int opreationTag = 0;
 };
 
 #endif // PKTRANSACTION_H

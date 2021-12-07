@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -97,7 +97,8 @@ private Q_SLOTS:
 Q_SIGNALS:
     void loadedAppStream();
     void available();
-
+public:
+   bool isNetworking = false;
 private:
     friend class PackageKitResource;
     template <typename T>
@@ -126,7 +127,7 @@ private:
     bool m_hasSecurityUpdates = false;
     QSet<PackageKitResource*> m_packagesToAdd;
     QSet<PackageKitResource*> m_packagesToDelete;
-    bool m_appstreamInitialized = false;
+    bool m_appstreamInitialized = true;//false;
 
     struct {
         QHash<QString, AbstractResource*> packages;
@@ -134,16 +135,6 @@ private:
         QHash<QString, QVector<AppPackageKitResource*>> extendedBy;
         QHash<QString, AbstractResource*> installsApplications;
     } m_packages;
-
-//    struct ServerData {
-//        QString appId;
-//        QString appName;
-//        QString banner;
-//        QString icon;
-//        QString name;
-//        QString categoryDisplay;
-//        QString comment;
-//    };
 
     QTimer m_delayedDetailsFetch;
     QSet<QString> m_packageNamesToFetchDetails;
@@ -155,6 +146,8 @@ private:
     bool isLoaded = false;
     QMetaObject::Connection ec;
     QMetaObject::Connection sc;
+    bool isRefresh = false;
+    int loadPackageTime = 0;
 
 };
 

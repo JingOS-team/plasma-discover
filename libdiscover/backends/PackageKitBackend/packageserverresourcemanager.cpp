@@ -25,7 +25,7 @@ PackageServerResourceManager::~PackageServerResourceManager()
     m_threadPool.clear();
 }
 
-static QByteArray startLoad() {
+static QByteArray startLoad(){
     QByteArray ret;
     QString path = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + QLatin1String(CACHE_FILENAME);
     QFile app_json(path);
@@ -46,7 +46,7 @@ void PackageServerResourceManager::loadCacheData()
     connect(fw, &QFutureWatcher<QByteArray>::finished, this, [this, fw]() {
         const auto data = fw->result();
         fw->deleteLater();
-        if (!data.isEmpty()) {
+        if(!data.isEmpty()){
             isCacheData = true;
             parseJson(data);
             emit loadFinished();
@@ -60,23 +60,28 @@ void PackageServerResourceManager::loadCacheData()
 
 void PackageServerResourceManager::requestData()
 {
+    if(isNetworking){
+        qDebug()<<Q_FUNC_INFO << " load cache isNetworking :" << isNetworking;
+        return;
+    }
+    isNetworking = true;
     QString url;
     url = QLatin1String(BASE_URL) + QLatin1String("allapp");
-//    QString requestParam = QLatin1String("versionId");
 
-    if (lastModified != "") {
+    if(lastModified != ""){
         headers.insert(IF_MODIFIED_SINCE,lastModified);
     }
-    if (etag != "") {
+    if(etag != ""){
         headers.insert(IF_NONE_MATCH,etag);
     }
     HttpClient::global() -> get(url)
     .headers(headers)
     .onResponse([this](QNetworkReply* result) {
+        isNetworking = false;
         bool isExistETAG = result->hasRawHeader(ETAG);
-        if (isExistETAG) {
-            etag = result->rawHeader(ETAG);
-            lastModified = result->rawHeader(LAST_MODIFIED);
+        if(isExistETAG) {
+           etag = result->rawHeader(ETAG);
+           lastModified = result->rawHeader(LAST_MODIFIED);
         }
         QByteArray serverData = result->readAll();
 
@@ -111,6 +116,7 @@ void PackageServerResourceManager::requestData()
 
     })
     .onError([this](QString errorStr) {
+        isNetworking = false;
         emit loadError("request fail");
         return;
     })
@@ -136,6 +142,7 @@ void PackageServerResourceManager::parseJson(QByteArray jsonData)
         return;
     }
     m_serverPackageNames.clear();
+    serverPackages.clear();
     for (int i = 0; i < appList.size(); i++) {
         auto appObj = appList.at(i).toObject();
         auto appId = appObj.value(QString::fromUtf8("appId")).toString();
@@ -183,7 +190,7 @@ void PackageServerResourceManager::parseJson(QByteArray jsonData)
 
     }
 
-    if (!isCacheData) {
+    if(!isCacheData){
         emit loadFinished();
     }
 }
@@ -192,7 +199,7 @@ void PackageServerResourceManager::refreshData()
 {
     bool isactive = m_requestDataTimer.isActive();
     if (isactive) {
-        m_requestDataTimer.stop();
+       m_requestDataTimer.stop();
     }
     isCacheData = false;
     m_requestDataTimer.start();
@@ -201,8 +208,6 @@ void PackageServerResourceManager::refreshData()
 
 bool PackageServerResourceManager::existPackageName(QString pkgName)
 {
-//   qDebug()<<Q_FUNC_INFO<<" pkgName:::" << pkgName;
-
     bool isExist = serverPackages.contains(pkgName);
 
     return isExist;
@@ -214,6 +219,7 @@ ServerData PackageServerResourceManager::resourceByName(QString pkgName)
 
 QList<ServerData> PackageServerResourceManager::resourceByCategory(QString categoryName)
 {
+    categoryName = categoryName.toLower();
     auto resources = kFilter<QList<ServerData>>(serverPackages, [categoryName](ServerData res) {
         return res.categoriesSet.contains(categoryName);
     });
@@ -222,15 +228,10 @@ QList<ServerData> PackageServerResourceManager::resourceByCategory(QString categ
 QList<ServerData> PackageServerResourceManager::resourceByKeyword(QString keyword)
 {
     QList<ServerData> allResult;
-//    QSet<ServerData> localCacheServerData = QSet<ServerData>(serverPackages.values().begin(), serverPackages.values().end());
-//    auto startWithResource = kFilter<QList<ServerData>>(serverPackages, [keyword](ServerData res) {
-//                                              bool isExist = res.name.startsWith(keyword);
-//        return isExist;
-//    });
-//    allResult += startWithResource;
-//    allResult.unite(QSet<ServerData>(startWithResource.begin(), startWithResource.end()));
+    keyword = keyword.toLower();
     auto resources = kFilter<QList<ServerData>>(serverPackages, [keyword](ServerData res) {
-        bool isExist = res.name.contains(keyword);
+        QString resNameLow = res.name.toLower();
+        bool isExist = resNameLow.contains(keyword);
         return isExist;
     });
     allResult += resources;

@@ -1,0 +1,2 @@
+# We know, we put it there
+file-contains-fixme-placeholder debian/rules*

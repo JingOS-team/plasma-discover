@@ -2,7 +2,7 @@
 
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 import QtQuick 2.15
@@ -34,13 +34,16 @@ DiscoverPage {
     property string sortProperty: "appsListPageSorting"
     property bool compact: page.width < 550 || !applicationWindow().wideScreen
     property bool showRating: true
+    property bool ifOffline: ResourcesModel.networkState === "1"
 
     property bool canNavigate: true
     readonly property alias subcategories: appsModel.subcategories
     property int currentCategoryIndex
+    property int headItemCount: 0
     property bool isFetching: ResourcesModel.isFetching
     property alias isNetworking: loaderAnim.visible
-    property int defaultFontSize:14//theme.defaultFont.pointSize
+    property int defaultFontSize:14 * appFontSize
+    property string localArchInfo: ResourcesModel.localArch
     verticalScrollBarPolicy: Qt.ScrollBarAlwaysOff
 
     function stripHtml(input) {
@@ -58,8 +61,6 @@ DiscoverPage {
     onRefreshingChanged: {
         if (refreshing) {
             appsModel.refreshCache()
-            //                             appsModel.invalidateFilter()
-            refreshing = false
         }
     }
 
@@ -120,12 +121,13 @@ DiscoverPage {
         BannerView {
             id: gridHeadView
             Component.onCompleted: {
-                if (gridHeadView.headCount === 0) {
-                    currentCategoryIndex = 1
-                }
+                headItemCount = gridHeadView.headCount
             }
             onBannerItemClicked: {
                 apps.bannerClicked(bannerName)
+            }
+            onHeadCountChanged: {
+                headItemCount = gridHeadView.headCount
             }
         }
     }
@@ -156,7 +158,6 @@ DiscoverPage {
             id: apps
             signal bannerClicked(var appName)
             anchors.fill: parent
-            // Layout.topMargin: 50
             maximumColumns: 3
             maximumColumnWidth: apps.width / 3
             cellHeight: cellWidth / 2
@@ -188,6 +189,7 @@ DiscoverPage {
                            || sortRole === ResourcesProxyModel.ReleaseDateRole ? Qt.DescendingOrder : Qt.AscendingOrder
 
                 onBusyChanged: {
+                    console.log(" busy changed:" + isBusy)
                     isNetworking = isBusy
                 }
             }
@@ -199,7 +201,7 @@ DiscoverPage {
             header: Item {
                 id: rcmdAppContainer
                 visible: currentCategoryIndex === 0
-                height: visible ? page.height * 446 / 1200 : 0
+                height: visible  && headItemCount > 0 ? page.height * 446 / 1200 : 0
                 width: parent.width - apps.gridSpacing
                 Loader {
                     id: headLoader
@@ -216,9 +218,14 @@ DiscoverPage {
         height: parent.height
         width: parent.width
         timerRun: visible
-//        visible: appsModel.isBusy
+        Component.onCompleted:{
+        }
         onVisibleChanged: {
             apps.opacity = visible ? 0 : 1
+            apps.interactive = !visible
+            if(!visible){
+                refreshing = false
+            }
         }
     }
 
@@ -247,8 +254,9 @@ DiscoverPage {
 
     function getDetails(app, ispkg) {
         loaderAnim.visible = true
-        var appNameString = app.packageName//(ispkg & app.appstreamId !== "") ? app.appstreamId : app.packageName
+        var appNameString = app.packageName
         ispkg = app.appstreamId !== "" ? ispkg : false
+        console.log(" appNameString:" + appNameString)
         var xhr = new XMLHttpRequest()
         xhr.onreadystatechange = function () {
             console.log('onreadystatechange:' + xhr.readyState)
@@ -322,8 +330,7 @@ DiscoverPage {
                     }
                 }
                 var versionName = null2Empty(object.versionName)
-                var pkgSize = null2Empty(
-                            (object.packageSize / 1024 / 1024).toFixed(1) + "M")
+                var pkgSize = null2Empty(object.packageSize) === "" ? "" : ((object.packageSize / 1024 / 1024).toFixed(1) + "M")
                 var updateDate = null2Empty(object.updateDate)
                 var homePage = null2Empty(object.homePage)
                 createDetailsActions(app, icon, name, categories, appSummary,
@@ -335,7 +342,7 @@ DiscoverPage {
             }
         }
         xhr.open("GET",
-                 "https://appapi.jingos.com/v1/appinfo?architecture=x86&appName=" + appNameString)
+                 "yourself url" + appNameString)
         xhr.send()
     }
 

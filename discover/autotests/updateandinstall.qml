@@ -22,6 +22,7 @@ DiscoverTest
             verify(waitForSignal(appRoot.stack, "currentItemChanged"))
 
             var button = findChild(appRoot.stack.currentItem, "InstallApplicationButton")
+            console.log("button", appRoot.stack.currentItem, button)
             verify(button)
             verify(!button.isActive)
             button.click()

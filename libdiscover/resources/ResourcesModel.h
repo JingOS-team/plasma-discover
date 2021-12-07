@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -13,6 +13,7 @@
 
 #include "discovercommon_export.h"
 #include "AbstractResourcesBackend.h"
+#include <network/networkutils.h>
 
 class QAction;
 
@@ -77,6 +78,8 @@ class DISCOVERCOMMON_EXPORT ResourcesModel : public QObject
     Q_PROPERTY(int fetchingUpdatesProgress READ fetchingUpdatesProgress NOTIFY fetchingUpdatesProgressChanged)
     Q_PROPERTY(QString applicationSourceName READ applicationSourceName NOTIFY currentApplicationBackendChanged)
     Q_PROPERTY(QString networkState READ networkState NOTIFY networkStateChanged)
+    Q_PROPERTY(QString localArch READ localArch NOTIFY localArchChanged)
+
 public:
     /** This constructor should be only used by unit tests.
      *  @p backendName defines what backend will be loaded when the backend is constructed.
@@ -115,6 +118,9 @@ public:
     QString networkState() {
         return m_networkState;
     }
+    QString localArch() {
+        return NetworkUtils::global()->readLocalArch();
+    }
 
 public Q_SLOTS:
     void installApplication(AbstractResource* app, const AddonList& addons);
@@ -133,6 +139,7 @@ Q_SIGNALS:
     void currentApplicationBackendChanged(AbstractResourcesBackend* currentApplicationBackend);
     void fetchingUpdatesProgressChanged(int fetchingUpdatesProgress);
     void networkStateChanged(QString networkState);
+    void localArchChanged();
 
 private Q_SLOTS:
     void callerFetchingChanged();

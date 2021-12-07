@@ -21,6 +21,7 @@
 #include <QStandardPaths>
 #include <kstartupinfo.h>
 #include <QDateTime>
+#include<japplicationqt.h>
 
 #include <QX11Info>
 
@@ -83,11 +84,14 @@ void processArgs(QCommandLineParser* parser, DiscoverObject* mainWindow)
 
 int main(int argc, char** argv)
 {
-    qint64 startTime = QDateTime::currentMSecsSinceEpoch();
+     qint64 startTime = QDateTime::currentMSecsSinceEpoch();
     // needs to be set before we create the QGuiApplication
     QCoreApplication::setAttribute(Qt::AA_DisableSessionManager, true);
 
     QApplication app(argc, argv);
+    JApplicationQt japp;
+    japp.enableBackgroud(true);
+    QCoreApplication::setApplicationName("App Store");
     app.setWindowIcon(QIcon::fromTheme(QStringLiteral("plasmadiscover")));
     app.setAttribute(Qt::AA_DontCreateNativeWidgetSiblings);
     app.setAttribute(Qt::AA_UseHighDpiPixmaps, true);

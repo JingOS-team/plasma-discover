@@ -1,0 +1,156 @@
+Source: plasma-discover
+Section: kde
+Priority: optional
+Maintainer: Debian/Kubuntu Qt/KDE Maintainers <debian-qt-kde@lists.debian.org>
+Uploaders: Maximiliano Curia <maxy@debian.org>,
+           Matthias Klumpp <mak@debian.org>
+Build-Depends: cmake (>= 2.8.12),
+               debhelper (>= 11~),
+               extra-cmake-modules (>= 5.50.0~),
+               kirigami2-dev (>= 5.42),
+               kuserfeedback-dev,
+               libappstreamqt-dev (>= 0.10.3),
+               libdebconf-kde-dev (>= 1.0.0),
+               libflatpak-dev (>= 0.10.2),
+               libfwupd-dev,
+               libkf5archive-dev (>= 5.50.0~),
+               libkf5attica-dev (>= 5.23~),
+               libkf5config-dev (>= 5.50.0~),
+               libkf5configwidgets-dev (>= 5.16.0~),
+               libkf5coreaddons-dev (>= 5.50.0~),
+               libkf5crash-dev (>= 5.50.0~),
+               libkf5dbusaddons-dev (>= 5.50.0~),
+               libkf5declarative-dev (>= 5.42~),
+               libkf5i18n-dev (>= 5.50.0~),
+               libkf5iconthemes-dev (>= 5.16.0~),
+               libkf5itemmodels-dev (>= 5.50.0~),
+               libkf5itemviews-dev (>= 5.16.0~),
+               libkf5kdelibs4support-dev (>= 5.34.0~),
+               libkf5kio-dev (>= 5.50.0~),
+               libkf5newstuff-dev (>= 5.23~),
+               libkf5notifications-dev (>= 5.16.0~),
+               libkf5plasma-dev (>= 5.16.0~),
+               libkf5solid-dev (>= 5.16.0~),
+               libkf5textwidgets-dev,
+               libkf5wallet-dev (>= 5.16.0~),
+               libkf5widgetsaddons-dev (>= 5.16.0~),
+               libkf5xmlgui-dev (>= 5.50.0~),
+               libmarkdown2-dev,
+               libpackagekitqt5-dev (>= 1.0.1),
+               libqca-qt5-2-dev,
+               libqt5svg5-dev (>= 5.4.0~),
+               libsnapd-qt-dev (>= 1.30),
+               libsoup2.4-dev,
+               pkg-config,
+               pkg-kde-tools (>= 0.15.16),
+               qtbase5-dev (>= 5.11.0~),
+               qtdeclarative5-dev (>= 5.11.0~),
+               libappstreamqt-dev,
+	       libpackagekitqt5-dev,
+	       japp-sdk-qt-dev,
+	       libkf5notifications-dev,
+	       libqt5x11extras5-dev
+
+Standards-Version: 4.1.4
+Homepage: https://projects.kde.org/projects/kde/workspace/discover
+Vcs-Browser: https://salsa.debian.org/qt-kde-team/kde/plasma-discover
+Vcs-Git: https://salsa.debian.org/qt-kde-team/kde/plasma-discover.git
+Package: plasma-discover
+Architecture: any
+Depends: appstream (>= 0.8),
+         apt-config-icons,
+         apt-config-icons-hidpi,
+         apt-config-icons-large,
+         apt-config-icons-large-hidpi,
+         packagekit (>= 1.0),
+         plasma-discover-common (= ${source:Version}),
+         plasma-framework,
+         qml-module-org-kde-kcoreaddons,
+         qml-module-org-kde-kirigami2 (>= 5.42),
+         qml-module-org-kde-kquickcontrols,
+         qml-module-org-kde-kquickcontrolsaddons,
+         qml-module-org-kde-qqc2desktopstyle,
+         ${misc:Depends},
+         ${shlibs:Depends}
+Breaks: libmuon (<< 4:5.6),
+        muon-discover (<< 4:5.5.3a),
+        muon-notifier (<< 4:5.5.3a),
+        muon-updater (<< 4:5.5.3a),
+        plasma-discover-common (<< 5.15.0),
+        plasma-discover-flatpak-backend (<< 5.15.0),
+        plasma-discover-private (<< 5.15.0),
+        plasma-discover-snap-backend (<< 5.15.0),
+        plasma-discover-updater (<< 5.15.0)
+Replaces: libmuon (<< 4:5.6),
+          muon-discover (<< 4:5.5.3a),
+          muon-notifier (<< 4:5.5.3a),
+          muon-updater (<< 4:5.5.3a),
+          plasma-discover-common (<< 5.15.0),
+          plasma-discover-flatpak-backend (<< 5.15.0),
+          plasma-discover-private (<< 5.15.0),
+          plasma-discover-snap-backend (<< 5.15.0),
+          plasma-discover-updater (<< 5.15.0)
+Recommends: apt-config-icons-large,
+            plasma-discover-backend-flatpak,
+            plasma-discover-backend-snap
+Suggests: apt-config-icons-hidpi
+Description: Discover software management suite
+ Discover is a graphical software manager for the Plasma workspace.
+ It helps users easily and quickly find applications and other software
+ they might want to install.
+ .
+ By allowing to navigate a software library by search, categories, top lists
+ along with detailed application information that includes screenshots
+ and reviews, users can more quickly find applications that suit their needs.
+ .
+ Discover will also keep the system up to date by notifying about updates and
+ installing them.
+
+Package: plasma-discover-backend-flatpak
+Architecture: any
+Depends: flatpak,
+         plasma-discover (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Breaks: plasma-discover-flatpak-backend (<< 5.15.0)
+Replaces: plasma-discover-flatpak-backend (<< 5.15.0)
+Description: Discover software management suite - Flatpak backend
+ Discover is a graphical software manager for the Plasma workspace.
+ It helps users easily and quickly find applications and other software
+ they might want to install.
+ .
+ This package contains a backend for the Flatpak application
+ bundling system.
+
+Package: plasma-discover-backend-snap
+Architecture: any
+Depends: plasma-discover (= ${binary:Version}),
+         ${misc:Depends},
+         ${shlibs:Depends}
+Recommends: snapd
+Breaks: plasma-discover-snap-backend (<< 5.15.0)
+Replaces: plasma-discover-snap-backend (<< 5.15.0)
+Description: Discover software management suite - Snap backend
+ Discover is a graphical software manager for the Plasma workspace.
+ It helps users easily and quickly find applications and other software
+ they might want to install.
+ .
+ This package contains a backend for the Ubuntu Core Snappy application
+ bundling system.
+
+Package: plasma-discover-common
+Architecture: all
+Depends: ${misc:Depends}
+Breaks: muon-common (<< 4:5.5.3a),
+        plasma-discover  (<< 5.15.0),
+        plasma-discover-private  (<< 5.15.0),
+        plasma-discover-updater  (<< 5.15.0)
+Replaces: muon-common (<< 4:5.5.3a),
+          plasma-discover (<< 5.15.0),
+          plasma-discover-private  (<< 5.15.0),
+          plasma-discover-updater  (<< 5.15.0)
+Description: Discover software manager suite (common data files)
+ Discover is a graphical software manager for the Plasma workspace.
+ .
+ This package contains data files shared by various parts of the
+ Discover suite.

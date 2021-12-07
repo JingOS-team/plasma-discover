@@ -1,9 +1,9 @@
-
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.0
 import QtGraphicalEffects 1.0

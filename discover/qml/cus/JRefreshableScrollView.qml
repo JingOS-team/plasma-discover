@@ -60,7 +60,9 @@ JScrollView {
 
     property Item _swipeFilter
 
-    onRefreshingChanged: flickableItem.topMargin = topPadding + (refreshing ? busyIndicatorFrame.height : 0);
+    onRefreshingChanged: {
+        flickableItem.topMargin = topPadding + (refreshing ? busyIndicatorFrame.height : 0);
+        }
     children: [
         Item {
             id: busyIndicatorFrame
@@ -128,6 +130,7 @@ JScrollView {
                 interval: 500
                 onTriggered: {
                     if (!root.refreshing && parent.y > busyIndicatorFrame.height/2 + topPadding) {
+                        console.log(" **********refreshing refreshTriggerTimer::")
                         root.refreshing = true;
                     }
                 }

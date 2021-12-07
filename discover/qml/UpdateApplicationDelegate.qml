@@ -2,7 +2,7 @@
 
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 import QtQuick 2.1
@@ -10,7 +10,7 @@ import QtQuick.Controls 2.1
 import QtQuick.Layouts 1.1
 import QtQuick.Window 2.1
 import "navigation.js" as Navigation
-import org.kde.kirigami 2.6 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import "cus/"
 import QtGraphicalEffects 1.0
 
@@ -20,7 +20,7 @@ Kirigami.AbstractCard {
     property int installProgress
     property bool compact: false
     property bool showRating: true
-    property int defaultFontSize:14//theme.defaultFont.pointSize
+    property int defaultFontSize:14 * appFontSize
     property alias installButtonText: installButton.text
     property int itemRadius: 10 * appScaleSize
 
@@ -41,9 +41,10 @@ Kirigami.AbstractCard {
     rightPadding: 0
     hoverEnabled: true
     background: RectDropshadow {
-        color: "#FFFFFF"
+        color: Kirigami.JTheme.cardBackground
         radius: itemRadius
         shadowColor: "#80C3C9D9"
+        borderColor: discoverMain.isDarkTheme ? "transparent" : "#C7D3DBEE"
     }
 
     Component {
@@ -52,7 +53,7 @@ Kirigami.AbstractCard {
             width: delegateArea.width
             height: delegateArea.height
             radius: itemRadius
-            color: delegateArea.pressed ? "#29787880" : "#1F767680"
+            color: delegateArea.pressed ?  Kirigami.JTheme.pressBackground : Kirigami.JTheme.hoverBackground
             Behavior on y {
                 SpringAnimation {
                     spring: 3
@@ -97,8 +98,9 @@ Kirigami.AbstractCard {
             height: (parent.height + contentDetailItem.itemMargins * 2) / 2
             width: height
             radius: height / 10
-            color: "#CCFFFFFF"
-            border.color: "#CDD0D7"
+            color: "#00FFFFFF"
+            border.color: discoverMain.isDarkTheme ? "transparent" : "#CDD0D7"
+
             border.width: 1
             anchors {
                 left: parent.left
@@ -143,7 +145,7 @@ Kirigami.AbstractCard {
             }
             compact: delegateArea.compact
             text: i18n("Update")
-            textSize: defaultFontSize - 5
+            textSize: defaultFontSize - 5 * appFontSize
             onUpdateButtonClicked: {
                 updateModel.updateResourceByIndex(index)
             }
@@ -176,6 +178,7 @@ Kirigami.AbstractCard {
                 maximumLineCount: 1
                 font.pixelSize: delegateArea.defaultFontSize
                 font.bold: true
+                color: Kirigami.JTheme.majorForeground
             }
 
             Kirigami.Heading {
@@ -188,8 +191,8 @@ Kirigami.AbstractCard {
                 elide: Text.ElideRight
                 text: cppClassModel.currentCategoriesName(delegateArea.application.categoryDisplay)
                 maximumLineCount: 1
-                color: "#99000000"
-                font.pixelSize: delegateArea.defaultFontSize - 4
+                color: Kirigami.JTheme.minorForeground
+                font.pixelSize: delegateArea.defaultFontSize - 4  * appFontSize
             }
 
             Kirigami.Heading {
@@ -201,11 +204,11 @@ Kirigami.AbstractCard {
                 height: textColumn.height - category.contentHeight - head.contentHeight - 20
                 elide: Text.ElideRight
                 verticalAlignment: Text.AlignTop
-                color: "#4D000000"
+                color: Kirigami.JTheme.minorForeground
                 text: delegateArea.application.comment
                 maximumLineCount: 3
                 wrapMode: Text.WrapAnywhere
-                font.pixelSize: delegateArea.defaultFontSize - 4
+                font.pixelSize: delegateArea.defaultFontSize - 4 * appFontSize
             }
         }
     }

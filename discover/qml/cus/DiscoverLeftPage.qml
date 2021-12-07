@@ -1,9 +1,10 @@
 
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.5
 import org.kde.kirigami 2.15 as Kirigami
@@ -17,10 +18,12 @@ Item {
 
     property string leftSearchContent: searchRect.text
     property string netStateValue: ResourcesModel.networkState
+    property bool isFirstLoad: true
 
-    onNetStateValueChanged:{
-         if ("1" !== netStateValue) {
+    onNetStateValueChanged: {
+        if ("1" !== netStateValue) {
             cppClassModel.categoryCache()
+            BannerModel.loadBannerData()
         }
     }
     Rectangle {
@@ -41,9 +44,9 @@ Item {
             width: parent.width
             text: i18n("Store")
             elide: Text.ElideRight
-            color: '#FF000000'
+            color: Kirigami.JTheme.majorForeground
             font {
-                pixelSize: discoverMain.defaultFontSize + 11
+                pixelSize: discoverMain.defaultFontSize + 11 * appFontSize
                 bold: true
             }
 
@@ -61,22 +64,16 @@ Item {
         id: searchRect
 
         anchors.top: indexRom.bottom
-        anchors.topMargin: 20 * appScaleSize //searchRect.height / 4
+        anchors.topMargin: 20 * appScaleSize
         anchors.left: parent.left
         anchors.leftMargin: 5 * appScaleSize
 
-        width: 180 * appScaleSize//discoverLeft.width * 36 / 49
-//        height: 27 * appScaleSize//width / 7
+        width: 180 * appScaleSize
         focus: false
         placeholderText: ""
         Accessible.name: i18n("Search")
         Accessible.searchEdit: true
-
-        background: Rectangle {
-            anchors.fill: parent
-            color: "#FFFFFF"
-            radius: height * 0.36
-        }
+        font.pixelSize: 17 * appFontSize
 
         onRightActionTrigger: {
 
@@ -119,8 +116,9 @@ Item {
         id: app_class_list
         anchors {
             top: searchRect.bottom
-            topMargin: 20 * appScaleSize//parent.height * 31 / discoverMain.defaultHeight
+            topMargin: 20 * appScaleSize
             bottom: parent.bottom
+            bottomMargin: 20 * appScaleSize
         }
         width: searchRect.width + 40 * appScaleSize
         clip: true
@@ -132,7 +130,13 @@ Item {
             rightPage.loaderRun = true
         }
         onListItemClicked: {
-            searchRect.text = ""
+            isFirstLoad = false
+            if (searchRect.text === "" & searchRect.focus) {
+                app_class_list.itemSelectedBackShow = true
+                searchRect.focus = false
+            } else {
+                searchRect.text = ""
+            }
             if (listCount - itemIndex === 2) {
                 rightPage.createUpdatePage()
             } else if (listCount - itemIndex === 1) {

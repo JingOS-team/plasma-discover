@@ -40,6 +40,7 @@ target_link_libraries(plasma-discover PUBLIC
                                      KF5::QuickAddons
                                      Qt5::Quick
                                      Qt5::X11Extras
+                                     jappcoreqt
                                      Discover::Common
 )
 
@@ -94,6 +95,7 @@ if(EXISTS "/etc/debian_version")
     install(PROGRAMS ${CMAKE_CURRENT_BINARY_DIR}/org.kde.discover.apt.urlhandler.desktop DESTINATION ${XDG_APPS_INSTALL_DIR} )
 endif()
 remove_definitions(-DQT_NO_CAST_FROM_ASCII)
+remove_definitions(-DQT_NO_SIGNALS_SLOTS_KEYWORDS)
 
 install(FILES plasmadiscoverui.rc  DESTINATION  ${KXMLGUI_INSTALL_DIR}/plasmadiscover)
 install( FILES org.kde.discover.appdata.xml DESTINATION ${KDE_INSTALL_METAINFODIR} )

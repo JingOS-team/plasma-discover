@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 #include "PackageKitUpdater.h"
@@ -19,26 +19,33 @@
 #include "utils.h"
 #include <Transaction/TransactionModel.h>
 
-int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage)
+int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage, int opreationTag)
 {
     const auto was = percentage;
     if (status != PackageKit::Transaction::StatusUnknown) {
-        static const QMap<PackageKit::Transaction::Status, int> statuses = {
+        QMap<PackageKit::Transaction::Status, int> statuses = {
             { PackageKit::Transaction::Status::StatusDownload, 0 },
             { PackageKit::Transaction::Status::StatusInstall, 1},
             { PackageKit::Transaction::Status::StatusRemove, 1},
-            { PackageKit::Transaction::Status::StatusLoadingCache, 1},
+            // { PackageKit::Transaction::Status::StatusLoadingCache, 1},
             { PackageKit::Transaction::Status::StatusUpdate, 1}
         };
+        if (opreationTag != 0) {
+            statuses.insert(PackageKit::Transaction::Status::StatusLoadingCache, 1);
+        }
         const auto idx = statuses.value(status, -1);
         if (idx < 0) {
-            qCDebug(LIBDISCOVER_BACKEND_LOG) << "Status not present" << status << "among" << statuses   .keys() << percentage;
+            qDebug() << "Status not present" << status << "among" << statuses   .keys() << percentage;
             return -1;
         }
-        percentage = (idx * 100 + percentage) / 2 /*the maximum in statuses*/;
+        if (opreationTag != 0) {
+            percentage = (idx * 100 + percentage) / 2 /*the maximum in statuses*/;
+        } else {
+            percentage = (idx * 100 + percentage) * 4 / 5 /*the maximum in statuses*/;
+        }
     }
-    qCDebug(LIBDISCOVER_BACKEND_LOG) << "reporting progress with status:" << status << percentage << was;
-    return percentage;
+    qDebug() << "reporting progress with status:" << status << percentage << was;
+    return percentage > 100 ? 100 : percentage;
 }
 
 static void kRemoveDuplicates(QJsonArray & input, std::function<QString(const QJsonValueRef &)> fetchKey)
@@ -397,7 +404,7 @@ void PackageKitUpdater::cancellableChanged()
 
 void PackageKitUpdater::percentageChanged()
 {
-    const auto actualPercentage = percentageWithStatus(m_transaction->status(), m_transaction->percentage());
+    const auto actualPercentage = percentageWithStatus(m_transaction->status(), m_transaction->percentage(),2);
     if (actualPercentage >= 0 && m_percentage != actualPercentage) {
         m_percentage = actualPercentage;
         emit progressChanged(m_percentage);

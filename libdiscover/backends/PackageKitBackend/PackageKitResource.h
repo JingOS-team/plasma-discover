@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -80,6 +80,7 @@ public:
 
 Q_SIGNALS:
     void dependenciesFound(const QJsonObject& dependencies);
+    void openAppStatusChanged(const bool isOpen) const;
 
 public Q_SLOTS:
     void addPackageId(PackageKit::Transaction::Info info, const QString &packageId, bool arch);
@@ -99,6 +100,8 @@ public Q_SLOTS:
                       const QDateTime &updated);
 
     void failedFetchingDetails(PackageKit::Transaction::Error, const QString& msg);
+    void openAppError(PackageKit::Transaction::Error, const QString& message);
+    void onOpenAppSlots(const bool isOpen);
 
 protected:
     PackageKit::Details m_details;
@@ -114,6 +117,7 @@ private:
     int m_dependenciesCount = -1;
     static const QStringList m_objects;
     AbstractResource::Type m_type = Application;
+    bool isOpenningApp = false;
 };
 
 #endif // PACKAGEKITRESOURCE_H

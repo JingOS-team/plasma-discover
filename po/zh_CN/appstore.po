@@ -145,7 +145,7 @@ msgid "Currently not connected to the network, please connect and try again"
 msgstr "当前未连接到网络，请连接并重试"
 
 #: discover/qml/cus/NullPageView.qml:48
-msgid "There is no apps at present"
+msgid "There is no app at present"
 msgstr "目前没有应用"
 
 #: kcm/updates.cpp:28
@@ -210,3 +210,9 @@ msgstr "不能移除'%1'"
 
 msgid "Application classification"
 msgstr "应用分类"
+
+msgid "Cancel"
+msgstr "取消"
+
+msgid "Cannot refresh cache whilst offline"
+msgstr "离线状态下不能刷新缓存"

@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -213,6 +213,7 @@ bool AppPackageKitResource::canExecute() const
 void AppPackageKitResource::invokeApplication() const
 {
     auto trans = PackageKit::Daemon::getFiles({installedPackageId()});
+    qDebug()<<Q_FUNC_INFO<< " installedPackageId():"<<installedPackageId();
     connect(trans, &PackageKit::Transaction::errorCode, backend(), &PackageKitBackend::transactionError);
     connect(trans, &PackageKit::Transaction::files, this, [this](const QString &/*packageID*/, const QStringList &_filenames) {
         //This workarounds bug in zypper's backend (suse) https://github.com/hughsie/PackageKit/issues/351

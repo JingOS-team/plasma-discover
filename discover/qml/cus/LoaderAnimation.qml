@@ -1,16 +1,18 @@
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.0
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     property alias timerRun: animLoader.active
     property int updateIndex
 
-    color: "#E8EFFF"
+    color: Kirigami.JTheme.background
 
     Component {
         id: animComponment
@@ -18,7 +20,7 @@ Rectangle {
             asynchronous: true
             width: 25 * appScaleSize
             height: 25 * appScaleSize
-            source: "qrc:/img/loadanim.gif"
+            source: discoverMain.isDarkTheme ? "qrc:/img/black_load.gif" : "qrc:/img/loadanim.gif"
         }
     }
 

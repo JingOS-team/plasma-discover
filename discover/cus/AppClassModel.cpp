@@ -1,7 +1,11 @@
 /*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
+
 #include "AppClassModel.h"
 #include <QFile>
 #include <QJsonDocument>
@@ -32,7 +36,6 @@ void LocalAppModelThread::run() {
         path = CACHE_PATH;
     }
     if (app_json.open(QIODevice::ReadOnly)) {
-        // 成功得到json文件
         QByteArray jsonData=app_json.readAll();
         if (!isNetworkStop && !jsonData.isEmpty()) {
             emit loadLocalSuc(jsonData,false);
@@ -133,13 +136,14 @@ void AppClassModel::setIconBaseUrl(QString iconBaseurl)
 QString AppClassModel::currentCategoriesName(QString categories)
 {
     QStringList sqlitData = categories.split(",");
-    if (sqlitData.size() > 1) {
+    if(sqlitData.size() > 1) {
         QStringList newData;
         foreach (QString category, sqlitData ) {
+            category = category.toLower();
             QString value = m_cacheCategoriesMap.value(category);
             newData.append(value);
         }
-        if (newData.size() > 1) {
+        if(newData.size() > 1){
             categories = newData.join(",");
         }
     } else {
@@ -151,19 +155,19 @@ QString AppClassModel::currentCategoriesName(QString categories)
 
 QString AppClassModel::categoryCache()
 {
-    if (lastModified != "") {
+    if(lastModified != ""){
         headers.insert(IF_MODIFIED_SINCE,lastModified);
     }
-    if (etag != "") {
+    if(etag != ""){
         headers.insert(IF_NONE_MATCH,etag);
     }
     HttpClient::global() -> get(QLatin1String(BASE_URL) + QLatin1String(CATEGORY_URL))
     .headers(headers)
     .onResponse([this](QNetworkReply* result) {
         bool isExistETAG = result->hasRawHeader(ETAG);
-        if (isExistETAG) {
-            etag = result->rawHeader(ETAG);
-            lastModified = result->rawHeader(LAST_MODIFIED);
+        if(isExistETAG) {
+           etag = result->rawHeader(ETAG);
+           lastModified = result->rawHeader(LAST_MODIFIED);
         }
         QByteArray serverResult = result->readAll();
         if (serverResult.isEmpty()) {
@@ -230,6 +234,7 @@ void AppClassModel::createbannerData(QByteArray jsonData,bool isNetworkRequest)
             if (langP == currentLang) {
                 QString displayP =  displayObject[QString::fromUtf8("display")].toString();
                 category->setName(displayP);
+                typeP = typeP.toLower();
                 m_cacheCategoriesMap.insert(typeP,displayP);
             }
         }

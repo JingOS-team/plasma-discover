@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -95,6 +95,7 @@ void PKTransaction::trigger(PackageKit::Transaction::TransactionFlags flags)
                 return;
             }
             m_trans = PackageKit::Daemon::installPackages(ids, flags);
+            opreationTag = 0;
         }
         break;
         case Transaction::RemoveRole:
@@ -102,6 +103,7 @@ void PKTransaction::trigger(PackageKit::Transaction::TransactionFlags flags)
             m_trans = PackageKit::Daemon::removePackages(packageIds(m_apps, [](PackageKitResource* r) {
                 return r->installedPackageId();
             }), true /*allowDeps*/, false, flags);
+            opreationTag = 1;
             break;
         case Transaction::UpdateRole: {
             const QStringList ids = packageIds(m_apps, [](PackageKitResource* r) {
@@ -118,6 +120,7 @@ void PKTransaction::trigger(PackageKit::Transaction::TransactionFlags flags)
                 return;
             }
             m_trans = PackageKit::Daemon::updatePackages(ids, flags);
+            opreationTag = 2;
 
         }
         break;
@@ -151,7 +154,7 @@ void PKTransaction::statusChanged()
     progressChanged();
 }
 
-int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage);
+int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage, int opreationTag);
 
 void PKTransaction::progressChanged()
 {
@@ -160,8 +163,13 @@ void PKTransaction::progressChanged()
         qWarning() << "percentage cannot be calculated";
         percent = 50;
     }
-
-    const auto processedPercentage = percentageWithStatus(m_trans->status(), qBound<int>(0, percent, 100));
+    if (m_trans->status() == PackageKit::Transaction::Status::StatusDownload && isFristDownload) {
+        if (percent > 0) {
+            return;
+        }
+        isFristDownload = false;
+    }
+    const auto processedPercentage = percentageWithStatus(m_trans->status(), qBound<int>(0, percent, 100),opreationTag);
     if (processedPercentage >= 0)
         setProgress(processedPercentage);
 }
@@ -221,18 +229,19 @@ void PKTransaction::cleanup(PackageKit::Transaction::Exit exit, uint runtime)
 
 //            Q_EMIT proceedRequest(i18n("Confirm package removal"), i18np("This action will also remove the following package:\n%2", "This action will also remove the following packages:\n%2", packagesToRemove.count(), msg));
 //        } else {
-        proceed();
+            proceed();
 //        }
         return;
     }
 
-    this->submitResolve();
     if (failed)
         setStatus(Transaction::DoneWithErrorStatus);
     else if (cancel)
         setStatus(Transaction::CancelledStatus);
-    else
+    else{
+        this->submitResolve();
         setStatus(Transaction::DoneStatus);
+    }
 }
 
 void PKTransaction::processProceedFunction()

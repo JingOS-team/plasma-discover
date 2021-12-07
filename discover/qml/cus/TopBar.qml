@@ -1,13 +1,14 @@
-
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.5
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.1
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
     property var textCont
@@ -18,12 +19,12 @@ Rectangle {
 
     RowLayout {
 
-        Image {
+        Kirigami.Icon {
             id: img_back
             Layout.preferredWidth: 22 * appScaleSize
             Layout.preferredHeight: 22 * appScaleSize
             source: "qrc:/img/ic_back.png"
-            sourceSize: Qt.size(40, 40)
+            color: Kirigami.JTheme.majorForeground
             MouseArea {
                 anchors.fill: parent
                 onClicked: {
@@ -37,9 +38,9 @@ Rectangle {
                 verticalCenter: img_back.verticalCenter
                 leftMargin: 17
             }
-            color: '#FF000000'
+            color: Kirigami.JTheme.majorForeground//'#FF000000'
             font {
-                pixelSize: discoverMain.defaultFontSize + 6
+                pixelSize: discoverMain.defaultFontSize + 6 * appFontSize
                 bold: true
             }
         }

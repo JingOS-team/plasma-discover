@@ -1,9 +1,10 @@
 
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.12
 import QtQuick.Controls 2.12
@@ -22,6 +23,16 @@ Item {
                                                           !== (rcmdApp.count - 1)) : false
     property bool isListViewPress
     signal bannerItemClicked(var bannerName)
+
+    Timer {
+        id: setDuration
+        interval: 500
+        repeat: false
+        onTriggered: {
+            rcmdApp.highlightMoveDuration = 0
+            rcmdApp.currentIndex = 0
+        }
+    }
 
     ListView {
         id: rcmdApp
@@ -43,6 +54,14 @@ Item {
 
         Component.onCompleted: {
             rcmdApp.currentIndex = 0
+        }
+
+        onCurrentIndexChanged: {
+            if (currentIndex === 0) {
+                rcmdApp.highlightMoveDuration = 500
+            } else if (currentIndex === (count-1)){
+                setDuration.restart()
+            }
         }
 
         onMovementStarted: {
@@ -127,7 +146,7 @@ Item {
 
         interactive: false
         visible: count > 1
-        count: rcmdApp.count
+        count: rcmdApp.count - 1
         spacing: 10 * appScaleSize
         currentIndex: rcmdApp.currentIndex
         delegate: Rectangle {

@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -494,9 +494,10 @@ QQuickWindow* DiscoverObject::rootObject() const
 
 void DiscoverObject::showPassiveNotification(const QString& msg)
 {
-    QTimer::singleShot(100, this, [this, msg]() {
-        QMetaObject::invokeMethod(rootObject(), "showPassiveNotification", Qt::QueuedConnection, Q_ARG(QVariant, msg), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}));
-    });
+    qDebug()<<" show toast discoverObject::" << msg;
+    // QTimer::singleShot(100, this, [this, msg]() {
+    //     QMetaObject::invokeMethod(rootObject(), "showPassiveNotification", Qt::QueuedConnection, Q_ARG(QVariant, msg), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}), Q_ARG(QVariant, {}));
+    // });
 }
 
 void DiscoverObject::reboot()

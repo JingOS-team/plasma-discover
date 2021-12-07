@@ -1,5 +1,5 @@
 /*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
+ *   SPDX-FileCopyrightText:      2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
  */
 #include "bannerresourcemodel.h"
@@ -79,6 +79,7 @@ QVariant BannerResourceModel::data(const QModelIndex &index, int role) const
 
 void BannerResourceModel::loadBannerData()
 {
+    qDebug()<<Q_FUNC_INFO << " load banner....";
     localThread = new LocalBannerThread();
     connect(localThread, &LocalBannerThread::loadLocalSuc,this, &BannerResourceModel::createbannerData);
     connect(this, &BannerResourceModel::networkStop,localThread, &LocalBannerThread::onNetworkStop);
@@ -148,6 +149,9 @@ void BannerResourceModel::createbannerData(QByteArray bannerData,bool isNetworkR
         if (!appName.isEmpty()) {
             m_banners.append(new BannerAppResource(appName,banner));
         }
+    }
+    if (m_banners.size() > 0) {
+        m_banners.append(m_banners.at(0));
     }
     endResetModel();
 

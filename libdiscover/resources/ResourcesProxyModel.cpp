@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2010 Jonathan Thomas <echidnaman@kubuntu.org>
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -300,8 +300,12 @@ QVariantList ResourcesProxyModel::subcategories() const
 
 void ResourcesProxyModel::refreshCache()
 {
-    ResourcesModel::global()->refreshCache();
-    invalidateFilter();
+    if (m_currentStream) {
+    qCWarning(LIBDISCOVER_LOG) << "last stream isn't over yet" << m_filters << this;
+    return;
+    }
+  ResourcesModel::global()->refreshCache();
+  invalidateFilter();
 }
 
 void ResourcesProxyModel::invalidateFilter()

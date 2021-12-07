@@ -1,0 +1,4 @@
+#plasma-discover-snap-backend: postinst-must-call-ldconfig usr/lib/x86_64-linux-gnu/libDiscoverSnapClient.so
+#plasma-discover-snap-backend: package-name-doesnt-match-sonames libDiscoverSnapClient
+#plasma-discover-snap-backend: shlib-without-versioned-soname usr/lib/x86_64-linux-gnu/libSnapClient.so libSnapClient.so
+#plasma-discover-snap-backend: package-must-activate-ldconfig-trigger usr/lib/x86_64-linux-gnu/libDiscoverSnapClient.so

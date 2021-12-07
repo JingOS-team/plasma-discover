@@ -1,7 +1,9 @@
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 
 import QtQuick 2.15
@@ -9,18 +11,22 @@ import QtGraphicalEffects 1.0
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.3
 import "../navigation.js" as Nav
+import org.kde.kirigami 2.15 as Kirigami
 
 Item {
     id: imgItem
     property var url
     property var dismissVisibility: false
     property int imageRadius: 10 * appScaleSize
+    property bool isDarkTheme: Kirigami.JTheme.colorScheme === "jingosDark"
+
     RectDropshadow {
         id: shadow
-        color: "#FFFFFF"
+        color: isDarkTheme ? "transparent" :"#FFFFFF"
         anchors.fill: parent
         radius: imageRadius
         shadowColor: "#80C3C9D9"
+        borderColor: isDarkTheme ? "transparent" : "#C7D3DBEE"
     }
     Image {
         id: bigImageView

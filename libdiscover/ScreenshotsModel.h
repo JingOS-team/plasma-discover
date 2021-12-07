@@ -10,6 +10,12 @@
 #include <QModelIndex>
 #include <QUrl>
 #include "discovercommon_export.h"
+#include <QFile>
+#include <QStandardPaths>
+#include <QFileInfo>
+#include <QDir>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
 
 class AbstractResource;
 
@@ -33,18 +39,23 @@ public:
     int count() const;
 
     Q_INVOKABLE void remove(const QUrl &url);
+    QList<QUrl> cacheLoaclScreents(QList<QUrl> thumbnails);
 
 private Q_SLOTS:
     void screenshotsFetched(const QList<QUrl>& thumbnails, const QList<QUrl>& screenshots);
+    void onCacheEnd();
 
 Q_SIGNALS:
     void countChanged();
     void resourceChanged(const AbstractResource* resource);
+    void cacheEndChanged();
 
 private:
     AbstractResource* m_resource;
     QList<QUrl> m_thumbnails;
     QList<QUrl> m_screenshots;
+    int m_loadCacheNumber;
+    int m_thumberNumber;
 
 };
 

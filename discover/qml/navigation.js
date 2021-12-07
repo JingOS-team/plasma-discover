@@ -40,6 +40,7 @@ function openBigImg(imgArray) {
 }
 
 function pop() {
+    console.log("poppppppp")
     window.stack.layers.pop()
 }
 

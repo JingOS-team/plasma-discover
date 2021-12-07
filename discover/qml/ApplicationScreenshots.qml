@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
  *   SPDX-FileCopyrightText: 2020 Carl Schwan <carl@carlschwan.eu>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: LGPL-2.0-or-later
  */
 
@@ -20,7 +20,7 @@ ListView {
     property alias resource: screenshotsModel.application
     property var resource
 
-    spacing: 20//Kirigami.Units.largeSpacing
+    spacing: 20
     focus: overlay.visible
     orientation: Qt.Horizontal
 
@@ -34,36 +34,20 @@ ListView {
     }
 
     delegate: AbstractButton {
-        readonly property url imageSource: large_image_url
-        // readonly property real proportion: thumbnail.sourceSize.width>1 ? thumbnail.sourceSize.height/thumbnail.sourceSize.width : 1
+        readonly property var imageSource: large_image_url
 
         implicitWidth: thumbnail.width
         implicitHeight: root.height
         padding: Kirigami.Units.largeSpacing
         hoverEnabled: true
-        // onClicked: overlay.open()
         onClicked: {
             Nav.openBigImg(appScreenShots)
         }
         // TODO cursorShape: Qt.PointingHandCursor
 
-        // background: Image {
-        //     id: thumbnail
-        //     readonly property real proportion: thumbnail.sourceSize.width>1 ? thumbnail.sourceSize.height/thumbnail.sourceSize.width : 1
-        //     width: root.width / 2.5 //root.height / proportion
-        //     height: root.height
-
-        //     BusyIndicator {
-        //         visible: running
-        //         running: thumbnail.status == Image.Loading
-        //         anchors.centerIn: parent
-        //     }
-        //     source: small_image_url
-        // }
         background: BigImgItem {
             id: thumbnail
-            // readonly property real proportion: thumbnail.sourceSize.width>1 ? thumbnail.sourceSize.height/thumbnail.sourceSize.width : 1
-            width: root.width / 2.5 //root.height / proportion
+            width: root.width / 2.5
             height: root.height
 
             BusyIndicator {
@@ -163,32 +147,4 @@ ListView {
         edge: Qt.RightEdge
         width: Math.max(0, Math.min(root.contentWidth - root.contentX - root.width)/5)
     }
-
-    // RoundButton {
-    //     anchors {
-    //         left: parent.left
-    //         leftMargin: Kirigami.Units.largeSpacing
-    //         verticalCenter: parent.verticalCenter
-    //     }
-    //     width: Kirigami.Units.gridUnit * 2
-    //     height: width
-    //     icon.name: "arrow-left"
-    //     visible: !Kirigami.Settings.isMobile && root.currentIndex > 0
-    //     Keys.forwardTo: [root]
-    //     onClicked: root.currentIndex -= 1
-    // }
-
-    // RoundButton {
-    //     anchors {
-    //         right: parent.right
-    //         rightMargin: Kirigami.Units.largeSpacing
-    //         verticalCenter: parent.verticalCenter
-    //     }
-    //     width: Kirigami.Units.gridUnit * 2
-    //     height: width
-    //     icon.name: "arrow-right"
-    //     visible: !Kirigami.Settings.isMobile && root.currentIndex < root.count - 1
-    //     Keys.forwardTo: [root]
-    //     onClicked: root.currentIndex += 1
-    // }
 }

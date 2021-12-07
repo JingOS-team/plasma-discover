@@ -39,7 +39,7 @@ DiscoverNotifier::DiscoverNotifier(QObject * parent)
 
         connect(module, &BackendNotifierModule::foundUpgradeAction, this, &DiscoverNotifier::foundUpgradeAction);
     }
-
+    
     // connect(&m_timer, &QTimer::timeout, this, &DiscoverNotifier::showUpdatesNotification);
     m_timer.setSingleShot(true);
     m_timer.setInterval(1000);

@@ -1,9 +1,10 @@
 
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.0
 import "../../qml"
@@ -14,7 +15,7 @@ import org.kde.discover.app 1.0
 
 Rectangle {
     id: discoverRight
-    color: "#0000ff00"
+    color: "#00000000"
     property string categoryName: "Games"
     property string softUpdateName: i18n("SoftWare update")
 
@@ -30,6 +31,9 @@ Rectangle {
     property bool isFetching: ResourcesModel.isFetching
 
     onIsFetchingChanged: {
+        if (leftPage.isFirstLoad) {
+            return
+        }
         if (!isFetching & _browserList.count < 2) {
             rightCurrentItem()
         }
@@ -129,6 +133,7 @@ Rectangle {
         if (searchText === "") {
             category = currentCategory //CategoryModel.findCategoryByName(categoryName)
         }
+
         if (componentqml.status === Component.Ready) {
             qmlObject = componentqml.incubateObject(tabsObjectModel, {
                                                         "width": _browserList.width,
@@ -219,6 +224,6 @@ Rectangle {
         id: loaderAnim
         anchors.fill: parent
         timerRun: visible
-        visible: loaderRun | isFetching
+        visible: false //loaderRun | isFetching
     }
 }

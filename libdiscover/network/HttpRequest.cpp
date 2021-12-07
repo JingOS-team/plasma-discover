@@ -1,9 +1,13 @@
 ﻿/*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 #include "HttpRequest.h"
 #include "HttpClient.h"
+#include "networkutils.h"
 
 #include <QJsonDocument>
 #include <QUrlQuery>
@@ -249,7 +253,7 @@ void HttpRequest::insertPublicQueryParams()
         QUrl url(m_networkRequest.url());
         QUrlQuery urlQuery(url);
 
-        urlQuery.addQueryItem("architecture", "x86");
+        urlQuery.addQueryItem("architecture", NetworkUtils::global()->readLocalArch());
         url.setQuery(urlQuery);
 
         m_networkRequest.setUrl(url);

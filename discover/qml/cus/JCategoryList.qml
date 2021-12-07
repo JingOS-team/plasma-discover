@@ -1,11 +1,12 @@
-
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.0
+import org.kde.kirigami 2.15 as Kirigami
 
 Item {
     id: categoryListItem
@@ -33,16 +34,16 @@ Item {
                 leftMargin: 10 * appScaleSize
             }
             width: categoryList.width
-            height: section === i18n("My") ? 70 : 50
+            height: section === i18n("My") ? 70 * appScaleSize : 50 * appScaleSize
             color: "transparent"
 
             Text {
                 anchors.verticalCenter: parent.section === i18n("My") ? parent : parent.verticalCenter
                 anchors.bottom: parent.section === i18n("My") ? parent.bottom : parent
-                anchors.bottomMargin: parent.section === i18n("My") ? 10 : parent
+                anchors.bottomMargin: parent.section === i18n("My") ? 10 * appScaleSize : parent
                 text: parent.section
-                font.pixelSize: discoverMain.defaultFontSize - 2
-                color: "#4D000000"
+                font.pixelSize: discoverMain.defaultFontSize - 2 * appFontSize
+                color: Kirigami.JTheme.minorForeground//"#4D000000"
             }
         }
     }
@@ -61,7 +62,7 @@ Item {
                 anchors.centerIn: parent
 
                 text: updateCount
-                font.pixelSize: discoverMain.defaultFontSize - 5
+                font.pixelSize: discoverMain.defaultFontSize - 5 * appFontSize
                 color: "white"
             }
         }
@@ -89,11 +90,6 @@ Item {
         onMovementEnded: {
             movementEndd = true
         }
-        // delegate: ItemHoverView {
-        //     width: 200 * appScaleSize//parent.width
-        //     height: width / 6
-        //     color:"blue"
-        // }
 
         delegate: ItemHoverView {
             id: categoryItem
@@ -104,10 +100,10 @@ Item {
                 }
             }
 
-            width: 200 * appScaleSize//parent.width
+            width: 200 * appScaleSize
             height: width / 6
             radius: height / 4
-            color: itemSelectedBackShow & index === categoryList.itemIndex ? "#394BF1" : "#00000000"
+            color: itemSelectedBackShow & index === categoryList.itemIndex ? Kirigami.JTheme.highlightColor : "#00000000"//"#394BF1" : "#00000000"
 
             Component.onCompleted: {
                 if (index === 0) {
@@ -119,17 +115,16 @@ Item {
 
             Image {
                 id: categoryIcon
+                property var cionUrl: category.icon_select === "" ? category.icon : category.icon_select
                 anchors {
                     left: parent.left
                     leftMargin: 10 * appScaleSize
                     verticalCenter: parent.verticalCenter
                 }
-                width: 16 //* appScaleSize
-                height: 16 //* appScaleSize
-                source: itemSelectedBackShow & categoryList.itemIndex
-                        === index ? (category.icon_select
-                                     === "" ? category.icon : category.icon_select) : category.icon
-//                sourceSize: Qt.size(32, 32)
+                width: 16 * appScaleSize
+                height: 16 * appScaleSize
+                source: discoverMain.isDarkTheme ? cionUrl : (itemSelectedBackShow & categoryList.itemIndex
+                        === index ? cionUrl : category.icon)
                 asynchronous: true
             }
             Text {
@@ -141,7 +136,7 @@ Item {
                 }
                 text: category.name
                 font.pixelSize: discoverMain.defaultFontSize
-                color: itemSelectedBackShow & index === categoryList.itemIndex ? "white" : "black"
+                color: discoverMain.isDarkTheme ? "white" : (itemSelectedBackShow & index === categoryList.itemIndex ? "white" : "black")
             }
 
             Loader {

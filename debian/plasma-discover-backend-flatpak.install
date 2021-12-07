@@ -1,0 +1,5 @@
+#usr/lib/*/qt5/plugins/discover-notifier/FlatpakNotifier.so
+#usr/lib/*/qt5/plugins/discover/flatpak-backend.so
+#usr/share/applications/org.kde.discover-flatpak.desktop
+#usr/share/icons/hicolor/scalable/apps/flatpak-discover.svg
+#usr/share/libdiscover/categories/flatpak-backend-categories.xml

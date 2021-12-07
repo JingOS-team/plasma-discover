@@ -1,10 +1,11 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
 #include "ResourcesModel.h"
+#include "network/networkutils.h"
 
 #include "AbstractResource.h"
 #include "resources/AbstractResourcesBackend.h"
@@ -25,7 +26,6 @@
 #include <KLocalizedString>
 #include <KSharedConfig>
 #include <KConfigGroup>
-#include <network/networkutils.h>
 
 ResourcesModel *ResourcesModel::s_self = nullptr;
 
@@ -142,6 +142,7 @@ void ResourcesModel::addResourcesBackend(AbstractResourcesBackend* backend)
         connect(backend->reviewsBackend(), &AbstractReviewsBackend::error, this, &ResourcesModel::passiveMessage, Qt::UniqueConnection);
     }
     connect(backend,&AbstractResourcesBackend::networkStateChanged,this,[=](int state) {
+        qDebug() << "state === " << state;
         switch (state) {
         case 1:
             qDebug() << "offline";
@@ -360,6 +361,7 @@ void AggregatedResultsStream::resourceDestruction(QObject* obj)
 
 void AggregatedResultsStream::streamDestruction(QObject* obj)
 {
+    qDebug()<< " stream destroy() obj" << obj;
     m_streams.remove(obj);
     clear();
 }

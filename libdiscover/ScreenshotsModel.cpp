@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -14,6 +14,7 @@ ScreenshotsModel::ScreenshotsModel(QObject* parent)
     : QAbstractListModel(parent)
     , m_resource(nullptr)
 {
+    connect(this,&ScreenshotsModel::cacheEndChanged,this, &ScreenshotsModel::onCacheEnd);
 }
 
 QHash< int, QByteArray > ScreenshotsModel::roleNames() const
@@ -53,13 +54,76 @@ void ScreenshotsModel::screenshotsFetched(const QList< QUrl >& thumbnails, const
     Q_ASSERT(thumbnails.count()==screenshots.count());
     if (thumbnails.isEmpty())
         return;
-    beginInsertRows(QModelIndex(), m_thumbnails.size(), m_thumbnails.size()+thumbnails.size()-1);
+    m_thumberNumber = thumbnails.size();
+//    beginInsertRows(QModelIndex(), m_thumbnails.size(), m_thumbnails.size()+thumbnails.size()-1);
     m_screenshots.clear();
     m_thumbnails.clear();
-    m_thumbnails += thumbnails;
+    cacheLoaclScreents(thumbnails);
     m_screenshots += screenshots;
-    endInsertRows();
+//    endInsertRows();
     emit countChanged();
+}
+
+QList<QUrl> ScreenshotsModel::cacheLoaclScreents(QList<QUrl> thumbnails)
+{
+    m_loadCacheNumber = 0;
+    foreach(QUrl thumbUrl , thumbnails){
+        QString urlString = thumbUrl.url();
+        if(urlString == ""){
+           continue;
+        }
+        qDebug()<< Q_FUNC_INFO << " thumbUrl.url():" << urlString;
+        QStringList strData = urlString.split("/");
+        if (strData.size() > 1) {
+            QString cacheFileName = strData[strData.size() - 1];
+            const QString fileName = QStandardPaths::writableLocation(QStandardPaths::CacheLocation) + "/screenshots/"+ cacheFileName;
+            qDebug()<< Q_FUNC_INFO << " cacheFileName:" << fileName << " QFileInfo::exists(fileName):" << QFileInfo::exists(fileName);
+            if (!QFileInfo::exists(fileName)) {
+                const QDir cacheDir(QStandardPaths::writableLocation(QStandardPaths::CacheLocation));
+                // Create $HOME/.cache/discover/screenshots folder
+                cacheDir.mkdir(QStringLiteral("screenshots"));
+                QNetworkAccessManager *manager = new QNetworkAccessManager(this);
+                connect(manager, &QNetworkAccessManager::finished, this, [this, fileName, manager] (QNetworkReply *reply) {
+                    qDebug()<< Q_FUNC_INFO << "******** reply->error():" << reply->error();
+
+                    if (reply->error() == QNetworkReply::NoError) {
+                        QByteArray iconData = reply->readAll();
+                        QFile file(fileName);
+                        if (file.open(QIODevice::WriteOnly)) {
+                            file.write(iconData);
+                        }
+                        file.close();
+                        QFileInfo bannerFileInfo(file);
+                       QString  thumbFile = "file://" +bannerFileInfo.absoluteFilePath();
+                        qDebug()<< Q_FUNC_INFO << " thumbFile:" << thumbFile;
+                        m_thumbnails.append(QUrl(thumbFile));
+                    } else {
+                        m_thumbnails.append(QUrl(""));
+                    }
+                    Q_EMIT cacheEndChanged();
+                    manager->deleteLater();
+                });
+                manager->get(QNetworkRequest(thumbUrl));
+            } else {
+                QUrl cacheFileUrl("file://" + fileName);
+                m_thumbnails.append(cacheFileUrl);
+                Q_EMIT cacheEndChanged();
+            }
+        } else {
+           m_thumbnails.append(thumbUrl);
+           Q_EMIT cacheEndChanged();
+        }
+    }
+    return m_thumbnails;
+}
+
+void ScreenshotsModel::onCacheEnd()
+{
+    m_loadCacheNumber ++;
+    if(m_loadCacheNumber == m_thumberNumber){
+        beginResetModel();
+        endResetModel();
+    }
 }
 
 QVariant ScreenshotsModel::data(const QModelIndex& index, int role) const
@@ -69,9 +133,27 @@ QVariant ScreenshotsModel::data(const QModelIndex& index, int role) const
 
     switch (role) {
     case ThumbnailUrl:
-        return m_thumbnails[index.row()];
+    {
+        if (m_thumbnails.size() <= 0 || index.row() >= m_thumbnails.size()) {
+            return "";
+        }
+        QUrl turl = m_thumbnails[index.row()];
+        if(turl.isValid()){
+            return turl;
+        }
+        return QVariant();
+    }
     case ScreenshotUrl:
-        return m_screenshots[index.row()];
+    {
+        if (m_screenshots.size() <= 0 || index.row() >= m_screenshots.size()) {
+            return "";
+        }
+        QUrl url = m_screenshots[index.row()];
+        if(url.isValid()){
+            return url;
+        }
+        return QVariant();
+    }
     }
 
     return QVariant();
@@ -102,5 +184,7 @@ void ScreenshotsModel::remove(const QUrl& url)
         m_screenshots.removeAt(idxRemove);
         endRemoveRows();
         emit countChanged();
+
+        qDebug() << "screenshot removed" << url;
     }
 }

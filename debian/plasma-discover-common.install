@@ -1,0 +1,5 @@
+usr/share/discover/*
+usr/share/icons/hicolor/*/apps/jingdiscover.*
+#usr/share/knsrcfiles/discover_ktexteditor_codesnippets_core.knsrc
+usr/share/kxmlgui5/plasmadiscover/*
+usr/share/libdiscover/categories/packagekit-backend-categories.xml

@@ -1,8 +1,11 @@
 /*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
+
 #include "AppClass.h"
 #include <QDebug>
 

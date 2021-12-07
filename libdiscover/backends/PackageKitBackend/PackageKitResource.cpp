@@ -1,7 +1,7 @@
 /*
  *   SPDX-FileCopyrightText: 2012 Aleix Pol Gonzalez <aleixpol@blue-systems.com>
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 
@@ -37,6 +37,7 @@ PackageKitResource::PackageKitResource(QString packageName, QString summary, Pac
     connect(this, &PackageKitResource::dependenciesFound, this, [this](const QJsonObject& obj) {
         setDependenciesCount(obj.size());
     });
+    connect(this, &PackageKitResource::openAppStatusChanged, this, &PackageKitResource::onOpenAppSlots);
 }
 
 QString PackageKitResource::name() const
@@ -78,24 +79,32 @@ QString PackageKitResource::installedPackageId() const
 
 void PackageKitResource::invokeApplication() const
 {
+    if (isOpenningApp) {
+        return;
+    }
+    Q_EMIT this->openAppStatusChanged(true);
     auto trans = PackageKit::Daemon::getFiles({installedPackageId()});
-    qDebug()<<Q_FUNC_INFO<< " installedPackageId():"<<installedPackageId();
     connect(trans, &PackageKit::Transaction::errorCode, backend(), &PackageKitBackend::transactionError);
+    connect(trans, &PackageKit::Transaction::errorCode, this, &PackageKitResource::openAppError);
     connect(trans, &PackageKit::Transaction::files, this, [this](const QString &/*packageID*/, const QStringList &_filenames) {
         //This workarounds bug in zypper's backend (suse) https://github.com/hughsie/PackageKit/issues/351
         QStringList filenames = _filenames;
         if (filenames.count() == 1 && !QFile::exists(filenames.constFirst())) {
             filenames = filenames.constFirst().split(QLatin1Char(';'));
         }
-        qDebug()<<Q_FUNC_INFO<<" invokeapplicaiton filenames:"<< filenames;
+        
         const auto locations = QStandardPaths::standardLocations(QStandardPaths::ApplicationsLocation);
         const auto desktopFiles = kFilter<QStringList>(filenames, [locations](const QString &exe) {
             for (const auto &location: locations) {
-                if (exe.startsWith(location))
-                    return exe.contains(QLatin1String(".desktop"));
+                if (exe.startsWith(location) && exe.contains(QLatin1String(".desktop"))) {
+                    QFile exeFile(exe);
+                    return exeFile.exists();
+                }
             }
             return false;
         });
+        qDebug()<<Q_FUNC_INFO<<" invokeapplicaiton desktopFiles:"<< desktopFiles;
+        Q_EMIT this->openAppStatusChanged(false);
         if (!desktopFiles.isEmpty()) {
             QProcess::startDetached(QStringLiteral(CMAKE_INSTALL_FULL_LIBEXECDIR_KF5 "/discover/runservice"), { desktopFiles });
             return;
@@ -103,6 +112,16 @@ void PackageKitResource::invokeApplication() const
 
         Q_EMIT backend()->passiveMessage(i18n("Cannot launch %1", name()));
     });
+}
+
+void PackageKitResource::onOpenAppSlots(const bool isOpen)
+{
+    isOpenningApp = isOpen;
+}
+
+void PackageKitResource::openAppError(PackageKit::Transaction::Error, const QString& message)
+{
+    Q_EMIT this->openAppStatusChanged(false);
 }
 
 QString PackageKitResource::comment()
@@ -127,6 +146,7 @@ QUrl PackageKitResource::homepage()
 
 QVariant PackageKitResource::icon() const
 {
+    qDebug()<<Q_FUNC_INFO<<" currentIcon::"<< m_icon << " name:"<< name();
     if (!m_icon.isValid() || m_icon == "") {
         return "qrc:/img/ic_app_list_empty.png";
     }
@@ -190,7 +210,9 @@ AbstractResource::State PackageKitResource::state()
 
 void PackageKitResource::addPackageId(PackageKit::Transaction::Info info, const QString &packageId, bool arch)
 {
-
+    if (info == PackageKit::Transaction::InfoAvailable && m_packages.contains(PackageKit::Transaction::InfoInstalled)) {
+        m_packages.remove(PackageKit::Transaction::InfoInstalled);
+    }
     auto oldState = state();
     if (arch)
         m_packages[info].append(packageId);

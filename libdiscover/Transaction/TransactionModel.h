@@ -42,7 +42,7 @@ public:
     QModelIndex indexOf(AbstractResource *res) const;
 
     void addTransaction(Transaction *trans);
-    void removeTransaction(Transaction *trans);
+    void removeTransaction(Transaction *trans,bool isDestroy = false);
 
     bool contains(Transaction* transaction) const {
         return m_transactions.contains(transaction);

@@ -112,11 +112,13 @@ Item
             done = true;
             for(var v in testRoot) {
                 if (v.indexOf("test_") === 0) {
+                    console.log("doing", v)
                     testRoot.currentTest = v;
                     testRoot.reset();
                     testRoot[v]();
                 }
             }
+            console.log("done")
             appRoot.close()
         }
     }

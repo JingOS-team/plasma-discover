@@ -1,6 +1,9 @@
 ﻿/*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 #include "HttpResponse.h"
 
@@ -125,8 +128,8 @@ HttpResponse::HttpResponse(QNetworkReply *networkReply,
     connect(m_networkReply, SIGNAL(finished()), this, SLOT(onFinished()));
     connect(m_networkReply, SIGNAL(error(QNetworkReply::NetworkError)), this, SLOT(onError(QNetworkReply::NetworkError)));
     connect(m_networkReply, SIGNAL(downloadProgress(qint64,qint64)), this, SLOT(onDownloadProgress(qint64, qint64)));
-    connect(ResourcesModel::global(),&ResourcesModel::networkStateChanged, this, [this](QString state) {
-        if (state == "1") {
+    connect(ResourcesModel::global(),&ResourcesModel::networkStateChanged, this, [this](QString state){
+        if(state == "1") {
             if (m_networkReply->isRunning()) {
                 m_networkReply->abort();
                 m_networkReply->deleteLater();
@@ -138,7 +141,7 @@ HttpResponse::HttpResponse(QNetworkReply *networkReply,
         QObject::connect(m_networkReply, SIGNAL(finished()), &loop, SLOT(quit()));
         loop.exec();
     }
-    if (ResourcesModel::global()->networkState() == "1") {
+    if(ResourcesModel::global()->networkState() == "1"){
         if (m_networkReply->isRunning()) {
             m_networkReply->abort();
             m_networkReply->deleteLater();
@@ -164,6 +167,7 @@ void HttpResponse::onFinished()
     if (m_slotsMap.contains(onResponse_QNetworkReply_A_Pointer)) {
         _exec(m_slotsMap.value(onResponse_QNetworkReply_A_Pointer).second, QNetworkReply*, reply) {
             emit finished(reply);
+            m_slotsMap.clear();
         }
     }
     else if (m_slotsMap.contains((onResponse_QByteArray))) {
@@ -172,6 +176,7 @@ void HttpResponse::onFinished()
         _exec(m_slotsMap.value((onResponse_QByteArray)).second, QByteArray, result) {
             emit finished(result);
         }
+        m_slotsMap.clear();
 
         reply->deleteLater();
     }
@@ -182,7 +187,7 @@ void HttpResponse::onFinished()
         _exec(m_slotsMap.value((onResponse_QVariantMap)).second, QVariantMap, resultMap) {
             emit finished(resultMap);
         }
-
+        m_slotsMap.clear();
         reply->deleteLater();
     }
 }
@@ -198,6 +203,7 @@ void HttpResponse::onError(QNetworkReply::NetworkError error)
     if (m_slotsMap.contains((onError_QString_QNetworkReply_A_Poniter))) {
         _exec2(m_slotsMap.value((onError_QString_QNetworkReply_A_Poniter)).second, QString, QNetworkReply*, errorString, reply) {
             emit this->error(errorString, reply);
+            m_slotsMap.clear();
         }
     }
     else if (m_slotsMap.contains((onError_QNetworkReply_To_NetworkError_QNetworkReply_A_Pointer))) {
@@ -205,18 +211,21 @@ void HttpResponse::onError(QNetworkReply::NetworkError error)
                QNetworkReply::NetworkError, QNetworkReply*,
                error, reply) {
             emit this->error(error, reply);
+            m_slotsMap.clear();
         }
     }
     else if (m_slotsMap.contains((onError_QString))) {
         _exec(m_slotsMap.value((onError_QString)).second, QString, errorString) {
             emit this->error(errorString);
         }
+        m_slotsMap.clear();
         reply->deleteLater();
     }
     else if (m_slotsMap.contains((onError_QNetworkReply_To_NetworkError))) {
         _exec(m_slotsMap.value((onError_QNetworkReply_To_NetworkError)).second, QNetworkReply::NetworkError, error) {
             emit this->error(error);
         }
+        m_slotsMap.clear();
 
         reply->deleteLater();
     }

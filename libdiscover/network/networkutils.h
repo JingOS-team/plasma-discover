@@ -1,6 +1,9 @@
 /*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 #ifndef NETWORKUTILS_H
 #define NETWORKUTILS_H
@@ -23,7 +26,9 @@ public:
     static NetworkUtils* global();
     static NetworkUtils* s_self;
     void appStatusReport(Status status, AbstractResource *resource);
-
+    QString readLocalArch();
+private:
+    QString m_localArch;
 };
 
 #endif // NETWORKUTILS_H

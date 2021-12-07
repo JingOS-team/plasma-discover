@@ -162,7 +162,7 @@ void TransactionModel::addTransaction(Transaction *trans)
     emit transactionAdded(trans);
 }
 
-void TransactionModel::removeTransaction(Transaction *trans)
+void TransactionModel::removeTransaction(Transaction *trans, bool isDestroy)
 {
     Q_ASSERT(trans);
     trans->deleteLater();
@@ -179,7 +179,7 @@ void TransactionModel::removeTransaction(Transaction *trans)
     endRemoveRows();
 
     emit transactionRemoved(trans);
-    if (m_transactions.isEmpty())
+    if (m_transactions.isEmpty() && !isDestroy)
         emit lastTransactionFinished();
 }
 

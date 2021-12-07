@@ -1,0 +1,8 @@
+#usr/lib/*/libexec/discover/SnapMacaroonDialog
+#usr/lib/*/qt5/plugins/discover/snap-backend.so
+#usr/lib/kauth/libexec/libsnap_helper
+#usr/share/dbus-1/system-services/org.kde.discover.libsnapclient.service
+#usr/share/dbus-1/system.d/org.kde.discover.libsnapclient.conf
+#usr/share/dbus-1/system.d/org.kde.discover.libsnapclient.conf
+#usr/share/libdiscover/categories/snap-backend-categories.xml
+#usr/share/polkit-1/actions/org.kde.discover.libsnapclient.policy

@@ -1,14 +1,15 @@
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.1
 import QtQuick.Controls 2.3
 import QtQuick.Layouts 1.1
 import org.kde.discover 2.0
-import org.kde.kirigami 2.0 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 
@@ -48,24 +49,48 @@ ConditionalLoader {
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: root.text
-            font.pixelSize: delegateArea.defaultFontSize - 5
+            font.pixelSize: delegateArea.defaultFontSize - 5 * appFontSize
         }
         background: Rectangle {
             id: installBg
-            color: "#F2FBFBFB"
+            color: Kirigami.JTheme.cardBackground//"#F2FBFBFB"
             radius: height / 5
             layer.enabled: true
-            border.color: "#CDD0D7"
-            layer.effect: DropShadow {
-                id: rectShadow
-                anchors.fill: installBg
-                color: "#12000000"
-                source: installBg
-                samples: 9
-                radius: 4
-                horizontalOffset: 0
-                verticalOffset: 0
-                spread: 0
+            border.color:  listener.progress > 0 ? "transparent" : Kirigami.JTheme.disableForeground//"#CDD0D7"
+            Rectangle {
+                id: hoverRect
+                anchors.fill: parent
+                gradient: Gradient {
+                    orientation: Gradient.Horizontal
+                    GradientStop { position: 0.0; color: "#1E1E1E" }
+                    GradientStop { position: 1.0; color: "#000000"; }
+                }
+                opacity: 0
+                radius: installBg.radius
+                MouseArea{
+                            anchors.fill: parent
+                            hoverEnabled: true
+                            onEntered: {
+                                hoverRect.opacity = 0.2
+                            }
+
+                            onExited: {
+                                hoverRect.opacity = 0
+                            }
+
+                            onPressed: {
+                                hoverRect.opacity = 0.4
+                            }
+                            onReleased: {
+                                hoverRect.opacity = 0
+                            }
+                            onCanceled: {
+                                hoverRect.opacity = 0
+                            }
+                            onClicked: {
+                                root.click()
+                            }
+                        }
             }
         }
 

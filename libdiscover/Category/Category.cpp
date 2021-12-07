@@ -212,6 +212,7 @@ QString Category::iconCachePath(QString typeName,ICONTYPE iconType)
     typeName = typeName.toLower();
     QString suffix = typeName+QLatin1String("_")+iconTypeString+QLatin1String(".png");
     QString path = QStandardPaths::locate(QStandardPaths::GenericDataLocation, QLatin1String("discover/pkcategories/")+suffix);
+    qDebug()<<Q_FUNC_INFO<< " typename:"<<typeName << " suffix:"<< suffix << " path:"<<path;
     if (path.isEmpty()) {
         return QLatin1String("");
     }

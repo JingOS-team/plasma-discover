@@ -1,8 +1,15 @@
-import QtQuick 2.1
+/*
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
+ */
+import QtQuick 2.15
 import QtQuick.Controls 2.3
-import QtQuick.Layouts 1.1
+import QtQuick.Layouts 1.3
 import org.kde.discover 2.0
-import org.kde.kirigami 2.0 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 import QtQuick.Controls.Styles 1.4
 import QtGraphicalEffects 1.0
 import "cus"
@@ -23,7 +30,7 @@ ConditionalLoader {
     property string updateTextString: application.canUpgrade ? i18n("Update") : i18n(
                                                                    "OPEN")
 
-    property int defaultFontSize:14//theme.defaultFont.pointSize
+    property int defaultFontSize:14 * appFontSize//theme.defaultFont.pointSize
 
     property bool compact: false
     property int textSize: defaultFontSize
@@ -83,7 +90,6 @@ ConditionalLoader {
 
     condition: listener.isActive
     componentTrue: LabelBackground {
-        //            text: listener.statusText
         progress: listener.progress / 100
     }
 
@@ -91,10 +97,9 @@ ConditionalLoader {
         id: textButton
 
         enabled: application.state !== AbstractResource.Broken
-        //        text: compact ? "" : root.text
         contentItem: Text {
             id: installText
-            color: "black"
+            color: Kirigami.JTheme.majorForeground//"black"
             horizontalAlignment: Text.AlignHCenter
             verticalAlignment: Text.AlignVCenter
             text: root.text
@@ -102,22 +107,42 @@ ConditionalLoader {
         }
         background: Rectangle {
             id: installBg
-            color: "#F2FBFBFB"
+            color: Kirigami.JTheme.cardBackground
             radius: height / 5
-//            layer.enabled: true
-            border.color: "#CDD0D7"
+            border.color: listener.progress > 0 ? "transparent" : Kirigami.JTheme.disableForeground//"#CDD0D7"
             border.width: 1
-//            layer.effect: DropShadow {
-//                id: rectShadow
-//                anchors.fill: installBg
-//                color: "#12000000"
-//                source: installBg
-//                samples: 9
-//                radius: 4
-//                horizontalOffset: 0
-//                verticalOffset: 0
-//                spread: 0
-//            }
+            Rectangle {
+                id: hoverRect
+                anchors.fill: parent
+                opacity: 0
+                color: Kirigami.JTheme.majorForeground
+                radius: installBg.radius
+                MouseArea{
+                    width: parent.width + 10 * appScaleSize
+                    height: parent.height + 10 * appScaleSize
+                    hoverEnabled: true
+                    onEntered: {
+                        hoverRect.opacity = 0.2
+                    }
+
+                    onExited: {
+                        hoverRect.opacity = 0
+                    }
+
+                    onPressed: {
+                        hoverRect.opacity = 0.4
+                    }
+                    onReleased: {
+                        hoverRect.opacity = 0
+                    }
+                    onCanceled: {
+                        hoverRect.opacity = 0
+                    }
+                    onClicked: {
+                        root.click()
+                    }
+                }
+            }
         }
 
         icon.name: compact ? root.action.icon.name : ""

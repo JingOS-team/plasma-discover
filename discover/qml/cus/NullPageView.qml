@@ -1,11 +1,12 @@
-
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.0
+import org.kde.kirigami 2.15 as Kirigami
 
 Item {
 
@@ -17,13 +18,13 @@ Item {
 
     signal deviceNetworkStateChanged(var state)
 
-    Image {
+    Kirigami.Icon {
         id: nullImage
         anchors.horizontalCenter: parent.horizontalCenter
         source: "qrc:/img/nullpage.png"
-        sourceSize: Qt.size(120, 120)
         width:60 * appScaleSize
         height: 60 * appScaleSize
+        color: Kirigami.JTheme.majorForeground
     }
 
     Text {
@@ -34,7 +35,7 @@ Item {
         }
         text: getShowText()
         font.pixelSize: defaultFontSize
-        color: "#4D3C3C43"
+        color: Kirigami.JTheme.disableForeground
     }
 
     function getShowText() {
@@ -47,7 +48,7 @@ Item {
         if ("1" === state) {
             return i18n("Currently not connected to the network, please connect and try again")
         } else {
-            return i18n("There is no apps at present")
+            return i18n("There is no app at present")
         }
     }
 }

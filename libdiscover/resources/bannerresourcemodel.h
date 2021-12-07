@@ -1,6 +1,9 @@
 /*
- *   SPDX-FileCopyrightText:      2021 Wang Rui <wangrui@jingos.com>
- *   SPDX-License-Identifier:     LGPL-2.1-only OR LGPL-3.0-only OR LicenseRef-KDE-Accepted-LGPL
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
+ *
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 #ifndef BANNERRESOURCEMODEL_H
 #define BANNERRESOURCEMODEL_H
@@ -45,7 +48,7 @@ public:
     QVariant data(const QModelIndex &index, int role = Qt::DisplayRole) const override;
 
     static BannerResourceModel* global();
-    void loadBannerData();
+    Q_SCRIPTABLE void loadBannerData();
 Q_SIGNALS:
     void networkStart();
     void networkStop(bool isSuc);

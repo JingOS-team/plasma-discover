@@ -7,7 +7,7 @@
 import QtQuick 2.6
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 2.2
-import org.kde.kirigami 2.4 as Kirigami
+import org.kde.kirigami 2.15 as Kirigami
 
 /**
  * This is the base class for Form layouts conforming to the
@@ -195,7 +195,7 @@ Item {
         }
         Item {
             Layout.preferredWidth: {
-                var hint = Math.min(root.width, lay.knownItemsImplicitWidth);
+                var hint = Math.max(200 * appScaleSize, lay.knownItemsImplicitWidth);
                 for (var i in lay.actualTwinFormLayouts) {
                     if (lay.actualTwinFormLayouts[i] && lay.actualTwinFormLayouts[i].hasOwnProperty("children")) {
                         hint = Math.max(hint, lay.actualTwinFormLayouts[i].children[0].knownItemsImplicitWidth);
@@ -370,8 +370,10 @@ Item {
             Kirigami.MnemonicData.controlType: Kirigami.MnemonicData.FormLabel
             Kirigami.MnemonicData.label: item.Kirigami.FormData.label
             text: Kirigami.MnemonicData.richTextLabel
+            color: Kirigami.JTheme.minorForeground
 
             level: item.Kirigami.FormData.isSection ? 3 : 5
+            font.pixelSize: 14 * appFontSize
 
             Layout.columnSpan: item.Kirigami.FormData.isSection ? lay.columns : 1
             Layout.preferredHeight: {

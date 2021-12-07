@@ -1,17 +1,21 @@
 
-
 /*
- * SPDX-FileCopyrightText: (C) 2021 Wang Rui <wangrui@jingos.com>
+ * Copyright (C) 2021 Beijing Jingling Information System Technology Co., Ltd. All rights reserved.
  *
- * SPDX-License-Identifier: LGPL-2.1-or-later
+ * Authors:
+ * Zhang He Gang <zhanghegang@jingos.com>
+ *
  */
 import QtQuick 2.12
 import QtQuick.Controls 2.12
 import QtQuick.Layouts 1.3
+import org.kde.kirigami 2.15 as Kirigami
 
 Rectangle {
-    color: "#E8EFFF"
+    color: Kirigami.JTheme.background //"#E8EFFF"
     property var imgPathArray
+    property bool isDarkTheme: Kirigami.JTheme.colorScheme === "jingosDark"
+
     SwipeView {
         id: view
         anchors {
@@ -52,12 +56,14 @@ Rectangle {
                 object.dismissVisibility = true
                 return object
             } else {
+                console.log("component create fail: " + component.errorString())
             }
         }
     }
 
     PageIndicator {
         id: pageIndicator
+
         anchors {
             top: view.bottom
             topMargin: screen.height * 0.03
@@ -72,17 +78,7 @@ Rectangle {
             width: 6 * appScaleSize
             height: width
             radius: width / 2
-            color: view.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"
-            // border.width: 1
-            // border.color: view.currentIndex === index ? "#B33C3C43" : "#00000000"
-            // color: "transparent"
-            // Rectangle {
-            //     anchors.centerIn: parent
-            //     width: 6 * appScaleSize
-            //     height: width
-            //     radius: width / 2
-            //     color: view.currentIndex === index ? "#B33C3C43" : "#4D3C3C43"
-            // }
+            color: view.currentIndex === index ? Kirigami.JTheme.iconForeground : Kirigami.JTheme.iconMinorForeground //"#B33C3C43" : "#4D3C3C43"
         }
     }
 }

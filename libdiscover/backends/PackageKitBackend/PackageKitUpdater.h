@@ -1,6 +1,6 @@
 /*
  *   SPDX-FileCopyrightText: 2013 Lukas Appelhans <l.appelhans@gmx.de>
- *                           2021 Wang Rui <wangrui@jingos.com>
+ *                           2021 Zhang He Gang <zhanghegang@jingos.com>
  *   SPDX-License-Identifier: GPL-2.0-only OR GPL-3.0-only OR LicenseRef-KDE-Accepted-GPL
  */
 #ifndef PACKAGEKITUPDATER_H
@@ -13,7 +13,7 @@
 
 class SystemUpgrade;
 
-int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage);
+int percentageWithStatus(PackageKit::Transaction::Status status, uint percentage,int opreationTag);
 
 class PackageKitUpdater : public AbstractBackendUpdater
 {

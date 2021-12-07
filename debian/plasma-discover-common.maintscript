@@ -1,0 +1,2 @@
+# KNSRC files are now in /usr/share, where they should have belonged all along.
+rm_conffile /etc/xdg/discover_ktexteditor_codesnippets_core.knsrc
